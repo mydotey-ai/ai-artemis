@@ -22,3 +22,6 @@ target
 
 # Java version reference (local clone only)
 artemis-java/
+
+# Git worktrees
+.worktrees/
