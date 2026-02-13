@@ -2,911 +2,236 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
+## 项目概述
+
 **Goal:** 使用Rust重写Artemis服务注册中心，消除GC问题，实现P99延迟<10ms，支持100k+实例
 
-**Architecture:** Workspace多Crate架构，包含artemis-core（核心模型）、artemis-server（业务逻辑）、artemis-web（Web层）、artemis-management（管理功能）、artemis-client（客户端SDK）、artemis（CLI程序）6个crate。一次性完整实现，并行开发所有模块。
+**Architecture:** Workspace多Crate架构，包含6个crate：
+- `artemis-core` - 核心模型和trait定义
+- `artemis-server` - 业务逻辑实现
+- `artemis-web` - HTTP/WebSocket API层
+- `artemis-management` - 管理功能和持久化
+- `artemis-client` - 客户端SDK
+- `artemis` - CLI工具和服务器启动程序
 
 **Tech Stack:** Rust 2024, Tokio, Axum, DashMap, parking_lot, SQLx, Governor, Serde, Clap
 
 ---
 
-## 阶段1: 项目基础设施
+## 📋 分阶段实施计划
 
-### Task 1.1: 创建Workspace项目结构
+**完整的实施计划分为12个阶段，52个任务。**
 
-**Files:**
-- Create: `Cargo.toml`
-- Create: `rust-toolchain.toml`
-- Create: `.rustfmt.toml`
-- Create: `.gitignore`
-
-**Step 1: 创建workspace根配置**
-
-```toml
-# Cargo.toml
-[workspace]
-members = [
-    "artemis-core",
-    "artemis-server",
-    "artemis-web",
-    "artemis-management",
-    "artemis-client",
-    "artemis",
-]
-resolver = "2"
-
-[workspace.package]
-version = "0.1.0"
-edition = "2024"
-rust-version = "1.85"
-authors = ["Artemis Contributors"]
-license = "MIT OR Apache-2.0"
-
-[workspace.dependencies]
-# 异步运行时
-tokio = { version = "1.41", features = ["full"] }
-tokio-util = { version = "0.7", features = ["codec"] }
-
-# Web框架
-axum = { version = "0.7", features = ["ws", "macros"] }
-tower = { version = "0.5", features = ["full"] }
-tower-http = { version = "0.6", features = ["cors", "trace", "compression"] }
-
-# 序列化
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-
-# 并发数据结构
-dashmap = "6.1"
-parking_lot = "0.12"
-
-# HTTP客户端
-reqwest = { version = "0.12", features = ["json"] }
-
-# WebSocket
-tokio-tungstenite = "0.24"
-
-# 数据库
-sqlx = { version = "0.8", features = ["runtime-tokio", "mysql", "chrono", "json"] }
-
-# 时间处理
-chrono = { version = "0.4", features = ["serde"] }
-
-# 限流
-governor = "0.7"
-
-# 日志和追踪
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
-
-# 配置
-config = "0.14"
-figment = { version = "0.10", features = ["toml", "env"] }
-
-# 错误处理
-thiserror = "2.0"
-anyhow = "1.0"
-
-# UUID
-uuid = { version = "1.11", features = ["v4", "serde"] }
-
-# CLI
-clap = { version = "4.5", features = ["derive"] }
-
-# 异步trait
-async-trait = "0.1"
-
-# 其他工具
-bytes = "1.8"
-futures = "0.3"
-```
-
-**Step 2: 创建工具链配置**
-
-```toml
-# rust-toolchain.toml
-[toolchain]
-channel = "1.85"
-edition = "2024"
-components = ["rustfmt", "clippy"]
-```
-
-**Step 3: 创建rustfmt配置**
-
-```toml
-# .rustfmt.toml
-edition = "2024"
-max_width = 100
-use_small_heuristics = "Max"
-```
-
-**Step 4: 更新.gitignore**
-
-```
-# .gitignore
-/target
-Cargo.lock
-**/*.rs.bk
-*.pdb
-.env
-artemis.toml
-*.log
-```
-
-**Step 5: 提交基础配置**
-
-```bash
-git add Cargo.toml rust-toolchain.toml .rustfmt.toml .gitignore
-git commit -m "chore: setup workspace structure and toolchain"
-```
-
-### Task 1.2: 创建所有crate目录
-
-**Files:**
-- Create: `artemis-core/Cargo.toml`
-- Create: `artemis-core/src/lib.rs`
-- Create: `artemis-server/Cargo.toml`
-- Create: `artemis-server/src/lib.rs`
-- Create: `artemis-web/Cargo.toml`
-- Create: `artemis-web/src/lib.rs`
-- Create: `artemis-management/Cargo.toml`
-- Create: `artemis-management/src/lib.rs`
-- Create: `artemis-client/Cargo.toml`
-- Create: `artemis-client/src/lib.rs`
-- Create: `artemis/Cargo.toml`
-- Create: `artemis/src/main.rs`
-
-**Step 1: 创建artemis-core**
-
-```bash
-mkdir -p artemis-core/src
-```
-
-```toml
-# artemis-core/Cargo.toml
-[package]
-name = "artemis-core"
-version.workspace = true
-edition.workspace = true
-
-[dependencies]
-serde = { workspace = true }
-serde_json = { workspace = true }
-chrono = { workspace = true }
-thiserror = { workspace = true }
-async-trait = { workspace = true }
-parking_lot = { workspace = true }
-uuid = { workspace = true }
-```
-
-```rust
-// artemis-core/src/lib.rs
-//! Artemis Core - 核心数据模型和trait定义
-
-pub mod model;
-pub mod traits;
-pub mod error;
-pub mod config;
-pub mod utils;
-```
-
-**Step 2: 创建artemis-server**
-
-```bash
-mkdir -p artemis-server/src
-```
-
-```toml
-# artemis-server/Cargo.toml
-[package]
-name = "artemis-server"
-version.workspace = true
-edition.workspace = true
-
-[dependencies]
-artemis-core = { path = "../artemis-core" }
-tokio = { workspace = true }
-dashmap = { workspace = true }
-parking_lot = { workspace = true }
-async-trait = { workspace = true }
-governor = { workspace = true }
-tracing = { workspace = true }
-chrono = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-reqwest = { workspace = true }
-anyhow = { workspace = true }
-```
-
-```rust
-// artemis-server/src/lib.rs
-//! Artemis Server - 业务逻辑实现
-
-pub mod registry;
-pub mod discovery;
-pub mod lease;
-pub mod cache;
-pub mod cluster;
-pub mod replication;
-pub mod ratelimiter;
-pub mod storage;
-```
-
-**Step 3: 创建artemis-web**
-
-```bash
-mkdir -p artemis-web/src
-```
-
-```toml
-# artemis-web/Cargo.toml
-[package]
-name = "artemis-web"
-version.workspace = true
-edition.workspace = true
-
-[dependencies]
-artemis-core = { path = "../artemis-core" }
-artemis-server = { path = "../artemis-server" }
-axum = { workspace = true }
-tower = { workspace = true }
-tower-http = { workspace = true }
-tokio = { workspace = true }
-tokio-util = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-tracing = { workspace = true }
-anyhow = { workspace = true }
-dashmap = { workspace = true }
-futures = { workspace = true }
-chrono = { workspace = true }
-```
-
-```rust
-// artemis-web/src/lib.rs
-//! Artemis Web - HTTP/WebSocket API层
-
-pub mod server;
-pub mod state;
-pub mod api;
-pub mod websocket;
-pub mod middleware;
-```
-
-**Step 4: 创建artemis-management**
-
-```bash
-mkdir -p artemis-management/src
-```
-
-```toml
-# artemis-management/Cargo.toml
-[package]
-name = "artemis-management"
-version.workspace = true
-edition.workspace = true
-
-[dependencies]
-artemis-core = { path = "../artemis-core" }
-artemis-server = { path = "../artemis-server" }
-sqlx = { workspace = true }
-tokio = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-chrono = { workspace = true }
-uuid = { workspace = true }
-tracing = { workspace = true }
-axum = { workspace = true }
-anyhow = { workspace = true }
-```
-
-```rust
-// artemis-management/src/lib.rs
-//! Artemis Management - 管理功能和持久化
-
-pub mod instance;
-pub mod group;
-pub mod route;
-pub mod dao;
-pub mod api;
-```
-
-**Step 5: 创建artemis-client**
-
-```bash
-mkdir -p artemis-client/src
-```
-
-```toml
-# artemis-client/Cargo.toml
-[package]
-name = "artemis-client"
-version.workspace = true
-edition.workspace = true
-description = "Artemis Service Registry Client SDK"
-license.workspace = true
-
-[dependencies]
-artemis-core = { path = "../artemis-core" }
-reqwest = { workspace = true }
-tokio = { workspace = true }
-tokio-tungstenite = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-async-trait = { workspace = true }
-parking_lot = { workspace = true }
-tracing = { workspace = true }
-futures = { workspace = true }
-```
-
-```rust
-// artemis-client/src/lib.rs
-//! Artemis Client SDK - 客户端SDK
-
-pub mod config;
-pub mod registry;
-pub mod discovery;
-pub mod websocket;
-pub mod error;
-```
-
-**Step 6: 创建artemis CLI**
-
-```bash
-mkdir -p artemis/src
-```
-
-```toml
-# artemis/Cargo.toml
-[package]
-name = "artemis"
-version.workspace = true
-edition.workspace = true
-description = "Artemis Service Registry - CLI and Server"
-
-[[bin]]
-name = "artemis"
-path = "src/main.rs"
-
-[dependencies]
-artemis-core = { path = "../artemis-core" }
-artemis-server = { path = "../artemis-server" }
-artemis-web = { path = "../artemis-web" }
-artemis-management = { path = "../artemis-management" }
-clap = { workspace = true }
-tokio = { workspace = true }
-figment = { workspace = true }
-toml = "0.8"
-tracing = { workspace = true }
-tracing-subscriber = { workspace = true }
-reqwest = { workspace = true }
-serde_json = { workspace = true }
-sqlx = { workspace = true }
-anyhow = { workspace = true }
-```
-
-```rust
-// artemis/src/main.rs
-//! Artemis CLI - 可执行程序入口
-
-fn main() {
-    println!("Artemis Service Registry");
-}
-```
-
-**Step 7: 验证workspace编译**
-
-```bash
-cargo check --workspace
-```
-
-Expected: 成功编译所有crate
-
-**Step 8: 提交crate结构**
-
-```bash
-git add .
-git commit -m "chore: create all crate directories and basic structure"
-```
+👉 **详细计划请查看: [phases/README.md](phases/README.md)**
 
 ---
 
-## 阶段2: artemis-core实现
+## 🎯 实施路线图
 
-### Task 2.1: 实现核心数据模型 - Instance
+### MVP核心功能（P0 必须完成）
 
-**Files:**
-- Create: `artemis-core/src/model/mod.rs`
-- Create: `artemis-core/src/model/instance.rs`
+**Phase 1-8: 基础功能** - 37个任务，10-15小时
 
-**Step 1: 创建model模块**
+这8个阶段提供完整可用的服务注册中心：
+- ✅ 项目基础设施和所有crate初始化
+- ✅ 核心数据模型（Instance, Service, Lease等）
+- ✅ 注册服务和发现服务完整实现
+- ✅ HTTP API（与Java版本兼容）
+- ✅ 租约管理、版本化缓存、限流
+- ✅ DiscoveryFilter机制和增量差异计算
+- ✅ 管理功能基础和数据库持久化
+- ✅ 客户端SDK（注册、发现、自动心跳）
+- ✅ CLI工具（server/service/instance/config命令）
+- ✅ 集成测试、Docker部署、Prometheus指标
 
-```rust
-// artemis-core/src/model/mod.rs
-pub mod instance;
-pub mod service;
-pub mod lease;
-pub mod route;
-pub mod change;
-pub mod request;
+**完成后可投入生产使用。**
 
-pub use instance::{Instance, InstanceKey, InstanceStatus};
-pub use service::{Service, ServiceGroup};
-pub use lease::Lease;
-pub use route::{RouteRule, RouteStrategy};
-pub use change::{InstanceChange, ChangeType};
-pub use request::*;
-```
+---
 
-**Step 2: 实现Instance模型**
+### 生产增强功能（P1 强烈建议）
 
-```rust
-// artemis-core/src/model/instance.rs
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+**Phase 9: WebSocket实时推送** - 4个任务，2-3小时 🔥
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct Instance {
-    pub region_id: String,
-    pub zone_id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub group_id: Option<String>,
-    pub service_id: String,
-    pub instance_id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub machine_name: Option<String>,
-    pub ip: String,
-    pub port: u16,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub protocol: Option<String>,
-    pub url: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub health_check_url: Option<String>,
-    pub status: InstanceStatus,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub metadata: Option<HashMap<String, String>>,
-}
+实现WebSocket功能，支持服务变更实时通知：
+- SessionManager会话管理
+- WebSocket Handler和路由
+- InstanceChangeManager变更推送
+- WebSocketClient客户端实现
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "lowercase")]
-pub enum InstanceStatus {
-    Starting,
-    Up,
-    Down,
-    Unhealthy,
-    Unknown,
-}
+**Phase 12: 性能优化和OpenTelemetry** - 5个任务，4-5小时 🔥
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
-pub struct InstanceKey {
-    pub region_id: String,
-    pub zone_id: String,
-    pub service_id: String,
-    pub group_id: String,
-    pub instance_id: String,
-}
+达到生产级性能标准：
+- 深度性能基准测试和优化
+- 热路径优化（心跳、发现）
+- OpenTelemetry分布式追踪集成
+- 内存和并发优化
+- 验证P99 < 10ms目标
 
-impl Instance {
-    pub fn key(&self) -> InstanceKey {
-        InstanceKey {
-            region_id: self.region_id.clone(),
-            zone_id: self.zone_id.clone(),
-            service_id: self.service_id.to_lowercase(),
-            group_id: self.group_id.clone().unwrap_or_default(),
-            instance_id: self.instance_id.clone(),
-        }
-    }
-}
+---
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+### 企业级高级功能（P2 可选）
 
-    #[test]
-    fn test_instance_key_generation() {
-        let instance = Instance {
-            region_id: "us-east".to_string(),
-            zone_id: "zone-1".to_string(),
-            group_id: Some("group-a".to_string()),
-            service_id: "MyService".to_string(),
-            instance_id: "inst-1".to_string(),
-            machine_name: None,
-            ip: "192.168.1.1".to_string(),
-            port: 8080,
-            protocol: Some("http".to_string()),
-            url: "http://192.168.1.1:8080".to_string(),
-            health_check_url: None,
-            status: InstanceStatus::Up,
-            metadata: None,
-        };
+**Phase 10: 集群和数据复制** - 5个任务，4-5小时
 
-        let key = instance.key();
-        assert_eq!(key.service_id, "myservice"); // 转小写
-        assert_eq!(key.group_id, "group-a");
-    }
+多节点集群和高可用：
+- ClusterManager集群节点管理
+- ReplicationManager数据复制
+- 一致性协议
+- 集群配置和API
+- 集群测试
 
-    #[test]
-    fn test_instance_serde() {
-        let instance = Instance {
-            region_id: "us-east".to_string(),
-            zone_id: "zone-1".to_string(),
-            group_id: None,
-            service_id: "test-service".to_string(),
-            instance_id: "inst-1".to_string(),
-            machine_name: None,
-            ip: "192.168.1.1".to_string(),
-            port: 8080,
-            protocol: None,
-            url: "http://192.168.1.1:8080".to_string(),
-            health_check_url: None,
-            status: InstanceStatus::Up,
-            metadata: None,
-        };
+**Phase 11: 高级管理功能** - 4个任务，3-4小时
 
-        let json = serde_json::to_string(&instance).unwrap();
-        let deserialized: Instance = serde_json::from_str(&json).unwrap();
-        assert_eq!(instance, deserialized);
-    }
-}
-```
+服务分组和路由规则：
+- GroupManager和GroupDao
+- RouteManager和RouteDao
+- GroupDiscoveryFilter分组过滤
+- 管理API完整实现
 
-**Step 3: 运行测试**
+---
+
+## 📊 统计信息
+
+| 指标 | MVP版本 | 完整版本 |
+|------|---------|----------|
+| **阶段数** | 8个 | 12个 |
+| **任务数** | 37个 | 52个 |
+| **预计时间** | 10-15小时 | 25-35小时 |
+| **优先级** | P0（必须） | P0-P2 |
+
+---
+
+## 🚀 执行指南
+
+### 使用executing-plans技能
 
 ```bash
-cargo test -p artemis-core
+# 1. 读取阶段1计划
+Read docs/plans/phases/phase1-infrastructure.md
+
+# 2. 执行阶段1的所有Task
+# 默认每批执行3个Task，完成后报告
+
+# 3. 验证
+cargo check --workspace
+cargo test --workspace
+
+# 4. 继续下一阶段
 ```
 
-Expected: 2 tests passed
+### 执行顺序
 
-**Step 4: 提交**
+**必须按阶段顺序执行:** Phase 1 → Phase 2 → ... → Phase 12
 
-```bash
-git add artemis-core/src/model/
-git commit -m "feat(core): implement Instance model with tests"
+每个阶段依赖前面阶段的完成。
+
+### 推荐执行策略
+
+**第一轮 - MVP版本（2-3周）:**
+- Phase 1-8: 核心功能
+- **产出:** 可用的服务注册中心
+
+**第二轮 - 生产增强（1周）:**
+- Phase 9: WebSocket实时推送
+- Phase 12: 性能优化
+- **产出:** 生产级系统
+
+**第三轮 - 企业级（按需）:**
+- Phase 10: 集群
+- Phase 11: 高级管理
+- **产出:** 企业级功能
+
+---
+
+## 🔗 相关文档
+
+- **详细执行指南:** [phases/README.md](phases/README.md) - 包含所有阶段的详细信息
+- **产品规格说明:** [artemis-rust-rewrite-specification.md](../artemis-rust-rewrite-specification.md)
+- **详细设计文档:** [2026-02-13-artemis-rust-design.md](2026-02-13-artemis-rust-design.md)
+- **Java实现参考:** `../../artemis-java/` (只读参考)
+
+---
+
+## 📝 关键特性
+
+### 已完整覆盖的功能
+
+✅ **核心功能**
+- 服务注册/发现
+- 租约管理和自动过期
+- 版本化缓存和增量同步
+- DiscoveryFilter机制
+- 限流保护
+- 实例拉入/拉出管理
+
+✅ **API兼容性**
+- REST API（兼容Java版本.json后缀）
+- WebSocket实时推送
+- 多种路径格式支持
+
+✅ **客户端SDK**
+- 注册客户端（自动心跳）
+- 发现客户端（本地缓存）
+- WebSocket客户端
+
+✅ **管理和运维**
+- CLI工具（server/service/instance/config）
+- 配置转换工具（Java→Rust）
+- MySQL持久化
+- ManagementDiscoveryFilter
+
+✅ **可观测性**
+- Prometheus指标
+- 健康检查
+- OpenTelemetry追踪（Phase 12）
+
+✅ **部署**
+- Docker支持
+- 优雅关闭
+- 环境变量配置
+
+### 高级功能（Phase 10-11）
+
+⭐ **集群功能**
+- 多节点集群
+- 数据复制
+- 一致性保证
+
+⭐ **高级管理**
+- 服务分组
+- 路由规则
+- 权重路由
+
+---
+
+## ⚡ 性能目标
+
+| 指标 | Java版本 | Rust目标 | Phase |
+|------|----------|----------|-------|
+| **P99延迟** | 50-200ms | < 10ms | Phase 12 |
+| **QPS** | ~10k | > 100k | Phase 12 |
+| **GC停顿** | 100ms+ | 0ms | 天然支持 |
+| **内存占用** | - | -50% | Phase 12 |
+| **实例容量** | - | 100k+ | Phase 12 |
+
+---
+
+## 📌 重要说明
+
+1. **MVP完整性:** Phase 1-8提供完整可用的核心功能，可直接投入生产
+2. **生产建议:** 强烈建议在生产部署前完成Phase 9和Phase 12
+3. **灵活性:** Phase 10-11可根据实际业务需求选择性实现
+4. **参考实现:** 所有设计都参考了Java版本，确保功能对等
+5. **测试覆盖:** 每个Phase都包含完整的测试要求
+
+---
+
+## 🎯 开始实施
+
+准备好后，请使用 `superpowers:executing-plans` 技能开始执行：
+
+```
+读取 docs/plans/phases/phase1-infrastructure.md 开始Phase 1
 ```
 
-### Task 2.2: 实现Service、Lease、RouteRule模型
-
-**Files:**
-- Create: `artemis-core/src/model/service.rs`
-- Create: `artemis-core/src/model/lease.rs`
-- Create: `artemis-core/src/model/route.rs`
-- Create: `artemis-core/src/model/change.rs`
-
-**Step 1: 实现Service模型**
-
-```rust
-// artemis-core/src/model/service.rs
-use super::instance::Instance;
-use super::route::RouteRule;
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Service {
-    pub service_id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub metadata: Option<HashMap<String, String>>,
-    pub instances: Vec<Instance>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub logic_instances: Option<Vec<Instance>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub route_rules: Option<Vec<RouteRule>>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ServiceGroup {
-    pub group_key: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub weight: Option<u32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub instance_ids: Option<Vec<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub instances: Option<Vec<Instance>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub metadata: Option<HashMap<String, String>>,
-}
-```
-
-**Step 2: 实现Lease模型**
-
-```rust
-// artemis-core/src/model/lease.rs
-use super::instance::InstanceKey;
-use parking_lot::Mutex;
-use std::sync::Arc;
-use std::time::{Duration, Instant};
-
-#[derive(Debug)]
-pub struct Lease {
-    key: InstanceKey,
-    creation_time: Instant,
-    renewal_time: Arc<Mutex<Instant>>,
-    eviction_time: Arc<Mutex<Option<Instant>>>,
-    ttl: Duration,
-}
-
-impl Lease {
-    pub fn new(key: InstanceKey, ttl: Duration) -> Self {
-        let now = Instant::now();
-        Self {
-            key,
-            creation_time: now,
-            renewal_time: Arc::new(Mutex::new(now)),
-            eviction_time: Arc::new(Mutex::new(None)),
-            ttl,
-        }
-    }
-
-    pub fn renew(&self) {
-        *self.renewal_time.lock() = Instant::now();
-    }
-
-    pub fn is_expired(&self) -> bool {
-        self.renewal_time.lock().elapsed() > self.ttl
-    }
-
-    pub fn mark_evicted(&self) {
-        *self.eviction_time.lock() = Some(Instant::now());
-    }
-
-    pub fn key(&self) -> &InstanceKey {
-        &self.key
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::model::instance::InstanceKey;
-    use std::thread::sleep;
-
-    #[test]
-    fn test_lease_expiration() {
-        let key = InstanceKey {
-            region_id: "test".to_string(),
-            zone_id: "zone".to_string(),
-            service_id: "service".to_string(),
-            group_id: String::new(),
-            instance_id: "inst".to_string(),
-        };
-
-        let lease = Lease::new(key, Duration::from_millis(100));
-
-        assert!(!lease.is_expired());
-        sleep(Duration::from_millis(150));
-        assert!(lease.is_expired());
-    }
-
-    #[test]
-    fn test_lease_renewal() {
-        let key = InstanceKey {
-            region_id: "test".to_string(),
-            zone_id: "zone".to_string(),
-            service_id: "service".to_string(),
-            group_id: String::new(),
-            instance_id: "inst".to_string(),
-        };
-
-        let lease = Lease::new(key, Duration::from_millis(100));
-
-        sleep(Duration::from_millis(60));
-        lease.renew();
-        sleep(Duration::from_millis(60));
-
-        assert!(!lease.is_expired());
-    }
-}
-```
-
-**Step 3: 实现RouteRule模型**
-
-```rust
-// artemis-core/src/model/route.rs
-use super::service::ServiceGroup;
-use serde::{Deserialize, Serialize};
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RouteRule {
-    pub route_id: String,
-    pub strategy: RouteStrategy,
-    pub groups: Vec<ServiceGroup>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum RouteStrategy {
-    WeightedRoundRobin,
-    CloseByVisit,
-}
-```
-
-**Step 4: 实现InstanceChange模型**
-
-```rust
-// artemis-core/src/model/change.rs
-use super::instance::Instance;
-use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct InstanceChange {
-    pub instance: Instance,
-    pub change_type: ChangeType,
-    pub change_time: DateTime<Utc>,
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "lowercase")]
-pub enum ChangeType {
-    New,
-    Delete,
-    Change,
-    Reload,
-}
-```
-
-**Step 5: 运行测试**
-
-```bash
-cargo test -p artemis-core
-```
-
-Expected: All tests pass
-
-**Step 6: 提交**
-
-```bash
-git add artemis-core/src/model/
-git commit -m "feat(core): implement Service, Lease, RouteRule, InstanceChange models"
-```
-
-### Task 2.3: 实现Request/Response模型
-
-**Files:**
-- Create: `artemis-core/src/model/request.rs`
-
-**Step 1: 实现请求响应模型**
-
-```rust
-// artemis-core/src/model/request.rs
-use super::instance::{Instance, InstanceKey};
-use super::service::Service;
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-
-// ===== 注册 =====
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct RegisterRequest {
-    pub instances: Vec<Instance>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct RegisterResponse {
-    pub response_status: ResponseStatus,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub failed_instances: Option<Vec<Instance>>,
-}
-
-// ===== 心跳 =====
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct HeartbeatRequest {
-    pub instance_keys: Vec<InstanceKey>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct HeartbeatResponse {
-    pub response_status: ResponseStatus,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub failed_instance_keys: Option<Vec<InstanceKey>>,
-}
-
-// ===== 注销 =====
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct UnregisterRequest {
-    pub instance_keys: Vec<InstanceKey>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct UnregisterResponse {
-    pub response_status: ResponseStatus,
-}
-
-// ===== 发现 =====
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct GetServiceRequest {
-    pub discovery_config: DiscoveryConfig,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct DiscoveryConfig {
-    pub service_id: String,
-    pub region_id: String,
-    pub zone_id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub discovery_data: Option<HashMap<String, String>>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct GetServiceResponse {
-    pub response_status: ResponseStatus,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub service: Option<Service>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct GetServicesRequest {
-    pub region_id: String,
-    pub zone_id: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct GetServicesResponse {
-    pub response_status: ResponseStatus,
-    pub services: Vec<Service>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct GetServicesDeltaRequest {
-    pub region_id: String,
-    pub zone_id: String,
-    pub since_timestamp: i64,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct GetServicesDeltaResponse {
-    pub response_status: ResponseStatus,
-    pub services: Vec<Service>,
-    pub current_timestamp: i64,
-}
-
-// ===== 通用响应状态 =====
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct ResponseStatus {
-    pub error_code: ErrorCode,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub error_message: Option<String>,
-}
-
-impl ResponseStatus {
-    pub fn success() -> Self {
-        Self {
-            error_code: ErrorCode::Success,
-            error_message: None,
-        }
-    }
-
-    pub fn error(code: ErrorCode, message: impl Into<String>) -> Self {
-        Self {
-            error_code: code,
-            error_message: Some(message.into()),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "kebab-case")]
-pub enum ErrorCode {
-    Success,
-    BadRequest,
-    ServiceUnavailable,
-    RateLimited,
-    InternalError,
-}
-```
-
-**Step 2: 提交**
-
-```bash
-git add artemis-core/src/model/request.rs
-git commit -m "feat(core): implement Request/Response models"
-```
-
-由于篇幅限制，我将继续创建完整的实施计划...
-
-继续实施计划内容...
+所有阶段的详细任务、代码示例、验证步骤都在 `phases/` 目录中。

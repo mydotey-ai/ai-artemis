@@ -1,0 +1,25 @@
+[package]
+name = "artemis-server"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+artemis-core = { path = "../artemis-core" }
+tokio = { workspace = true }
+dashmap = { workspace = true }
+parking_lot = { workspace = true }
+async-trait = { workspace = true }
+governor = { workspace = true }
+tracing = { workspace = true }
+chrono = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+reqwest = { workspace = true }
+anyhow = { workspace = true }
+
+[dev-dependencies]
+criterion = { workspace = true }
+
+[[bench]]
+name = "performance"
+harness = false

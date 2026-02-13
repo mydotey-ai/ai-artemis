@@ -25,3 +25,9 @@ artemis-java/
 
 # Git worktrees
 .worktrees/
+
+# Artemis-specific
+Cargo.lock
+.env
+artemis.toml
+*.log

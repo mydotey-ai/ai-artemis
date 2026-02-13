@@ -1,0 +1,23 @@
+[package]
+name = "artemis-client"
+version.workspace = true
+edition.workspace = true
+description = "Artemis Service Registry Client SDK"
+license.workspace = true
+
+[dependencies]
+artemis-core = { path = "../artemis-core" }
+reqwest = { workspace = true }
+tokio = { workspace = true }
+tokio-tungstenite = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+async-trait = { workspace = true }
+parking_lot = { workspace = true }
+tracing = { workspace = true }
+futures = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+anyhow = { workspace = true }
+tracing-subscriber = { workspace = true }
