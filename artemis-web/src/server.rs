@@ -9,6 +9,7 @@ use tower_http::cors::CorsLayer;
 pub async fn run_server(state: AppState, addr: SocketAddr) -> anyhow::Result<()> {
     let app = Router::new()
         .route("/health", get(|| async { "OK" }))
+        .route("/metrics", get(crate::api::metrics::metrics))
         .route("/api/registry/register", post(crate::api::registry::register))
         .route("/api/registry/register.json", post(crate::api::registry::register))
         .route("/api/registry/heartbeat", post(crate::api::registry::heartbeat))
