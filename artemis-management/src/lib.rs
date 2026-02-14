@@ -5,6 +5,8 @@ pub mod route;
 pub mod zone;
 pub mod canary;
 pub mod audit;
+pub mod db;
+pub mod dao;
 
 pub use group::GroupManager;
 pub use instance::InstanceManager;
@@ -12,3 +14,4 @@ pub use route::RouteManager;
 pub use zone::ZoneManager;
 pub use canary::CanaryManager;
 pub use audit::AuditManager;
+pub use db::Database;
