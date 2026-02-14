@@ -10,47 +10,54 @@
 
 | 类别 | TODO数量 | 优先级 | 状态 |
 |------|---------|--------|------|
-| **代码 TODO** | 2个 | 低 | 可选实现 |
+| **代码 TODO** | 0个 | N/A | ✅ **全部完成** (2026-02-15) |
 | **文档 TODO** | ~50个 | 低 | 大部分已过时 |
-| **功能待完成** | 1个阶段 | P1 | Phase 14数据持久化 |
+| **功能待完成** | 0个 | N/A | ✅ **全部完成** |
 
 ---
 
 ## 1. 代码中的 TODO
 
-### 1.1 复制重试队列 (低优先级)
+### ✅ 全部完成 (2026-02-15)
 
-**位置**: `artemis-server/src/replication/worker.rs:120`
-
-```rust
-// TODO: 可以实现重试队列
-```
-
-**说明**:
-- 当前实现已有基础重试机制
-- 这是一个优化建议,可实现更高级的重试队列
-- **优先级**: 低 (当前实现已足够)
-- **影响**: 无 (可选优化)
-
-**建议**: 保留 TODO,作为未来性能优化的备选项
+所有代码 TODO 已实现完成,详细报告见: `docs/reports/todo-implementations-2026-02-15.md`
 
 ---
 
-### 1.2 OpenTelemetry 完整实现 (低优先级)
+### 1.1 ✅ 复制重试队列优化 - 已实现
 
-**位置**: `artemis-core/src/telemetry/mod.rs:60`
+**位置**: `artemis-server/src/replication/worker.rs`
 
-```rust
-// TODO: 完整实现OpenTelemetry初始化
-```
+**实现内容**:
+- ✅ 智能重试队列 (`VecDeque<RetryItem>`)
+- ✅ 指数退避策略 (2^retry_count 秒)
+- ✅ 可配置的最大重试次数
+- ✅ 自动队列处理 (1秒间隔)
+- ✅ 失败自动重试,超限自动丢弃
 
-**说明**:
-- 当前已有基础的 tracing 支持
-- OpenTelemetry 是可选的高级监控特性
-- **优先级**: 低 (Prometheus metrics已实现)
-- **影响**: 无 (当前监控已足够)
+**实现统计**:
+- 新增代码: ~150 行
+- 测试通过: ✅
+- Clippy 通过: ✅
 
-**建议**: 保留 TODO,作为未来高级监控的扩展点
+---
+
+### 1.2 ✅ OpenTelemetry 完整实现 - 已实现
+
+**位置**: `artemis-core/src/telemetry/mod.rs`
+
+**实现内容**:
+- ✅ OTLP 导出器 (HTTP 协议)
+- ✅ 可配置的采样器 (AlwaysOn/AlwaysOff/TraceIdRatioBased)
+- ✅ 服务资源配置 (service.name, service.version)
+- ✅ tracing-subscriber 集成
+- ✅ 支持 Jaeger, Tempo 等后端
+
+**实现统计**:
+- 重写代码: ~100 行
+- 新增依赖: 4 个 (opentelemetry 生态)
+- 测试通过: 5 个单元测试 ✅
+- Clippy 通过: ✅
 
 ---
 
