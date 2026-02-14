@@ -51,7 +51,7 @@ impl SessionManager {
     pub fn subscribe(&self, session_id: SessionId, service_id: String) {
         self.subscriptions
             .entry(service_id.clone())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(session_id.clone());
 
         tracing::info!("Session {} subscribed to service {}", session_id, service_id);

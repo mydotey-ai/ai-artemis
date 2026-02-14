@@ -68,7 +68,7 @@ async fn handle_socket(socket: WebSocket, state: AppState) {
                     };
 
                     if let Ok(json) = serde_json::to_string(&error_msg) {
-                        let _ = sender.lock().await.send(Message::Text(json)).await;
+                        let _ = sender.lock().await.send(Message::Text(json.into())).await;
                     }
                 }
             }
@@ -104,7 +104,7 @@ async fn handle_text_message(
 
             let response = ServerMessage::Subscribed { service_id };
             let json = serde_json::to_string(&response)?;
-            sender.lock().await.send(Message::Text(json)).await?;
+            sender.lock().await.send(Message::Text(json.into())).await?;
         }
 
         ClientMessage::Unsubscribe { service_id } => {
@@ -112,13 +112,13 @@ async fn handle_text_message(
 
             let response = ServerMessage::Unsubscribed { service_id };
             let json = serde_json::to_string(&response)?;
-            sender.lock().await.send(Message::Text(json)).await?;
+            sender.lock().await.send(Message::Text(json.into())).await?;
         }
 
         ClientMessage::Ping => {
             let response = ServerMessage::Pong;
             let json = serde_json::to_string(&response)?;
-            sender.lock().await.send(Message::Text(json)).await?;
+            sender.lock().await.send(Message::Text(json.into())).await?;
         }
     }
 
