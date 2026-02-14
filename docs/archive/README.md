@@ -22,12 +22,12 @@
 
 | 文档 | 描述 | 归档时间 |
 |------|------|----------|
-| [COMPLETE_IMPLEMENTATION_SUMMARY.md](COMPLETE_IMPLEMENTATION_SUMMARY.md) | Phase 1-8 MVP 完整实施总结 | 2026-02-14 |
-| [FINAL_SUMMARY.md](FINAL_SUMMARY.md) | Phase 1-8 最终总结 | 2026-02-14 |
-| [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md) | 集群复制实施过程总结 | 2026-02-14 |
-| [PHASE_9_12_SUMMARY.md](PHASE_9_12_SUMMARY.md) | Phase 9-12 高级功能实施总结 | 2026-02-14 |
-| [DOCUMENTATION_UPDATE_2026-02-14.md](DOCUMENTATION_UPDATE_2026-02-14.md) | 文档更新记录 | 2026-02-14 |
-| [DOCS_UPDATE_SUMMARY.txt](DOCS_UPDATE_SUMMARY.txt) | 文档更新摘要 | 2026-02-14 |
+| [complete-implementation-summary.md](complete-implementation-summary.md) | Phase 1-8 MVP 完整实施总结 | 2026-02-14 |
+| [final-summary.md](final-summary.md) | Phase 1-8 最终总结 | 2026-02-14 |
+| [implementation-summary.md](implementation-summary.md) | 集群复制实施过程总结 | 2026-02-14 |
+| [phase-9-12-summary.md](phase-9-12-summary.md) | Phase 9-12 高级功能实施总结 | 2026-02-14 |
+| [documentation-update.md](documentation-update.md) | 文档更新记录 | 2026-02-14 |
+| [DOCS_UPDATE_SUMMARY.txt](DOCS_UPDATE_SUMMARY.txt) | 文档更新摘要 (文本文件) | 2026-02-14 |
 
 ---
 

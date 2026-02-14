@@ -25,13 +25,12 @@ docs/
 ├── reports/                                    # 状态和完成报告
 │   ├── README.md                               # 报告索引
 │   ├── project-completion.md                   # 项目完成总报告
-│   ├── project-status.md                       # 项目状态快照
 │   ├── implementation-status.md                # 实施状态跟踪
 │   ├── features/                               # 功能实现报告
 │   │   ├── cluster-replication.md
 │   │   ├── instance-management.md
 │   │   ├── group-routing.md
-│   │   └── ...
+│   │   └── feature-comparison.md
 │   └── performance/                            # 性能报告
 │       ├── performance-report.md
 │       ├── optimizations.md
@@ -39,7 +38,7 @@ docs/
 │
 └── archive/                                    # 归档的历史文档
     ├── README.md
-    └── ... (历史总结文档)
+    └── ... (5 个历史总结文档)
 ```
 
 ---
@@ -70,7 +69,6 @@ docs/
 
 **项目状态**:
 - [项目完成报告](reports/project-completion.md) - 完整的项目成果总结
-- [项目状态快照](reports/project-status.md) - 当前项目状态
 - [实施状态跟踪](reports/implementation-status.md) - 各 Phase 完成状态
 
 **功能实现报告**:

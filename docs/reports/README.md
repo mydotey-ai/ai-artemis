@@ -9,7 +9,6 @@
 | 文档 | 描述 | 更新时间 |
 |------|------|----------|
 | [项目完成报告](project-completion.md) | 完整的项目完成总结、统计数据和成果 | 2026-02-14 |
-| [项目状态](project-status.md) | 当前项目状态快照 | 2026-02-14 |
 | [实施状态](implementation-status.md) | 各 Phase 实施进度和状态跟踪 | 2026-02-14 |
 
 ---
@@ -20,13 +19,11 @@
 
 | 文档 | 描述 | 更新时间 |
 |------|------|----------|
-| [集群复制](features/cluster-replication.md) | 集群数据复制功能的详细实现文档 (42KB) | 2026-02-14 |
-| [实例管理](features/instance-management.md) | 实例拉入拉出功能的实现报告 | 2026-02-14 |
-| [实例管理验证](features/instance-management-verification.md) | 实例管理功能的测试验证报告 | 2026-02-14 |
+| [集群复制](features/cluster-replication.md) | 集群数据复制功能的详细实现文档 | 2026-02-14 |
+| [实例管理](features/instance-management.md) | 实例拉入拉出功能的完整实现报告 | 2026-02-14 |
 | [分组路由](features/group-routing.md) | 分组路由功能的完整实现报告 (Phase 13) | 2026-02-14 |
 | [Phase 12-13 总结](features/phase-12-13-summary.md) | 实例管理和分组路由功能的总结 | 2026-02-14 |
 | [功能对比](features/feature-comparison.md) | Rust vs Java 版本的详细功能对比 | 2026-02-14 |
-| [功能差距分析](features/feature-gap-analysis.md) | 功能差距分析和未来规划 | 2026-02-14 |
 
 ---
 
