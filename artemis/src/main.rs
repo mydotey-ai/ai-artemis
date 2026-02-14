@@ -142,10 +142,11 @@ async fn start_server(config_path: Option<String>, addr_override: Option<String>
         (None, None)
     };
 
-    // 5. Create services (with replication support)
+    // 5. Create services (with cache and replication support)
     let registry_service = Arc::new(RegistryServiceImpl::new(
         repository.clone(),
         lease_manager.clone(),
+        cache.clone(),
         change_manager,
         replication_manager.clone(),
     ));

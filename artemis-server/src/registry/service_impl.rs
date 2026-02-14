@@ -1,4 +1,5 @@
 use super::repository::RegistryRepository;
+use crate::cache::VersionedCacheManager;
 use crate::change::InstanceChangeManager;
 use crate::lease::LeaseManager;
 use crate::replication::ReplicationManager;
@@ -19,6 +20,7 @@ use tracing::{info, warn};
 pub struct RegistryServiceImpl {
     repository: RegistryRepository,
     lease_manager: Arc<LeaseManager>,
+    cache: Arc<VersionedCacheManager>,
     change_manager: Arc<InstanceChangeManager>,
     replication_manager: Option<Arc<ReplicationManager>>,
 }
@@ -27,14 +29,36 @@ impl RegistryServiceImpl {
     pub fn new(
         repository: RegistryRepository,
         lease_manager: Arc<LeaseManager>,
+        cache: Arc<VersionedCacheManager>,
         change_manager: Arc<InstanceChangeManager>,
         replication_manager: Option<Arc<ReplicationManager>>,
     ) -> Self {
         Self {
             repository,
             lease_manager,
+            cache,
             change_manager,
             replication_manager,
+        }
+    }
+
+    /// 重建服务并更新缓存
+    fn rebuild_and_cache_service(&self, service_id: &str) {
+        let instances = self.repository.get_instances_by_service(service_id);
+
+        if instances.is_empty() {
+            // 没有实例,删除缓存
+            self.cache.remove_service(service_id);
+        } else {
+            // 有实例,更新缓存
+            let service = artemis_core::model::Service {
+                service_id: service_id.to_string(),
+                metadata: None,
+                instances,
+                logic_instances: None,
+                route_rules: None,
+            };
+            self.cache.update_service(service);
         }
     }
 }
@@ -48,11 +72,16 @@ impl RegistryService for RegistryServiceImpl {
             let key = instance.key();
             info!("Registering instance: {:?}", key);
 
+            let service_id = instance.service_id.clone();
+
             // 注册实例
             self.repository.register(instance.clone());
 
             // 创建租约
             self.lease_manager.create_lease(key);
+
+            // 更新缓存
+            self.rebuild_and_cache_service(&service_id);
 
             // 发布变更事件
             self.change_manager.publish_register(&instance);
@@ -103,9 +132,14 @@ impl RegistryService for RegistryServiceImpl {
         for key in request.instance_keys {
             info!("Unregistering instance: {:?}", key);
 
+            let service_id = key.service_id.clone();
+
             // 获取实例信息用于发布事件
             if let Some(instance) = self.repository.remove(&key) {
                 self.lease_manager.remove_lease(&key);
+
+                // 更新缓存
+                self.rebuild_and_cache_service(&service_id);
 
                 // 发布变更事件
                 self.change_manager.publish_unregister(&key, &instance);
@@ -129,9 +163,14 @@ impl RegistryService for RegistryServiceImpl {
             let key = instance.key();
             info!("Registering instance from replication: {:?}", key);
 
+            let service_id = instance.service_id.clone();
+
             // 只做本地处理,不触发复制
             self.repository.register(instance.clone());
             self.lease_manager.create_lease(key);
+
+            // 更新缓存
+            self.rebuild_and_cache_service(&service_id);
 
             // 发布变更事件(用于 WebSocket 推送等)
             self.change_manager.publish_register(&instance);
@@ -171,8 +210,14 @@ impl RegistryService for RegistryServiceImpl {
         for key in request.instance_keys {
             info!("Unregistering instance from replication: {:?}", key);
 
+            let service_id = key.service_id.clone();
+
             if let Some(instance) = self.repository.remove(&key) {
                 self.lease_manager.remove_lease(&key);
+
+                // 更新缓存
+                self.rebuild_and_cache_service(&service_id);
+
                 self.change_manager.publish_unregister(&key, &instance);
             }
         }
@@ -219,8 +264,9 @@ mod tests {
     async fn test_register() {
         let repo = RegistryRepository::new();
         let lease_mgr = Arc::new(LeaseManager::new(Duration::from_secs(30)));
+        let cache = Arc::new(crate::cache::VersionedCacheManager::new());
         let change_mgr = Arc::new(InstanceChangeManager::new());
-        let service = RegistryServiceImpl::new(repo.clone(), lease_mgr, change_mgr, None);
+        let service = RegistryServiceImpl::new(repo.clone(), lease_mgr, cache, change_mgr, None);
 
         let request = RegisterRequest { instances: vec![create_test_instance()] };
 
@@ -233,8 +279,9 @@ mod tests {
     async fn test_heartbeat() {
         let repo = RegistryRepository::new();
         let lease_mgr = Arc::new(LeaseManager::new(Duration::from_secs(30)));
+        let cache = Arc::new(crate::cache::VersionedCacheManager::new());
         let change_mgr = Arc::new(InstanceChangeManager::new());
-        let service = RegistryServiceImpl::new(repo, lease_mgr, change_mgr, None);
+        let service = RegistryServiceImpl::new(repo, lease_mgr, cache, change_mgr, None);
 
         let instance = create_test_instance();
         let key = instance.key();
@@ -253,8 +300,9 @@ mod tests {
     async fn test_unregister() {
         let repo = RegistryRepository::new();
         let lease_mgr = Arc::new(LeaseManager::new(Duration::from_secs(30)));
+        let cache = Arc::new(crate::cache::VersionedCacheManager::new());
         let change_mgr = Arc::new(InstanceChangeManager::new());
-        let service = RegistryServiceImpl::new(repo.clone(), lease_mgr, change_mgr, None);
+        let service = RegistryServiceImpl::new(repo.clone(), lease_mgr, cache, change_mgr, None);
 
         let instance = create_test_instance();
         let key = instance.key();
