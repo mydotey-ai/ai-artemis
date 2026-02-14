@@ -1,9 +1,9 @@
 use artemis_core::config::ArtemisConfig;
-use artemis_management::InstanceManager;
+use artemis_management::{GroupManager, InstanceManager, RouteManager};
 use artemis_server::{
     cache::VersionedCacheManager, cluster::ClusterManager, discovery::DiscoveryServiceImpl,
     lease::LeaseManager, registry::RegistryRepository, replication::ReplicationManager,
-    RegistryServiceImpl,
+    routing::RouteEngine, RegistryServiceImpl,
 };
 use artemis_web::{server::run_server, state::AppState};
 use clap::{Parser, Subcommand};
@@ -155,16 +155,29 @@ async fn start_server(config_path: Option<String>, addr_override: Option<String>
     // 6. Initialize management components
     let instance_manager = Arc::new(InstanceManager::new());
 
-    // 7. Create discovery service with management filter
+    // 7. Initialize routing components
+    let group_manager = Arc::new(GroupManager::new());
+    let route_manager = Arc::new(RouteManager::new());
+    let route_engine = Arc::new(RouteEngine::new());
+
+    // 8. Create discovery service with filters
     let mut discovery_service = DiscoveryServiceImpl::new(repository, cache.clone());
+
+    // Add management filter (pull-in/pull-out)
     discovery_service.add_filter(Arc::new(
         artemis_server::discovery::ManagementDiscoveryFilter::new(instance_manager.clone()),
     ));
+
+    // Add group routing filter
+    discovery_service.add_filter(Arc::new(
+        artemis_server::discovery::GroupRoutingFilter::new(route_manager.clone(), route_engine.clone()),
+    ));
+
     let discovery_service = Arc::new(discovery_service);
 
     let session_manager = Arc::new(artemis_web::websocket::SessionManager::new());
 
-    // 8. Create AppState
+    // 9. Create AppState
     let state = AppState {
         registry_service,
         discovery_service,
@@ -173,9 +186,11 @@ async fn start_server(config_path: Option<String>, addr_override: Option<String>
         cluster_manager,
         replication_manager,
         instance_manager,
+        group_manager,
+        route_manager,
     };
 
-    // 9. Start server
+    // 10. Start server
     println!("Artemis server listening on {}", listen_addr);
     run_server(state, listen_addr).await
 }

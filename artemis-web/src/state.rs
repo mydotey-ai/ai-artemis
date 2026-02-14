@@ -1,5 +1,5 @@
 use crate::websocket::SessionManager;
-use artemis_management::InstanceManager;
+use artemis_management::{GroupManager, InstanceManager, RouteManager};
 use artemis_server::{
     cache::VersionedCacheManager, cluster::ClusterManager, discovery::DiscoveryServiceImpl,
     replication::ReplicationManager, RegistryServiceImpl,
@@ -15,4 +15,6 @@ pub struct AppState {
     pub cluster_manager: Option<Arc<ClusterManager>>,
     pub replication_manager: Option<Arc<ReplicationManager>>,
     pub instance_manager: Arc<InstanceManager>,
+    pub group_manager: Arc<GroupManager>,
+    pub route_manager: Arc<RouteManager>,
 }
