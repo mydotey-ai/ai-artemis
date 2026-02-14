@@ -1,9 +1,14 @@
 use super::repository::RegistryRepository;
 use crate::change::InstanceChangeManager;
 use crate::lease::LeaseManager;
+use crate::replication::ReplicationManager;
 use artemis_core::model::{
     ErrorCode, HeartbeatRequest, HeartbeatResponse, RegisterRequest, RegisterResponse,
     ResponseStatus, UnregisterRequest, UnregisterResponse,
+    ReplicateRegisterRequest, ReplicateRegisterResponse,
+    ReplicateHeartbeatRequest, ReplicateHeartbeatResponse,
+    ReplicateUnregisterRequest, ReplicateUnregisterResponse,
+    GetAllServicesResponse,
 };
 use artemis_core::traits::RegistryService;
 use async_trait::async_trait;
@@ -15,6 +20,7 @@ pub struct RegistryServiceImpl {
     repository: RegistryRepository,
     lease_manager: Arc<LeaseManager>,
     change_manager: Arc<InstanceChangeManager>,
+    replication_manager: Option<Arc<ReplicationManager>>,
 }
 
 impl RegistryServiceImpl {
@@ -22,8 +28,14 @@ impl RegistryServiceImpl {
         repository: RegistryRepository,
         lease_manager: Arc<LeaseManager>,
         change_manager: Arc<InstanceChangeManager>,
+        replication_manager: Option<Arc<ReplicationManager>>,
     ) -> Self {
-        Self { repository, lease_manager, change_manager }
+        Self {
+            repository,
+            lease_manager,
+            change_manager,
+            replication_manager,
+        }
     }
 }
 
@@ -44,6 +56,11 @@ impl RegistryService for RegistryServiceImpl {
 
             // 发布变更事件
             self.change_manager.publish_register(&instance);
+
+            // 触发复制
+            if let Some(ref repl_mgr) = self.replication_manager {
+                repl_mgr.publish_register(instance.clone());
+            }
         }
 
         RegisterResponse {
@@ -60,10 +77,15 @@ impl RegistryService for RegistryServiceImpl {
         // 预分配容量以减少内存重新分配
         let mut failed = Vec::with_capacity(request.instance_keys.len());
 
-        for key in request.instance_keys {
-            if !self.lease_manager.renew(&key) {
+        for key in &request.instance_keys {
+            if !self.lease_manager.renew(key) {
                 warn!("Heartbeat failed for non-existent instance: {:?}", key);
-                failed.push(key);
+                failed.push(key.clone());
+            } else {
+                // 触发复制(只复制成功的心跳)
+                if let Some(ref repl_mgr) = self.replication_manager {
+                    repl_mgr.publish_heartbeat(key.clone());
+                }
             }
         }
 
@@ -87,10 +109,84 @@ impl RegistryService for RegistryServiceImpl {
 
                 // 发布变更事件
                 self.change_manager.publish_unregister(&key, &instance);
+
+                // 触发复制
+                if let Some(ref repl_mgr) = self.replication_manager {
+                    repl_mgr.publish_unregister(key.clone());
+                }
             }
         }
 
         UnregisterResponse { response_status: ResponseStatus::success() }
+    }
+
+    // ===== 复制方法实现(不触发二次复制) =====
+
+    async fn register_from_replication(&self, request: ReplicateRegisterRequest) -> ReplicateRegisterResponse {
+        let failed = Vec::new();
+
+        for instance in request.instances {
+            let key = instance.key();
+            info!("Registering instance from replication: {:?}", key);
+
+            // 只做本地处理,不触发复制
+            self.repository.register(instance.clone());
+            self.lease_manager.create_lease(key);
+
+            // 发布变更事件(用于 WebSocket 推送等)
+            self.change_manager.publish_register(&instance);
+        }
+
+        ReplicateRegisterResponse {
+            response_status: if failed.is_empty() {
+                ResponseStatus::success()
+            } else {
+                ResponseStatus::error(ErrorCode::BadRequest, "Some instances failed")
+            },
+            failed_instances: if failed.is_empty() { None } else { Some(failed) },
+        }
+    }
+
+    async fn heartbeat_from_replication(&self, request: ReplicateHeartbeatRequest) -> ReplicateHeartbeatResponse {
+        let mut failed = Vec::with_capacity(request.instance_keys.len());
+
+        for key in request.instance_keys {
+            if !self.lease_manager.renew(&key) {
+                warn!("Heartbeat from replication failed for non-existent instance: {:?}", key);
+                failed.push(key);
+            }
+        }
+
+        ReplicateHeartbeatResponse {
+            response_status: if failed.is_empty() {
+                ResponseStatus::success()
+            } else {
+                ResponseStatus::error(ErrorCode::BadRequest, "Some heartbeats failed")
+            },
+            failed_instance_keys: if failed.is_empty() { None } else { Some(failed) },
+        }
+    }
+
+    async fn unregister_from_replication(&self, request: ReplicateUnregisterRequest) -> ReplicateUnregisterResponse {
+        for key in request.instance_keys {
+            info!("Unregistering instance from replication: {:?}", key);
+
+            if let Some(instance) = self.repository.remove(&key) {
+                self.lease_manager.remove_lease(&key);
+                self.change_manager.publish_unregister(&key, &instance);
+            }
+        }
+
+        ReplicateUnregisterResponse { response_status: ResponseStatus::success() }
+    }
+
+    async fn get_all_services(&self) -> GetAllServicesResponse {
+        let services = self.repository.get_all_services();
+
+        GetAllServicesResponse {
+            response_status: ResponseStatus::success(),
+            services,
+        }
     }
 }
 
@@ -124,7 +220,7 @@ mod tests {
         let repo = RegistryRepository::new();
         let lease_mgr = Arc::new(LeaseManager::new(Duration::from_secs(30)));
         let change_mgr = Arc::new(InstanceChangeManager::new());
-        let service = RegistryServiceImpl::new(repo.clone(), lease_mgr, change_mgr);
+        let service = RegistryServiceImpl::new(repo.clone(), lease_mgr, change_mgr, None);
 
         let request = RegisterRequest { instances: vec![create_test_instance()] };
 
@@ -138,7 +234,7 @@ mod tests {
         let repo = RegistryRepository::new();
         let lease_mgr = Arc::new(LeaseManager::new(Duration::from_secs(30)));
         let change_mgr = Arc::new(InstanceChangeManager::new());
-        let service = RegistryServiceImpl::new(repo, lease_mgr, change_mgr);
+        let service = RegistryServiceImpl::new(repo, lease_mgr, change_mgr, None);
 
         let instance = create_test_instance();
         let key = instance.key();
@@ -158,7 +254,7 @@ mod tests {
         let repo = RegistryRepository::new();
         let lease_mgr = Arc::new(LeaseManager::new(Duration::from_secs(30)));
         let change_mgr = Arc::new(InstanceChangeManager::new());
-        let service = RegistryServiceImpl::new(repo.clone(), lease_mgr, change_mgr);
+        let service = RegistryServiceImpl::new(repo.clone(), lease_mgr, change_mgr, None);
 
         let instance = create_test_instance();
         let key = instance.key();

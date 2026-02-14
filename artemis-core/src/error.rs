@@ -17,6 +17,9 @@ pub enum ArtemisError {
     #[error("Rate limit exceeded")]
     RateLimitExceeded,
 
+    #[error("Configuration error: {0}")]
+    Configuration(String),
+
     #[error("Serialization error: {0}")]
     SerializationError(#[from] serde_json::Error),
 

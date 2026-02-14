@@ -1,6 +1,7 @@
-use artemis_core::model::{Instance, InstanceKey};
+use artemis_core::model::{Instance, InstanceKey, Service};
 use dashmap::DashMap;
 use std::sync::Arc;
+use std::collections::HashMap;
 
 /// 内存中的注册表存储（高性能无锁）
 #[derive(Clone)]
@@ -48,6 +49,36 @@ impl RegistryRepository {
     /// 获取实例数量
     pub fn count(&self) -> usize {
         self.instances.len()
+    }
+
+    /// 获取所有服务(按 service_id 分组)
+    pub fn get_all_services(&self) -> Vec<Service> {
+        // 按 service_id 分组
+        let mut services_map: HashMap<String, Vec<Instance>> = HashMap::new();
+
+        for entry in self.instances.iter() {
+            let instance = entry.value().clone();
+            let service_id = instance.service_id.clone();
+
+            services_map
+                .entry(service_id)
+                .or_insert_with(Vec::new)
+                .push(instance);
+        }
+
+        // 转换为 Service 对象
+        services_map
+            .into_iter()
+            .map(|(service_id, instances)| {
+                Service {
+                    service_id,
+                    metadata: None,
+                    instances,
+                    logic_instances: None,
+                    route_rules: None,
+                }
+            })
+            .collect()
     }
 }
 

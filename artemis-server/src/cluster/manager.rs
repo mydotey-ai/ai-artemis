@@ -4,16 +4,16 @@ use std::sync::Arc;
 use std::time::Duration;
 use tracing::{info, warn};
 
-/// 集群管理器框架
+/// 集群管理器
 ///
 /// 负责管理集群节点，包括：
 /// - 节点注册和发现
-/// - 健康检查
+/// - 主动健康检查
 /// - 节点状态管理
-///
-/// Note: 这是框架实现，完整功能待Phase 10详细实施
 #[derive(Clone)]
 pub struct ClusterManager {
+    /// 当前节点ID
+    node_id: String,
     /// 集群节点映射: NodeId -> ClusterNode
     nodes: Arc<DashMap<String, ClusterNode>>,
     /// 心跳超时时间
@@ -21,8 +21,21 @@ pub struct ClusterManager {
 }
 
 impl ClusterManager {
-    pub fn new(heartbeat_timeout: Duration) -> Self {
-        Self { nodes: Arc::new(DashMap::new()), heartbeat_timeout }
+    pub fn new(node_id: String, peers: Vec<String>) -> Self {
+        let nodes = Arc::new(DashMap::new());
+
+        // 初始化对等节点
+        for peer_url in peers {
+            let node = ClusterNode::new_from_url(peer_url);
+            info!("Adding peer node: {} at {}", node.node_id, node.base_url());
+            nodes.insert(node.node_id.clone(), node);
+        }
+
+        Self {
+            node_id,
+            nodes,
+            heartbeat_timeout: Duration::from_secs(30),
+        }
     }
 
     /// 注册新节点
@@ -47,6 +60,17 @@ impl ClusterManager {
         self.nodes
             .iter()
             .filter(|entry| entry.value().is_healthy())
+            .map(|entry| entry.value().clone())
+            .collect()
+    }
+
+    /// 获取健康的对等节点(排除自己)
+    pub fn get_healthy_peers(&self) -> Vec<ClusterNode> {
+        self.nodes
+            .iter()
+            .filter(|entry| {
+                entry.key() != &self.node_id && entry.value().is_healthy()
+            })
             .map(|entry| entry.value().clone())
             .collect()
     }
@@ -77,18 +101,35 @@ impl ClusterManager {
         }
     }
 
-    /// 启动健康检查任务（框架方法）
-    pub fn start_health_check_task(self, check_interval: Duration) {
+    /// 启动健康检查任务
+    pub fn start_health_check_task(self: Arc<Self>) {
         tokio::spawn(async move {
-            let mut interval = tokio::time::interval(check_interval);
+            let mut interval = tokio::time::interval(Duration::from_secs(5));
+            info!("Health check task started (interval: 5s)");
+
             loop {
                 interval.tick().await;
 
-                let expired = self.check_expired_nodes();
-                if !expired.is_empty() {
-                    info!("Found {} expired nodes", expired.len());
-                    for node_id in expired {
-                        self.mark_node_down(&node_id);
+                for node_entry in self.nodes.iter() {
+                    let node_id = node_entry.key().clone();
+                    let base_url = node_entry.value().base_url();
+
+                    // 执行健康检查
+                    let is_healthy = check_node_health(&base_url).await;
+
+                    // 更新节点状态
+                    if let Some(mut node) = self.nodes.get_mut(&node_id) {
+                        let was_healthy = node.is_healthy();
+                        node.update_status(is_healthy);
+
+                        // 状态变化时记录日志
+                        if was_healthy != is_healthy {
+                            if is_healthy {
+                                info!("Node {} is now UP", node_id);
+                            } else {
+                                warn!("Node {} is now DOWN", node_id);
+                            }
+                        }
                     }
                 }
             }
@@ -96,9 +137,22 @@ impl ClusterManager {
     }
 }
 
+/// 检查节点健康状态
+async fn check_node_health(base_url: &str) -> bool {
+    let health_url = format!("{}/health", base_url);
+
+    match reqwest::get(&health_url).await {
+        Ok(response) => response.status().is_success(),
+        Err(e) => {
+            tracing::debug!("Health check failed for {}: {}", base_url, e);
+            false
+        }
+    }
+}
+
 impl Default for ClusterManager {
     fn default() -> Self {
-        Self::new(Duration::from_secs(30))
+        Self::new("default-node".to_string(), vec![])
     }
 }
 

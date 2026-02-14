@@ -169,7 +169,7 @@ start_node() {
     cd "${SCRIPT_DIR}"
 
     # 使用配置文件启动服务器
-    RUST_LOG=info cargo run --release --bin artemis -- server --addr "127.0.0.1:${port}" \
+    RUST_LOG=info cargo run --release --bin artemis -- server --config "${config_file}" \
         > "${log_file}" 2>&1 &
 
     local pid=$!
@@ -269,7 +269,7 @@ start_cluster() {
     for i in $(seq 1 ${node_count}); do
         local port=$((base_port + i - 1))
         local peer_port=$((base_peer_port + i - 1))
-        local peer_nodes=$(generate_peer_list ${node_count} ${base_peer_port} ${i})
+        local peer_nodes=$(generate_peer_list ${node_count} ${base_port} ${i})
         generate_node_config ${i} ${port} ${peer_port} "${peer_nodes}"
     done
 

@@ -1,12 +1,17 @@
-//! Data replication framework (Phase 10)
+//! Data replication implementation
 //!
-//! This module provides the foundation for data replication across cluster nodes:
+//! This module provides data replication across cluster nodes:
 //! - Replication event handling
 //! - Batch replication optimization
-//! - Consistency protocol framework
-//!
-//! Status: Framework only, full implementation pending
+//! - HTTP-based replication client
+//! - Error handling and retry logic
 
+pub mod client;
+pub mod error;
 pub mod manager;
+pub mod worker;
 
-pub use manager::ReplicationManager;
+pub use client::ReplicationClient;
+pub use error::{ReplicationError, ReplicationErrorKind};
+pub use manager::{ReplicationEvent, ReplicationManager};
+pub use worker::ReplicationWorker;

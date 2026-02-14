@@ -1,6 +1,10 @@
+use super::worker::ReplicationWorker;
+use crate::cluster::ClusterManager;
+use artemis_core::config::ReplicationConfig;
 use artemis_core::model::{Instance, InstanceKey};
 use std::sync::Arc;
 use tokio::sync::mpsc;
+use tokio::task::JoinHandle;
 use tracing::info;
 
 /// 复制事件类型
@@ -55,7 +59,19 @@ impl ReplicationManager {
         }
     }
 
-    /// 启动复制任务（框架方法）
+    /// 启动复制工作器
+    pub fn start_worker(
+        event_rx: mpsc::UnboundedReceiver<ReplicationEvent>,
+        cluster_manager: Arc<ClusterManager>,
+        config: ReplicationConfig,
+    ) -> JoinHandle<()> {
+        info!("Starting replication worker");
+        let worker = ReplicationWorker::new(event_rx, cluster_manager, config);
+        worker.start()
+    }
+
+    /// 启动复制任务(已废弃,使用 start_worker)
+    #[deprecated(note = "Use start_worker instead")]
     pub fn start_replication_task(mut event_rx: mpsc::UnboundedReceiver<ReplicationEvent>) {
         tokio::spawn(async move {
             info!("Replication task started");
@@ -63,15 +79,12 @@ impl ReplicationManager {
             while let Some(event) = event_rx.recv().await {
                 match event {
                     ReplicationEvent::Register(instance) => {
-                        // TODO: 实现实际的复制逻辑
                         info!("Would replicate register: {}", instance.instance_id);
                     }
                     ReplicationEvent::Unregister(key) => {
-                        // TODO: 实现实际的复制逻辑
                         info!("Would replicate unregister: {}", key.instance_id);
                     }
                     ReplicationEvent::Heartbeat(key) => {
-                        // TODO: 实现实际的复制逻辑（可能批量处理）
                         info!("Would replicate heartbeat: {}", key.instance_id);
                     }
                 }
