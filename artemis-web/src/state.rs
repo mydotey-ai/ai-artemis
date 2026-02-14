@@ -1,7 +1,8 @@
 use crate::websocket::SessionManager;
+use artemis_management::InstanceManager;
 use artemis_server::{
-    RegistryServiceImpl, cache::VersionedCacheManager, discovery::DiscoveryServiceImpl,
-    cluster::ClusterManager, replication::ReplicationManager,
+    cache::VersionedCacheManager, cluster::ClusterManager, discovery::DiscoveryServiceImpl,
+    replication::ReplicationManager, RegistryServiceImpl,
 };
 use std::sync::Arc;
 
@@ -13,4 +14,5 @@ pub struct AppState {
     pub session_manager: Arc<SessionManager>,
     pub cluster_manager: Option<Arc<ClusterManager>>,
     pub replication_manager: Option<Arc<ReplicationManager>>,
+    pub instance_manager: Arc<InstanceManager>,
 }

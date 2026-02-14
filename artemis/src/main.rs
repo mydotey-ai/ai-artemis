@@ -1,8 +1,9 @@
 use artemis_core::config::ArtemisConfig;
+use artemis_management::InstanceManager;
 use artemis_server::{
-    RegistryServiceImpl, cache::VersionedCacheManager, discovery::DiscoveryServiceImpl,
-    lease::LeaseManager, registry::RegistryRepository,
-    cluster::ClusterManager, replication::ReplicationManager,
+    cache::VersionedCacheManager, cluster::ClusterManager, discovery::DiscoveryServiceImpl,
+    lease::LeaseManager, registry::RegistryRepository, replication::ReplicationManager,
+    RegistryServiceImpl,
 };
 use artemis_web::{server::run_server, state::AppState};
 use clap::{Parser, Subcommand};
@@ -151,11 +152,19 @@ async fn start_server(config_path: Option<String>, addr_override: Option<String>
         replication_manager.clone(),
     ));
 
-    let discovery_service = Arc::new(DiscoveryServiceImpl::new(repository, cache.clone()));
+    // 6. Initialize management components
+    let instance_manager = Arc::new(InstanceManager::new());
+
+    // 7. Create discovery service with management filter
+    let mut discovery_service = DiscoveryServiceImpl::new(repository, cache.clone());
+    discovery_service.add_filter(Arc::new(
+        artemis_server::discovery::ManagementDiscoveryFilter::new(instance_manager.clone()),
+    ));
+    let discovery_service = Arc::new(discovery_service);
 
     let session_manager = Arc::new(artemis_web::websocket::SessionManager::new());
 
-    // 6. Create AppState
+    // 8. Create AppState
     let state = AppState {
         registry_service,
         discovery_service,
@@ -163,9 +172,10 @@ async fn start_server(config_path: Option<String>, addr_override: Option<String>
         session_manager,
         cluster_manager,
         replication_manager,
+        instance_manager,
     };
 
-    // 7. Start server
+    // 9. Start server
     println!("Artemis server listening on {}", listen_addr);
     run_server(state, listen_addr).await
 }

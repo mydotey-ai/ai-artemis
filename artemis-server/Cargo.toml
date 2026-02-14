@@ -5,6 +5,7 @@ edition.workspace = true
 
 [dependencies]
 artemis-core = { path = "../artemis-core" }
+artemis-management = { path = "../artemis-management" }
 tokio = { workspace = true }
 dashmap = { workspace = true }
 parking_lot = { workspace = true }

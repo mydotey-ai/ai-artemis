@@ -24,6 +24,11 @@ impl DiscoveryServiceImpl {
         Self { repository, cache, filter_chain }
     }
 
+    /// 添加过滤器到过滤链
+    pub fn add_filter(&mut self, filter: Arc<dyn super::filter::DiscoveryFilter>) {
+        self.filter_chain.add_filter(filter);
+    }
+
     fn build_service(&self, service_id: &str) -> Option<Service> {
         let instances = self.repository.get_instances_by_service(service_id);
         if instances.is_empty() {

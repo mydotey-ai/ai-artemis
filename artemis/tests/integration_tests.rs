@@ -24,13 +24,24 @@ async fn start_test_server(port: u16) -> tokio::task::JoinHandle<()> {
         let registry_service = Arc::new(RegistryServiceImpl::new(
             repository.clone(),
             lease_manager.clone(),
+            cache.clone(),
             change_manager.clone(),
+            None, // No replication in test
         ));
         let discovery_service = Arc::new(DiscoveryServiceImpl::new(repository, cache.clone()));
 
         let session_manager = Arc::new(artemis_web::websocket::SessionManager::new());
+        let instance_manager = Arc::new(artemis_management::InstanceManager::new());
 
-        let app_state = AppState { registry_service, discovery_service, cache, session_manager };
+        let app_state = AppState {
+            registry_service,
+            discovery_service,
+            cache,
+            session_manager,
+            cluster_manager: None,
+            replication_manager: None,
+            instance_manager,
+        };
 
         let addr: SocketAddr = format!("127.0.0.1:{}", port).parse().unwrap();
         let _ = artemis_web::server::run_server(app_state, addr).await;

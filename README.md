@@ -257,6 +257,85 @@ ws.onerror = (error) => {
 };
 ```
 
+### 实例管理 (Instance Management)
+
+实例管理功能允许运维人员手动控制实例的可用性,而无需注销实例。
+
+#### 拉出实例 (下线)
+
+```bash
+curl -X POST http://localhost:8080/api/management/instance/operate-instance.json \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instance_key": {
+      "service_id": "my-service",
+      "instance_id": "inst-1",
+      "region_id": "us-east",
+      "zone_id": "zone-1",
+      "group_id": "default"
+    },
+    "operation": "pullout",
+    "operation_complete": true,
+    "operator_id": "admin"
+  }'
+```
+
+#### 查询实例状态
+
+```bash
+curl -X POST http://localhost:8080/api/management/instance/is-instance-down.json \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instance_key": {
+      "service_id": "my-service",
+      "instance_id": "inst-1",
+      "region_id": "us-east",
+      "zone_id": "zone-1",
+      "group_id": "default"
+    }
+  }'
+```
+
+#### 拉入实例 (恢复)
+
+```bash
+curl -X POST http://localhost:8080/api/management/instance/operate-instance.json \
+  -H "Content-Type: application/json" \
+  -d '{
+    "instance_key": {...},
+    "operation": "pullin",
+    "operation_complete": true,
+    "operator_id": "admin"
+  }'
+```
+
+#### 服务器级别操作
+
+拉出整台服务器 (批量下线该服务器上的所有实例):
+
+```bash
+curl -X POST http://localhost:8080/api/management/server/operate-server.json \
+  -H "Content-Type: application/json" \
+  -d '{
+    "server_id": "192.168.1.100",
+    "region_id": "us-east",
+    "operation": "pullout",
+    "operation_complete": true,
+    "operator_id": "admin"
+  }'
+```
+
+**功能特点**:
+- ✅ **非破坏性**: 拉出实例不影响注册状态,可随时恢复
+- ✅ **自动过滤**: 被拉出的实例在服务发现时自动过滤
+- ✅ **批量操作**: 支持服务器级别的批量拉入/拉出
+- ✅ **操作审计**: 记录操作人和操作时间
+
+运行集成测试:
+```bash
+./test-instance-management.sh
+```
+
 ### 客户端 SDK 使用
 
 ```rust

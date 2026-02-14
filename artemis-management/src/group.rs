@@ -70,11 +70,16 @@ impl Default for GroupManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use artemis_core::model::RouteStrategy;
+    use artemis_core::model::{RouteRuleStatus, RouteStrategy};
 
     fn create_test_rule() -> RouteRule {
         RouteRule {
+            route_rule_id: None,
             route_id: "rule-1".to_string(),
+            service_id: "test-service".to_string(),
+            name: "rule-1".to_string(),
+            description: None,
+            status: RouteRuleStatus::Active,
             strategy: RouteStrategy::WeightedRoundRobin,
             groups: vec![],
         }

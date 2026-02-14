@@ -25,6 +25,13 @@ pub async fn run_server(state: AppState, addr: SocketAddr) -> anyhow::Result<()>
         .route("/api/replication/registry/heartbeat.json", post(crate::api::replication::replicate_heartbeat))
         .route("/api/replication/registry/unregister.json", post(crate::api::replication::replicate_unregister))
         .route("/api/replication/registry/services.json", get(crate::api::replication::get_all_services))
+        // Management endpoints - Instance operations
+        .route("/api/management/instance/operate-instance.json", post(crate::api::management::operate_instance))
+        .route("/api/management/instance/get-instance-operations.json", post(crate::api::management::get_instance_operations))
+        .route("/api/management/instance/is-instance-down.json", post(crate::api::management::is_instance_down))
+        // Management endpoints - Server operations
+        .route("/api/management/server/operate-server.json", post(crate::api::management::operate_server))
+        .route("/api/management/server/is-server-down.json", post(crate::api::management::is_server_down))
         .route("/ws", get(crate::websocket::ws_handler))
         .layer(CorsLayer::permissive())
         .with_state(state);
