@@ -27,10 +27,7 @@ enum ServerMessage {
     Subscribed { service_id: String },
 
     #[serde(rename = "service_change")]
-    ServiceChange {
-        service_id: String,
-        changes: Vec<InstanceChange>,
-    },
+    ServiceChange { service_id: String, changes: Vec<InstanceChange> },
 
     #[serde(rename = "pong")]
     Pong,
@@ -55,11 +52,8 @@ impl WebSocketClient {
 
     /// 连接WebSocket并订阅服务
     pub async fn connect_and_subscribe(self: Arc<Self>, service_id: String) -> Result<()> {
-        let ws_url = self
-            .config
-            .server_url
-            .replace("http://", "ws://")
-            .replace("https://", "wss://");
+        let ws_url =
+            self.config.server_url.replace("http://", "ws://").replace("https://", "wss://");
         let url = format!("{}/ws", ws_url);
 
         info!("Connecting to WebSocket: {}", url);
@@ -68,9 +62,7 @@ impl WebSocketClient {
         let (mut write, mut read) = ws_stream.split();
 
         // 发送订阅消息
-        let subscribe_msg = ClientMessage::Subscribe {
-            service_id: service_id.clone(),
-        };
+        let subscribe_msg = ClientMessage::Subscribe { service_id: service_id.clone() };
         let json = serde_json::to_string(&subscribe_msg)?;
         write.send(Message::Text(json.into())).await?;
 

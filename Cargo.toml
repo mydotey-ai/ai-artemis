@@ -12,13 +12,13 @@ resolver = "2"
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.93"
 authors = ["Artemis Contributors"]
 license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
 # 异步运行时
-tokio = { version = "1.49", features = ["full"] }
+tokio = { version = "1", features = ["full"] }
 tokio-util = { version = "0.7", features = ["codec"] }
 
 # Web框架
@@ -56,14 +56,14 @@ sqlx = { version = "0.8", features = [
 chrono = { version = "0.4", features = ["serde"] }
 
 # 限流
-governor = "0.10.4"
+governor = "0.10"
 
 # 日志和追踪
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 
 # 配置
-config = "0.15.19"
+config = "0.15"
 figment = { version = "0.10", features = ["toml", "env"] }
 
 # 错误处理
@@ -84,4 +84,4 @@ bytes = "1.8"
 futures = "0.3"
 
 # 性能测试
-criterion = { version = "0.5", features = ["async_tokio"] }
+criterion = { version = "0.8", features = ["async_tokio"] }

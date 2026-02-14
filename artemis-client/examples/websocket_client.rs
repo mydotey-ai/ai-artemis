@@ -1,4 +1,4 @@
-use artemis_client::{websocket::WebSocketClient, ClientConfig};
+use artemis_client::{ClientConfig, websocket::WebSocketClient};
 use std::sync::Arc;
 
 #[tokio::main]
@@ -16,10 +16,7 @@ async fn main() -> anyhow::Result<()> {
     // 连接并订阅
     let client_clone = client.clone();
     tokio::spawn(async move {
-        if let Err(e) = client_clone
-            .connect_and_subscribe("my-service".to_string())
-            .await
-        {
+        if let Err(e) = client_clone.connect_and_subscribe("my-service".to_string()).await {
             eprintln!("WebSocket error: {}", e);
         }
     });

@@ -31,12 +31,7 @@ impl ReplicationManager {
     pub fn new() -> (Self, mpsc::UnboundedReceiver<ReplicationEvent>) {
         let (event_tx, event_rx) = mpsc::unbounded_channel();
 
-        (
-            Self {
-                event_tx: Arc::new(event_tx),
-            },
-            event_rx,
-        )
+        (Self { event_tx: Arc::new(event_tx) }, event_rx)
     }
 
     /// 发布注册事件
@@ -61,9 +56,7 @@ impl ReplicationManager {
     }
 
     /// 启动复制任务（框架方法）
-    pub fn start_replication_task(
-        mut event_rx: mpsc::UnboundedReceiver<ReplicationEvent>,
-    ) {
+    pub fn start_replication_task(mut event_rx: mpsc::UnboundedReceiver<ReplicationEvent>) {
         tokio::spawn(async move {
             info!("Replication task started");
 

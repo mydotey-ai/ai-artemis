@@ -21,9 +21,7 @@ pub struct RouteManager {
 
 impl RouteManager {
     pub fn new() -> Self {
-        Self {
-            rules: Arc::new(DashMap::new()),
-        }
+        Self { rules: Arc::new(DashMap::new()) }
     }
 
     /// 创建路由规则
@@ -60,10 +58,7 @@ impl RouteManager {
 
     /// 列出所有路由规则
     pub fn list_rules(&self) -> Vec<RouteRule> {
-        self.rules
-            .iter()
-            .map(|entry| entry.value().clone())
-            .collect()
+        self.rules.iter().map(|entry| entry.value().clone()).collect()
     }
 
     /// 获取规则数量

@@ -23,11 +23,7 @@ impl RegistryServiceImpl {
         lease_manager: Arc<LeaseManager>,
         change_manager: Arc<InstanceChangeManager>,
     ) -> Self {
-        Self {
-            repository,
-            lease_manager,
-            change_manager,
-        }
+        Self { repository, lease_manager, change_manager }
     }
 }
 

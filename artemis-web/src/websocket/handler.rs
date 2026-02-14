@@ -1,12 +1,12 @@
 use crate::state::AppState;
 use axum::{
     extract::{
-        ws::{Message, WebSocket, WebSocketUpgrade},
         State,
+        ws::{Message, WebSocket, WebSocketUpgrade},
     },
     response::Response,
 };
-use futures::{stream::StreamExt, SinkExt};
+use futures::{SinkExt, stream::StreamExt};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
@@ -33,10 +33,7 @@ enum ServerMessage {
     Unsubscribed { service_id: String },
 
     #[serde(rename = "service_change")]
-    ServiceChange {
-        service_id: String,
-        changes: Vec<serde_json::Value>,
-    },
+    ServiceChange { service_id: String, changes: Vec<serde_json::Value> },
 
     #[serde(rename = "pong")]
     Pong,
@@ -63,9 +60,7 @@ async fn handle_socket(socket: WebSocket, state: AppState) {
                 if let Err(e) = handle_text_message(&text, &session_id, &state, &sender).await {
                     tracing::error!("Error handling message: {}", e);
 
-                    let error_msg = ServerMessage::Error {
-                        message: e.to_string(),
-                    };
+                    let error_msg = ServerMessage::Error { message: e.to_string() };
 
                     if let Ok(json) = serde_json::to_string(&error_msg) {
                         let _ = sender.lock().await.send(Message::Text(json.into())).await;
@@ -98,9 +93,7 @@ async fn handle_text_message(
 
     match client_msg {
         ClientMessage::Subscribe { service_id } => {
-            state
-                .session_manager
-                .subscribe(session_id.to_string(), service_id.clone());
+            state.session_manager.subscribe(session_id.to_string(), service_id.clone());
 
             let response = ServerMessage::Subscribed { service_id };
             let json = serde_json::to_string(&response)?;

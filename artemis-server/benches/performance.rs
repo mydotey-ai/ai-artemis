@@ -2,12 +2,17 @@
 //!
 //! Run with: cargo bench
 
-use artemis_core::model::{Instance, InstanceStatus, InstanceKey, RegisterRequest, HeartbeatRequest};
-use artemis_server::{RegistryServiceImpl, InstanceChangeManager, registry::RegistryRepository, lease::LeaseManager};
+use artemis_core::model::{
+    HeartbeatRequest, Instance, InstanceKey, InstanceStatus, RegisterRequest,
+};
 use artemis_core::traits::RegistryService;
+use artemis_server::{
+    InstanceChangeManager, RegistryServiceImpl, lease::LeaseManager, registry::RegistryRepository,
+};
+use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
+use std::hint::black_box;
 use std::sync::Arc;
 use std::time::Duration;
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
 
 fn create_test_instance(id: usize) -> Instance {
     Instance {
@@ -31,7 +36,7 @@ fn bench_register(c: &mut Criterion) {
     let rt = tokio::runtime::Runtime::new().unwrap();
 
     let mut group = c.benchmark_group("register");
-    
+
     for size in [1, 10, 100].iter() {
         group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, &size| {
             b.iter(|| {
@@ -49,7 +54,7 @@ fn bench_register(c: &mut Criterion) {
             });
         });
     }
-    
+
     group.finish();
 }
 
@@ -57,7 +62,7 @@ fn bench_heartbeat(c: &mut Criterion) {
     let rt = tokio::runtime::Runtime::new().unwrap();
 
     let mut group = c.benchmark_group("heartbeat");
-    
+
     for size in [1, 10, 100].iter() {
         group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, &size| {
             b.iter(|| {
@@ -65,7 +70,8 @@ fn bench_heartbeat(c: &mut Criterion) {
                     let repo = RegistryRepository::new();
                     let lease_mgr = Arc::new(LeaseManager::new(Duration::from_secs(30)));
                     let change_mgr = Arc::new(InstanceChangeManager::new());
-                    let service = RegistryServiceImpl::new(repo.clone(), lease_mgr.clone(), change_mgr);
+                    let service =
+                        RegistryServiceImpl::new(repo.clone(), lease_mgr.clone(), change_mgr);
 
                     // 先注册实例
                     let instances: Vec<Instance> = (0..size).map(create_test_instance).collect();
@@ -80,7 +86,7 @@ fn bench_heartbeat(c: &mut Criterion) {
             });
         });
     }
-    
+
     group.finish();
 }
 

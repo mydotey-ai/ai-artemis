@@ -21,9 +21,7 @@ pub struct GroupManager {
 
 impl GroupManager {
     pub fn new() -> Self {
-        Self {
-            groups: Arc::new(DashMap::new()),
-        }
+        Self { groups: Arc::new(DashMap::new()) }
     }
 
     /// 创建分组
@@ -54,10 +52,7 @@ impl GroupManager {
 
     /// 列出所有分组
     pub fn list_groups(&self) -> Vec<RouteRule> {
-        self.groups
-            .iter()
-            .map(|entry| entry.value().clone())
-            .collect()
+        self.groups.iter().map(|entry| entry.value().clone()).collect()
     }
 
     /// 获取分组数量

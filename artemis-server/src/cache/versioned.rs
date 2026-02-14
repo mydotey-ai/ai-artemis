@@ -64,58 +64,6 @@ impl Default for VersionedCacheManager {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn create_test_service(id: &str) -> Service {
-        Service {
-            service_id: id.to_string(),
-            metadata: None,
-            instances: vec![],
-            logic_instances: None,
-            route_rules: None,
-        }
-    }
-
-    #[test]
-    fn test_update_and_get() {
-        let manager = VersionedCacheManager::new();
-        let service = create_test_service("my-service");
-
-        let initial_version = manager.get_version();
-        manager.update_service(service.clone());
-
-        assert_eq!(manager.get_version(), initial_version + 1);
-        assert!(manager.get_service("my-service").is_some());
-    }
-
-    #[test]
-    fn test_version_increment() {
-        let manager = VersionedCacheManager::new();
-        let v0 = manager.get_version();
-
-        manager.update_service(create_test_service("service-1"));
-        assert_eq!(manager.get_version(), v0 + 1);
-
-        manager.update_service(create_test_service("service-2"));
-        assert_eq!(manager.get_version(), v0 + 2);
-
-        manager.remove_service("service-1");
-        assert_eq!(manager.get_version(), v0 + 3);
-    }
-
-    #[test]
-    fn test_get_all_services() {
-        let manager = VersionedCacheManager::new();
-        manager.update_service(create_test_service("service-1"));
-        manager.update_service(create_test_service("service-2"));
-
-        let services = manager.get_all_services();
-        assert_eq!(services.len(), 2);
-    }
-}
-
 // Task 3.8: 增量差异计算
 use artemis_core::model::{ChangeType, Instance, InstanceChange};
 use chrono::Utc;
@@ -194,5 +142,57 @@ impl VersionedCacheManager {
         }
 
         changes
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn create_test_service(id: &str) -> Service {
+        Service {
+            service_id: id.to_string(),
+            metadata: None,
+            instances: vec![],
+            logic_instances: None,
+            route_rules: None,
+        }
+    }
+
+    #[test]
+    fn test_update_and_get() {
+        let manager = VersionedCacheManager::new();
+        let service = create_test_service("my-service");
+
+        let initial_version = manager.get_version();
+        manager.update_service(service.clone());
+
+        assert_eq!(manager.get_version(), initial_version + 1);
+        assert!(manager.get_service("my-service").is_some());
+    }
+
+    #[test]
+    fn test_version_increment() {
+        let manager = VersionedCacheManager::new();
+        let v0 = manager.get_version();
+
+        manager.update_service(create_test_service("service-1"));
+        assert_eq!(manager.get_version(), v0 + 1);
+
+        manager.update_service(create_test_service("service-2"));
+        assert_eq!(manager.get_version(), v0 + 2);
+
+        manager.remove_service("service-1");
+        assert_eq!(manager.get_version(), v0 + 3);
+    }
+
+    #[test]
+    fn test_get_all_services() {
+        let manager = VersionedCacheManager::new();
+        manager.update_service(create_test_service("service-1"));
+        manager.update_service(create_test_service("service-2"));
+
+        let services = manager.get_all_services();
+        assert_eq!(services.len(), 2);
     }
 }

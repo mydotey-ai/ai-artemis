@@ -57,11 +57,7 @@ mod tests {
 
     #[test]
     fn test_node_creation() {
-        let node = ClusterNode::new(
-            "node-1".to_string(),
-            "192.168.1.100".to_string(),
-            8080,
-        );
+        let node = ClusterNode::new("node-1".to_string(), "192.168.1.100".to_string(), 8080);
 
         assert_eq!(node.node_id, "node-1");
         assert_eq!(node.address, "192.168.1.100");
@@ -71,11 +67,7 @@ mod tests {
 
     #[test]
     fn test_heartbeat_update() {
-        let mut node = ClusterNode::new(
-            "node-1".to_string(),
-            "192.168.1.100".to_string(),
-            8080,
-        );
+        let mut node = ClusterNode::new("node-1".to_string(), "192.168.1.100".to_string(), 8080);
 
         node.status = NodeStatus::Down;
         assert!(!node.is_healthy());

@@ -1,8 +1,8 @@
-use artemis_core::model::{InstanceChange, InstanceKey, Instance, ChangeType};
+use artemis_core::model::{ChangeType, Instance, InstanceChange, InstanceKey};
+use chrono::Utc;
 use dashmap::DashMap;
 use std::sync::Arc;
 use tokio::sync::mpsc;
-use chrono::Utc;
 
 type ChangeReceiver = mpsc::UnboundedReceiver<InstanceChange>;
 type ChangeSender = mpsc::UnboundedSender<InstanceChange>;
@@ -16,9 +16,7 @@ pub struct InstanceChangeManager {
 
 impl InstanceChangeManager {
     pub fn new() -> Self {
-        Self {
-            channels: Arc::new(DashMap::new()),
-        }
+        Self { channels: Arc::new(DashMap::new()) }
     }
 
     /// 订阅服务变更
@@ -30,10 +28,10 @@ impl InstanceChangeManager {
 
     /// 发布实例变更
     pub fn publish(&self, service_id: &str, change: InstanceChange) {
-        if let Some(sender) = self.channels.get(service_id) {
-            if let Err(e) = sender.send(change) {
-                tracing::error!("Failed to publish change: {}", e);
-            }
+        if let Some(sender) = self.channels.get(service_id)
+            && let Err(e) = sender.send(change)
+        {
+            tracing::error!("Failed to publish change: {}", e);
         }
     }
 

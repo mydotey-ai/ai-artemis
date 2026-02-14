@@ -1,7 +1,7 @@
 use axum::extract::ws::{Message, WebSocket};
 use dashmap::DashMap;
-use futures::stream::SplitSink;
 use futures::SinkExt;
+use futures::stream::SplitSink;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use uuid::Uuid;
@@ -21,10 +21,7 @@ pub struct SessionManager {
 
 impl SessionManager {
     pub fn new() -> Self {
-        Self {
-            sessions: Arc::new(DashMap::new()),
-            subscriptions: Arc::new(DashMap::new()),
-        }
+        Self { sessions: Arc::new(DashMap::new()), subscriptions: Arc::new(DashMap::new()) }
     }
 
     /// 注册新会话
@@ -49,10 +46,7 @@ impl SessionManager {
 
     /// 订阅服务
     pub fn subscribe(&self, session_id: SessionId, service_id: String) {
-        self.subscriptions
-            .entry(service_id.clone())
-            .or_default()
-            .push(session_id.clone());
+        self.subscriptions.entry(service_id.clone()).or_default().push(session_id.clone());
 
         tracing::info!("Session {} subscribed to service {}", session_id, service_id);
     }

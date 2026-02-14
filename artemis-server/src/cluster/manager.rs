@@ -22,10 +22,7 @@ pub struct ClusterManager {
 
 impl ClusterManager {
     pub fn new(heartbeat_timeout: Duration) -> Self {
-        Self {
-            nodes: Arc::new(DashMap::new()),
-            heartbeat_timeout,
-        }
+        Self { nodes: Arc::new(DashMap::new()), heartbeat_timeout }
     }
 
     /// 注册新节点
@@ -112,11 +109,7 @@ mod tests {
     #[test]
     fn test_register_node() {
         let manager = ClusterManager::default();
-        let node = ClusterNode::new(
-            "node-1".to_string(),
-            "192.168.1.100".to_string(),
-            8080,
-        );
+        let node = ClusterNode::new("node-1".to_string(), "192.168.1.100".to_string(), 8080);
 
         manager.register_node(node);
         assert_eq!(manager.node_count(), 1);
@@ -126,11 +119,7 @@ mod tests {
     fn test_get_healthy_nodes() {
         let manager = ClusterManager::default();
 
-        let node1 = ClusterNode::new(
-            "node-1".to_string(),
-            "192.168.1.100".to_string(),
-            8080,
-        );
+        let node1 = ClusterNode::new("node-1".to_string(), "192.168.1.100".to_string(), 8080);
         manager.register_node(node1);
 
         let healthy = manager.get_healthy_nodes();
@@ -141,11 +130,7 @@ mod tests {
     fn test_heartbeat_update() {
         let manager = ClusterManager::default();
 
-        let node = ClusterNode::new(
-            "node-1".to_string(),
-            "192.168.1.100".to_string(),
-            8080,
-        );
+        let node = ClusterNode::new("node-1".to_string(), "192.168.1.100".to_string(), 8080);
         manager.register_node(node);
 
         assert!(manager.update_heartbeat("node-1"));

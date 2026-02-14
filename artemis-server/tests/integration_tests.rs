@@ -5,8 +5,8 @@ use artemis_core::model::{
     RegisterRequest, UnregisterRequest,
 };
 use artemis_server::{
-    cache::VersionedCacheManager, change::InstanceChangeManager, discovery::DiscoveryServiceImpl,
-    lease::LeaseManager, registry::RegistryRepository, RegistryServiceImpl,
+    RegistryServiceImpl, cache::VersionedCacheManager, change::InstanceChangeManager,
+    discovery::DiscoveryServiceImpl, lease::LeaseManager, registry::RegistryRepository,
 };
 use artemis_web::state::AppState;
 use std::net::SocketAddr;
@@ -30,12 +30,7 @@ async fn start_test_server(port: u16) -> tokio::task::JoinHandle<()> {
 
         let session_manager = Arc::new(artemis_web::websocket::SessionManager::new());
 
-        let app_state = AppState {
-            registry_service,
-            discovery_service,
-            cache,
-            session_manager,
-        };
+        let app_state = AppState { registry_service, discovery_service, cache, session_manager };
 
         let addr: SocketAddr = format!("127.0.0.1:{}", port).parse().unwrap();
         let _ = artemis_web::server::run_server(app_state, addr).await;
@@ -72,14 +67,9 @@ async fn test_full_lifecycle() {
         metadata: None,
     };
 
-    let reg_req = RegisterRequest {
-        instances: vec![instance.clone()],
-    };
+    let reg_req = RegisterRequest { instances: vec![instance.clone()] };
     let reg_resp = registry_client.register(reg_req).await.unwrap();
-    assert_eq!(
-        reg_resp.response_status.error_code,
-        artemis_core::model::ErrorCode::Success
-    );
+    assert_eq!(reg_resp.response_status.error_code, artemis_core::model::ErrorCode::Success);
 
     // 2. 服务发现
     let discovery_client = Arc::new(DiscoveryClient::new(config));
@@ -101,24 +91,14 @@ async fn test_full_lifecycle() {
     assert_eq!(service.instances[0].instance_id, "e2e-inst-1");
 
     // 3. 心跳
-    let hb_req = HeartbeatRequest {
-        instance_keys: vec![instance.key()],
-    };
+    let hb_req = HeartbeatRequest { instance_keys: vec![instance.key()] };
     let hb_resp = registry_client.heartbeat(hb_req).await.unwrap();
-    assert_eq!(
-        hb_resp.response_status.error_code,
-        artemis_core::model::ErrorCode::Success
-    );
+    assert_eq!(hb_resp.response_status.error_code, artemis_core::model::ErrorCode::Success);
 
     // 4. 注销
-    let unreg_req = UnregisterRequest {
-        instance_keys: vec![instance.key()],
-    };
+    let unreg_req = UnregisterRequest { instance_keys: vec![instance.key()] };
     let unreg_resp = registry_client.unregister(unreg_req).await.unwrap();
-    assert_eq!(
-        unreg_resp.response_status.error_code,
-        artemis_core::model::ErrorCode::Success
-    );
+    assert_eq!(unreg_resp.response_status.error_code, artemis_core::model::ErrorCode::Success);
 }
 
 #[tokio::test]
@@ -152,9 +132,7 @@ async fn test_multiple_instances() {
         })
         .collect();
 
-    let reg_req = RegisterRequest {
-        instances: instances.clone(),
-    };
+    let reg_req = RegisterRequest { instances: instances.clone() };
     registry_client.register(reg_req).await.unwrap();
 
     // 验证服务发现
@@ -204,20 +182,13 @@ async fn test_heartbeat_keeps_instance_alive() {
     };
 
     // 注册实例
-    let reg_req = RegisterRequest {
-        instances: vec![instance.clone()],
-    };
+    let reg_req = RegisterRequest { instances: vec![instance.clone()] };
     registry_client.register(reg_req).await.unwrap();
 
     // 发送心跳
-    let hb_req = HeartbeatRequest {
-        instance_keys: vec![instance.key()],
-    };
+    let hb_req = HeartbeatRequest { instance_keys: vec![instance.key()] };
     let hb_resp = registry_client.heartbeat(hb_req).await.unwrap();
-    assert_eq!(
-        hb_resp.response_status.error_code,
-        artemis_core::model::ErrorCode::Success
-    );
+    assert_eq!(hb_resp.response_status.error_code, artemis_core::model::ErrorCode::Success);
 
     // 验证实例仍然活跃
     let discovery_client = Arc::new(DiscoveryClient::new(config));

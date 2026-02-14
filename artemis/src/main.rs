@@ -92,12 +92,7 @@ async fn start_server(addr: SocketAddr) -> anyhow::Result<()> {
 
     let session_manager = Arc::new(artemis_web::websocket::SessionManager::new());
 
-    let state = AppState {
-        registry_service,
-        discovery_service,
-        cache,
-        session_manager,
-    };
+    let state = AppState { registry_service, discovery_service, cache, session_manager };
 
     println!("Artemis server listening on {}", addr);
     run_server(state, addr).await

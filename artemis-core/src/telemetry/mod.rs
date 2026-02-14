@@ -46,11 +46,7 @@ pub struct TraceContext {
 
 impl TraceContext {
     pub fn new(trace_id: String, span_id: String) -> Self {
-        Self {
-            trace_id,
-            span_id,
-            parent_span_id: None,
-        }
+        Self { trace_id, span_id, parent_span_id: None }
     }
 
     pub fn with_parent(mut self, parent_span_id: String) -> Self {

@@ -1,7 +1,7 @@
+use crate::websocket::SessionManager;
 use artemis_server::{
     RegistryServiceImpl, cache::VersionedCacheManager, discovery::DiscoveryServiceImpl,
 };
-use crate::websocket::SessionManager;
 use std::sync::Arc;
 
 #[derive(Clone)]
