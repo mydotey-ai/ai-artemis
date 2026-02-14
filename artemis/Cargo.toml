@@ -23,3 +23,6 @@ reqwest = { workspace = true }
 serde_json = { workspace = true }
 sqlx = { workspace = true }
 anyhow = { workspace = true }
+
+[dev-dependencies]
+artemis-client = { path = "../artemis-client" }
