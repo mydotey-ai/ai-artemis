@@ -1,0 +1,28 @@
+# Build artifacts
+target/
+*.d
+
+# Git
+.git/
+.gitignore
+.worktrees/
+
+# Documentation
+*.md
+docs/
+
+# Java reference implementation
+artemis-java/
+
+# Tests and benchmarks
+tests/
+benches/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
