@@ -8,6 +8,7 @@ pub mod lease;
 pub mod ratelimiter;
 pub mod registry;
 pub mod replication;
+pub mod routing;
 pub mod storage;
 
 pub use change::InstanceChangeManager;
