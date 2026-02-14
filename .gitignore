@@ -31,3 +31,6 @@ Cargo.lock
 .env
 artemis.toml
 *.log
+
+# Local cluster files
+.cluster/

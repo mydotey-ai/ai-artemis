@@ -119,6 +119,44 @@ async fn main() {
 }
 ```
 
+## Local Cluster Management
+
+### Quick Start
+
+Start a 3-node cluster for local testing:
+
+```bash
+# Start cluster
+./cluster.sh start
+
+# Check status
+./cluster.sh status
+
+# View logs
+./cluster.sh logs
+
+# Stop cluster
+./cluster.sh stop
+```
+
+### Advanced Usage
+
+```bash
+# Start 5-node cluster with custom ports
+./cluster.sh start 5 8000 9000
+
+# View specific node logs
+./cluster.sh logs 1
+
+# Restart cluster
+./cluster.sh restart
+
+# Clean up all files
+./cluster.sh clean
+```
+
+See [CLUSTER.md](CLUSTER.md) for complete documentation.
+
 ## Development
 
 ```bash
