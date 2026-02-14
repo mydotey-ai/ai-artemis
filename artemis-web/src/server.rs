@@ -32,6 +32,22 @@ pub async fn run_server(state: AppState, addr: SocketAddr) -> anyhow::Result<()>
         // Management endpoints - Server operations
         .route("/api/management/server/operate-server.json", post(crate::api::management::operate_server))
         .route("/api/management/server/is-server-down.json", post(crate::api::management::is_server_down))
+        // Routing endpoints - Group management
+        .route("/api/routing/groups", post(crate::api::routing::create_group))
+        .route("/api/routing/groups", get(crate::api::routing::list_groups))
+        .route("/api/routing/groups/:group_id", get(crate::api::routing::get_group))
+        .route("/api/routing/groups/:group_key", axum::routing::delete(crate::api::routing::delete_group))
+        // Routing endpoints - Rule management
+        .route("/api/routing/rules", post(crate::api::routing::create_rule))
+        .route("/api/routing/rules", get(crate::api::routing::list_rules))
+        .route("/api/routing/rules/:rule_id", get(crate::api::routing::get_rule))
+        .route("/api/routing/rules/:rule_id", axum::routing::delete(crate::api::routing::delete_rule))
+        .route("/api/routing/rules/:rule_id/publish", post(crate::api::routing::publish_rule))
+        .route("/api/routing/rules/:rule_id/unpublish", post(crate::api::routing::unpublish_rule))
+        // Routing endpoints - Rule group association
+        .route("/api/routing/rules/:rule_id/groups", post(crate::api::routing::add_rule_group))
+        .route("/api/routing/rules/:rule_id/groups", get(crate::api::routing::get_rule_groups))
+        .route("/api/routing/rules/:rule_id/groups/:group_id", axum::routing::delete(crate::api::routing::remove_rule_group))
         .route("/ws", get(crate::websocket::ws_handler))
         .layer(CorsLayer::permissive())
         .with_state(state);
