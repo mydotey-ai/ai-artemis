@@ -731,22 +731,27 @@ docker-compose down
 ### 核心文档
 
 - [**产品规格**](docs/artemis-rust-rewrite-specification.md) - 完整的产品需求和规格说明
-- [**设计文档**](docs/plans/2026-02-13-artemis-rust-design.md) - 架构设计、模块结构、数据模型
-- [**实施计划**](docs/plans/2026-02-13-artemis-rust-implementation.md) - 分阶段开发路线图 (已完成)
-- [**完成报告**](docs/PROJECT_COMPLETION.md) - 详细的项目完成报告和统计数据
+- [**架构设计**](docs/plans/design.md) - 系统架构、模块结构、数据模型
+- [**实施路线图**](docs/plans/implementation-roadmap.md) - 分阶段开发路线图 (18个Phase)
+- [**完成报告**](docs/reports/project-completion-final.md) - 详细的项目完成报告和统计数据
 
 ### 使用文档
 
 - [**集群管理**](CLUSTER.md) - 本地多节点集群启动和管理指南
-- [**部署指南**](docs/deployment.md) - Docker、Kubernetes、监控配置 *(待创建)*
-- [**API 文档**](docs/api.md) - REST API 和 WebSocket 接口详细说明 *(待创建)*
+- [**数据库配置**](docs/DATABASE.md) - SQLite/MySQL 数据库配置和迁移指南
+- [**部署指南**](docs/deployment.md) - Docker、Kubernetes、监控配置
 
-### 实现文档
+### 功能实现文档
 
-- [**集群复制实现**](docs/CLUSTER_REPLICATION_IMPLEMENTATION.md) - 集群复制详细设计和实现
-- [**复制测试结果**](docs/REPLICATION_TEST_RESULTS.md) - 复制功能测试验证
-- [**实现状态**](docs/IMPLEMENTATION_STATUS.md) - 实现进度和状态跟踪
-- [**文档中心**](docs/README.md) - 完整的文档导航
+- [**集群复制实现**](docs/reports/features/cluster-replication.md) - 集群复制详细设计和实现
+- [**实例管理**](docs/reports/features/instance-management.md) - 实例拉入/拉出功能实现
+- [**分组路由**](docs/reports/features/group-routing.md) - 服务分组和路由规则实现
+- [**功能对比**](docs/reports/features/feature-comparison.md) - Rust vs Java 版本功能对比
+
+### 项目状态
+
+- [**实施状态**](docs/reports/implementation-status.md) - 实现进度和状态跟踪
+- [**文档中心**](docs/README.md) - 完整的文档导航和索引
 
 ### 参考实现
 
