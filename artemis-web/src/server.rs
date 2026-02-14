@@ -24,6 +24,40 @@ pub async fn run_server(state: AppState, addr: SocketAddr) -> anyhow::Result<()>
         .layer(CorsLayer::permissive())
         .with_state(state);
 
-    axum::serve(tokio::net::TcpListener::bind(addr).await?, app).await?;
+    tracing::info!("Starting Artemis Web Server on {}", addr);
+    let listener = tokio::net::TcpListener::bind(addr).await?;
+
+    axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal())
+        .await?;
+
     Ok(())
+}
+
+async fn shutdown_signal() {
+    use tokio::signal;
+
+    let ctrl_c = async {
+        signal::ctrl_c()
+            .await
+            .expect("Failed to install Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("Failed to install SIGTERM handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => {},
+        _ = terminate => {},
+    }
+
+    tracing::info!("Signal received, starting graceful shutdown");
 }
