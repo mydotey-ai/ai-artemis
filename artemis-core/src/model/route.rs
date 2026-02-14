@@ -44,6 +44,12 @@ pub struct RouteRuleGroup {
     pub weight: u32,
     /// 是否可发布
     pub unreleasable: bool,
+    /// 分组所在 Region (用于就近访问路由)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub region_id: Option<String>,
+    /// 分组所在 Zone (用于就近访问路由)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub zone_id: Option<String>,
 }
 
 impl RouteRuleGroup {
@@ -53,6 +59,26 @@ impl RouteRuleGroup {
             group_id,
             weight: weight.clamp(1, 100),
             unreleasable: false,
+            region_id: None,
+            zone_id: None,
+        }
+    }
+
+    /// 创建带地理位置信息的分组
+    pub fn with_location(
+        route_rule_id: String,
+        group_id: String,
+        weight: u32,
+        region_id: Option<String>,
+        zone_id: Option<String>,
+    ) -> Self {
+        Self {
+            route_rule_id,
+            group_id,
+            weight: weight.clamp(1, 100),
+            unreleasable: false,
+            region_id,
+            zone_id,
         }
     }
 }

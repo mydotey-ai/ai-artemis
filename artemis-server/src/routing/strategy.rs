@@ -83,11 +83,66 @@ impl RouteStrategy for WeightedRoundRobinStrategy {
     }
 }
 
-// Placeholder for upcoming tasks
+/// 就近访问策略
+///
+/// 根据客户端的地理位置(Region/Zone)选择最近的分组:
+/// - 优先级1: 匹配相同 Region 的分组
+/// - 优先级2: 匹配相同 Zone 的分组
+/// - 降级: 返回第一个分组
+#[derive(Clone)]
 pub struct CloseByVisitStrategy;
 
+impl CloseByVisitStrategy {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+impl Default for CloseByVisitStrategy {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl RouteStrategy for CloseByVisitStrategy {
+    fn select_group(
+        &self,
+        groups: &[RouteRuleGroup],
+        context: &super::context::RouteContext,
+    ) -> Option<String> {
+        if groups.is_empty() {
+            return None;
+        }
+
+        // 优先级1: 匹配相同 Region
+        if let Some(client_region) = &context.client_region {
+            for group in groups {
+                if let Some(group_region) = &group.region_id {
+                    if group_region == client_region {
+                        return Some(group.group_id.clone());
+                    }
+                }
+            }
+        }
+
+        // 优先级2: 匹配相同 Zone
+        if let Some(client_zone) = &context.client_zone {
+            for group in groups {
+                if let Some(group_zone) = &group.zone_id {
+                    if group_zone == client_zone {
+                        return Some(group.group_id.clone());
+                    }
+                }
+            }
+        }
+
+        // 降级: 返回第一个分组
+        Some(groups[0].group_id.clone())
+    }
+}
+
 #[cfg(test)]
-mod tests {
+mod weighted_round_robin_tests {
     use super::*;
     use artemis_core::model::RouteRuleGroup;
     use std::collections::HashMap;
@@ -124,6 +179,106 @@ mod tests {
     #[test]
     fn test_weighted_round_robin_empty_groups() {
         let strategy = WeightedRoundRobinStrategy::new();
+        let context = super::super::context::RouteContext::new();
+
+        let result = strategy.select_group(&[], &context);
+        assert!(result.is_none());
+    }
+}
+
+#[cfg(test)]
+mod close_by_visit_tests {
+    use super::*;
+    use artemis_core::model::RouteRuleGroup;
+
+    #[test]
+    fn test_close_by_visit_same_region() {
+        let strategy = CloseByVisitStrategy::new();
+
+        let groups = vec![
+            RouteRuleGroup::with_location(
+                "rule-1".to_string(),
+                "group-us-east".to_string(),
+                50,
+                Some("us-east".to_string()),
+                Some("zone-1".to_string()),
+            ),
+            RouteRuleGroup::with_location(
+                "rule-1".to_string(),
+                "group-us-west".to_string(),
+                30,
+                Some("us-west".to_string()),
+                Some("zone-1".to_string()),
+            ),
+            RouteRuleGroup::with_location(
+                "rule-1".to_string(),
+                "group-eu".to_string(),
+                20,
+                Some("eu-central".to_string()),
+                None,
+            ),
+        ];
+
+        let context = super::super::context::RouteContext::new()
+            .with_region("us-east".to_string());
+
+        let selected = strategy.select_group(&groups, &context).unwrap();
+        assert_eq!(selected, "group-us-east");
+    }
+
+    #[test]
+    fn test_close_by_visit_same_zone() {
+        let strategy = CloseByVisitStrategy::new();
+
+        let groups = vec![
+            RouteRuleGroup::with_location(
+                "rule-1".to_string(),
+                "group-zone1".to_string(),
+                50,
+                None,
+                Some("zone-1".to_string()),
+            ),
+            RouteRuleGroup::with_location(
+                "rule-1".to_string(),
+                "group-zone2".to_string(),
+                50,
+                None,
+                Some("zone-2".to_string()),
+            ),
+        ];
+
+        let context = super::super::context::RouteContext::new()
+            .with_zone("zone-2".to_string());
+
+        let selected = strategy.select_group(&groups, &context).unwrap();
+        assert_eq!(selected, "group-zone2");
+    }
+
+    #[test]
+    fn test_close_by_visit_fallback() {
+        let strategy = CloseByVisitStrategy::new();
+
+        let groups = vec![
+            RouteRuleGroup::with_location(
+                "rule-1".to_string(),
+                "group-default".to_string(),
+                100,
+                Some("us-east".to_string()),
+                None,
+            ),
+        ];
+
+        // 客户端位置不匹配,降级到第一个分组
+        let context = super::super::context::RouteContext::new()
+            .with_region("eu-west".to_string());
+
+        let selected = strategy.select_group(&groups, &context).unwrap();
+        assert_eq!(selected, "group-default");
+    }
+
+    #[test]
+    fn test_close_by_visit_empty_groups() {
+        let strategy = CloseByVisitStrategy::new();
         let context = super::super::context::RouteContext::new();
 
         let result = strategy.select_group(&[], &context);
