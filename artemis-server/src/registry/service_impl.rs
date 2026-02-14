@@ -61,6 +61,16 @@ impl RegistryServiceImpl {
             self.cache.update_service(service);
         }
     }
+
+    /// 获取分组的实例
+    pub fn get_instances_by_group(
+        &self,
+        service_id: &str,
+        group_id: &str,
+        region_id: Option<&str>,
+    ) -> Vec<artemis_core::model::Instance> {
+        self.repository.get_instances_by_group(service_id, group_id, region_id)
+    }
 }
 
 #[async_trait]

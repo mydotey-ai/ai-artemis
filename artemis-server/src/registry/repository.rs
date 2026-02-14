@@ -41,6 +41,28 @@ impl RegistryRepository {
             .collect()
     }
 
+    /// 获取某个分组的所有实例
+    pub fn get_instances_by_group(
+        &self,
+        service_id: &str,
+        group_id: &str,
+        region_id: Option<&str>,
+    ) -> Vec<Instance> {
+        let service_id_lower = service_id.to_lowercase();
+        self.instances
+            .iter()
+            .filter(|entry| {
+                let inst = entry.value();
+                let matches_service = entry.key().service_id == service_id_lower;
+                let matches_group = inst.group_id.as_deref() == Some(group_id);
+                let matches_region = region_id.map_or(true, |rid| inst.region_id == rid);
+
+                matches_service && matches_group && matches_region
+            })
+            .map(|entry| entry.value().clone())
+            .collect()
+    }
+
     /// 获取所有实例
     pub fn get_all_instances(&self) -> Vec<Instance> {
         self.instances.iter().map(|entry| entry.value().clone()).collect()

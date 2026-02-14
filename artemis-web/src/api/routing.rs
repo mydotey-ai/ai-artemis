@@ -50,6 +50,35 @@ pub struct ListGroupsQuery {
     pub region_id: Option<String>,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UpdateGroupRequest {
+    pub description: Option<String>,
+    pub status: Option<GroupStatus>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UpdateRuleRequest {
+    pub name: Option<String>,
+    pub description: Option<String>,
+    pub strategy: Option<RouteStrategy>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UpdateRuleGroupRequest {
+    pub weight: u32,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AddGroupTagsRequest {
+    pub tags: Vec<artemis_core::model::GroupTag>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GetGroupInstancesQuery {
+    pub region_id: Option<String>,
+    pub zone_id: Option<String>,
+}
+
 #[derive(Debug, Serialize)]
 pub struct ApiResponse<T> {
     pub success: bool,
@@ -159,6 +188,127 @@ pub async fn delete_group(
     }
 }
 
+/// PATCH /api/routing/groups/:group_key - 更新分组
+pub async fn update_group(
+    State(state): State<AppState>,
+    Path(group_key): Path<String>,
+    Json(req): Json<UpdateGroupRequest>,
+) -> impl IntoResponse {
+    match state.group_manager.get_group(&group_key) {
+        Some(mut group) => {
+            if let Some(description) = req.description {
+                group.description = Some(description);
+            }
+            if let Some(status) = req.status {
+                group.status = status;
+            }
+
+            match state.group_manager.update_group(group.clone()) {
+                Ok(_) => (StatusCode::OK, Json(ApiResponse::success(group))),
+                Err(e) => (StatusCode::BAD_REQUEST, Json(ApiResponse::<ServiceGroup>::error(e))),
+            }
+        }
+        None => (
+            StatusCode::NOT_FOUND,
+            Json(ApiResponse::<ServiceGroup>::error(format!("Group {} not found", group_key))),
+        ),
+    }
+}
+
+/// POST /api/routing/groups/:group_key/tags - 添加标签到分组
+pub async fn add_group_tags(
+    State(state): State<AppState>,
+    Path(group_key): Path<String>,
+    Json(req): Json<AddGroupTagsRequest>,
+) -> impl IntoResponse {
+    match state.group_manager.get_group(&group_key) {
+        Some(mut group) => {
+            let mut tags = group.tags.unwrap_or_default();
+            tags.extend(req.tags);
+            group.tags = Some(tags);
+
+            match state.group_manager.update_group(group.clone()) {
+                Ok(_) => (StatusCode::OK, Json(ApiResponse::success(group))),
+                Err(e) => (StatusCode::BAD_REQUEST, Json(ApiResponse::<ServiceGroup>::error(e))),
+            }
+        }
+        None => (
+            StatusCode::NOT_FOUND,
+            Json(ApiResponse::<ServiceGroup>::error(format!("Group {} not found", group_key))),
+        ),
+    }
+}
+
+/// GET /api/routing/groups/:group_key/tags - 获取分组标签
+pub async fn get_group_tags(
+    State(state): State<AppState>,
+    Path(group_key): Path<String>,
+) -> impl IntoResponse {
+    match state.group_manager.get_group(&group_key) {
+        Some(group) => {
+            let tags = group.tags.unwrap_or_default();
+            (StatusCode::OK, Json(ApiResponse::success(tags)))
+        }
+        None => (
+            StatusCode::NOT_FOUND,
+            Json(ApiResponse::<Vec<artemis_core::model::GroupTag>>::error(
+                format!("Group {} not found", group_key)
+            )),
+        ),
+    }
+}
+
+/// DELETE /api/routing/groups/:group_key/tags/:tag_key - 删除分组标签
+pub async fn remove_group_tag(
+    State(state): State<AppState>,
+    Path((group_key, tag_key)): Path<(String, String)>,
+) -> impl IntoResponse {
+    match state.group_manager.get_group(&group_key) {
+        Some(mut group) => {
+            if let Some(mut tags) = group.tags {
+                tags.retain(|tag| tag.key != tag_key);
+                group.tags = Some(tags);
+
+                match state.group_manager.update_group(group.clone()) {
+                    Ok(_) => (StatusCode::OK, Json(ApiResponse::success(group))),
+                    Err(e) => (StatusCode::BAD_REQUEST, Json(ApiResponse::<ServiceGroup>::error(e))),
+                }
+            } else {
+                (
+                    StatusCode::NOT_FOUND,
+                    Json(ApiResponse::<ServiceGroup>::error("No tags found".to_string())),
+                )
+            }
+        }
+        None => (
+            StatusCode::NOT_FOUND,
+            Json(ApiResponse::<ServiceGroup>::error(format!("Group {} not found", group_key))),
+        ),
+    }
+}
+
+/// GET /api/routing/groups/:group_key/instances - 获取分组的实例
+pub async fn get_group_instances(
+    State(state): State<AppState>,
+    Path(group_key): Path<String>,
+    Query(query): Query<GetGroupInstancesQuery>,
+) -> impl IntoResponse {
+    match state.group_manager.get_group(&group_key) {
+        Some(group) => {
+            let instances = state
+                .registry_service
+                .get_instances_by_group(&group.service_id, &group.name, query.region_id.as_deref());
+            (StatusCode::OK, Json(ApiResponse::success(instances)))
+        }
+        None => (
+            StatusCode::NOT_FOUND,
+            Json(ApiResponse::<Vec<artemis_core::model::Instance>>::error(
+                format!("Group {} not found", group_key)
+            )),
+        ),
+    }
+}
+
 // ===== 路由规则 API =====
 
 /// POST /api/routing/rules - 创建路由规则
@@ -231,6 +381,36 @@ pub async fn delete_rule(
     }
 }
 
+/// PATCH /api/routing/rules/:rule_id - 更新路由规则
+pub async fn update_rule(
+    State(state): State<AppState>,
+    Path(rule_id): Path<String>,
+    Json(req): Json<UpdateRuleRequest>,
+) -> impl IntoResponse {
+    match state.route_manager.get_rule(&rule_id) {
+        Some(mut rule) => {
+            if let Some(name) = req.name {
+                rule.name = name;
+            }
+            if let Some(description) = req.description {
+                rule.description = Some(description);
+            }
+            if let Some(strategy) = req.strategy {
+                rule.strategy = strategy;
+            }
+
+            match state.route_manager.update_rule(rule.clone()) {
+                Ok(_) => (StatusCode::OK, Json(ApiResponse::success(rule))),
+                Err(e) => (StatusCode::BAD_REQUEST, Json(ApiResponse::<RouteRule>::error(e))),
+            }
+        }
+        None => (
+            StatusCode::NOT_FOUND,
+            Json(ApiResponse::<RouteRule>::error(format!("Rule {} not found", rule_id))),
+        ),
+    }
+}
+
 /// POST /api/routing/rules/:rule_id/publish - 发布规则
 pub async fn publish_rule(
     State(state): State<AppState>,
@@ -292,5 +472,34 @@ pub async fn remove_rule_group(
     match state.route_manager.remove_rule_group(&rule_id, &group_id) {
         Ok(_) => (StatusCode::OK, Json(ApiResponse::success(()))),
         Err(e) => (StatusCode::NOT_FOUND, Json(ApiResponse::<()>::error(e))),
+    }
+}
+
+/// PATCH /api/routing/rules/:rule_id/groups/:group_id - 更新分组权重
+pub async fn update_rule_group(
+    State(state): State<AppState>,
+    Path((rule_id, group_id)): Path<(String, String)>,
+    Json(req): Json<UpdateRuleGroupRequest>,
+) -> impl IntoResponse {
+    // 获取现有分组配置
+    let groups = state.route_manager.get_rule_groups(&rule_id);
+    let group = groups.iter().find(|g| g.group_id == group_id);
+
+    match group {
+        Some(existing) => {
+            let mut updated = existing.clone();
+            updated.weight = req.weight;
+
+            match state.route_manager.update_rule_group(&rule_id, updated.clone()) {
+                Ok(_) => (StatusCode::OK, Json(ApiResponse::success(updated))),
+                Err(e) => (StatusCode::BAD_REQUEST, Json(ApiResponse::<RouteRuleGroup>::error(e))),
+            }
+        }
+        None => (
+            StatusCode::NOT_FOUND,
+            Json(ApiResponse::<RouteRuleGroup>::error(
+                format!("Group {} not found in rule {}", group_id, rule_id)
+            )),
+        ),
     }
 }

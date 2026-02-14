@@ -109,6 +109,7 @@ for i in {1..3}; do
           \"group_id\": \"group-a\",
           \"ip\": \"192.168.1.1$i\",
           \"port\": 8080,
+          \"url\": \"http://192.168.1.1$i:8080\",
           \"status\": \"up\"
         }]
       }" > /dev/null
@@ -127,6 +128,7 @@ for i in {1..2}; do
           \"group_id\": \"group-b\",
           \"ip\": \"192.168.1.2$i\",
           \"port\": 8080,
+          \"url\": \"http://192.168.1.2$i:8080\",
           \"status\": \"up\"
         }]
       }" > /dev/null
@@ -144,7 +146,8 @@ RESPONSE=$(curl -s -X POST "$BASE_URL/api/discovery/service.json" \
   -d "{
     \"discovery_config\": {
       \"service_id\": \"$SERVICE_ID\",
-      \"region_id\": \"$REGION_ID\"
+      \"region_id\": \"$REGION_ID\",
+      \"zone_id\": \"$ZONE_ID\"
     }
   }")
 
@@ -168,7 +171,7 @@ RESPONSE=$(curl -s -X POST "$BASE_URL/api/routing/groups" \
     \"region_id\": \"$REGION_ID\",
     \"zone_id\": \"$ZONE_ID\",
     \"name\": \"group-a\",
-    \"group_type\": \"Physical\",
+    \"group_type\": \"physical\",
     \"description\": \"生产环境分组\"
   }")
 
@@ -194,7 +197,7 @@ RESPONSE=$(curl -s -X POST "$BASE_URL/api/routing/groups" \
     \"region_id\": \"$REGION_ID\",
     \"zone_id\": \"$ZONE_ID\",
     \"name\": \"group-b\",
-    \"group_type\": \"Physical\",
+    \"group_type\": \"physical\",
     \"description\": \"测试环境分组\"
   }")
 
@@ -220,7 +223,7 @@ RESPONSE=$(curl -s -X POST "$BASE_URL/api/routing/rules" \
     \"service_id\": \"$SERVICE_ID\",
     \"name\": \"加权路由规则\",
     \"description\": \"70% 流量到生产,30% 到测试\",
-    \"strategy\": \"WeightedRoundRobin\"
+    \"strategy\": \"weighted-round-robin\"
   }")
 
 SUCCESS=$(echo "$RESPONSE" | jq -r '.success')
@@ -376,7 +379,8 @@ RESPONSE=$(curl -s -X POST "$BASE_URL/api/discovery/service.json" \
   -d "{
     \"discovery_config\": {
       \"service_id\": \"$SERVICE_ID\",
-      \"region_id\": \"$REGION_ID\"
+      \"region_id\": \"$REGION_ID\",
+      \"zone_id\": \"$ZONE_ID\"
     }
   }")
 
