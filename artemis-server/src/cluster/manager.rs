@@ -104,30 +104,47 @@ impl ClusterManager {
     /// 启动健康检查任务
     pub fn start_health_check_task(self: Arc<Self>) {
         tokio::spawn(async move {
-            let mut interval = tokio::time::interval(Duration::from_secs(5));
             info!("Health check task started (interval: 5s)");
+
+            // 首次延迟,等待所有节点启动
+            tokio::time::sleep(Duration::from_secs(10)).await;
+
+            let mut interval = tokio::time::interval(Duration::from_secs(5));
 
             loop {
                 interval.tick().await;
+
+                // 并发执行所有节点的健康检查
+                let mut tasks = vec![];
 
                 for node_entry in self.nodes.iter() {
                     let node_id = node_entry.key().clone();
                     let base_url = node_entry.value().base_url();
 
-                    // 执行健康检查
-                    let is_healthy = check_node_health(&base_url).await;
+                    // 为每个节点启动独立的健康检查任务
+                    let task = tokio::spawn(async move {
+                        let is_healthy = check_node_health(&base_url).await;
+                        (node_id, is_healthy)
+                    });
 
-                    // 更新节点状态
-                    if let Some(mut node) = self.nodes.get_mut(&node_id) {
-                        let was_healthy = node.is_healthy();
-                        node.update_status(is_healthy);
+                    tasks.push(task);
+                }
 
-                        // 状态变化时记录日志
-                        if was_healthy != is_healthy {
-                            if is_healthy {
-                                info!("Node {} is now UP", node_id);
-                            } else {
-                                warn!("Node {} is now DOWN", node_id);
+                // 等待所有健康检查完成
+                for task in tasks {
+                    if let Ok((node_id, is_healthy)) = task.await {
+                        // 更新节点状态
+                        if let Some(mut node) = self.nodes.get_mut(&node_id) {
+                            let was_healthy = node.is_healthy();
+                            node.update_status(is_healthy);
+
+                            // 状态变化时记录日志
+                            if was_healthy != is_healthy {
+                                if is_healthy {
+                                    info!("Node {} is now UP", node_id);
+                                } else {
+                                    warn!("Node {} is now DOWN", node_id);
+                                }
                             }
                         }
                     }
@@ -141,7 +158,13 @@ impl ClusterManager {
 async fn check_node_health(base_url: &str) -> bool {
     let health_url = format!("{}/health", base_url);
 
-    match reqwest::get(&health_url).await {
+    // 创建带超时的客户端 (避免长时间阻塞)
+    let client = reqwest::Client::builder()
+        .timeout(Duration::from_secs(2))
+        .build()
+        .unwrap_or_else(|_| reqwest::Client::new());
+
+    match client.get(&health_url).send().await {
         Ok(response) => response.status().is_success(),
         Err(e) => {
             tracing::debug!("Health check failed for {}: {}", base_url, e);
