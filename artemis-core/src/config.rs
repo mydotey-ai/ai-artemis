@@ -2,8 +2,9 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use crate::error::{ArtemisError, Result};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ArtemisConfig {
+    #[serde(default)]
     pub server: ServerConfig,
     #[serde(default)]
     pub cluster: ClusterConfig,
@@ -48,7 +49,7 @@ pub struct ServerConfig {
     pub zone_id: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ClusterConfig {
     #[serde(default)]
     pub enabled: bool,
@@ -162,11 +163,6 @@ impl Default for ServerConfig {
     }
 }
 
-impl Default for ClusterConfig {
-    fn default() -> Self {
-        Self { enabled: false, peers: None }
-    }
-}
 
 impl Default for ReplicationConfig {
     fn default() -> Self {
@@ -217,21 +213,6 @@ impl Default for LoggingConfig {
     }
 }
 
-impl Default for ArtemisConfig {
-    fn default() -> Self {
-        Self {
-            server: ServerConfig::default(),
-            cluster: ClusterConfig::default(),
-            replication: ReplicationConfig::default(),
-            lease: LeaseConfig::default(),
-            cache: CacheConfig::default(),
-            ratelimit: RateLimitConfig::default(),
-            logging: LoggingConfig::default(),
-            database: None,
-            registry: None,
-        }
-    }
-}
 
 impl ArtemisConfig {
     /// Load configuration from a TOML file

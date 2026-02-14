@@ -117,10 +117,10 @@ impl RouteStrategy for CloseByVisitStrategy {
         // 优先级1: 匹配相同 Region
         if let Some(client_region) = &context.client_region {
             for group in groups {
-                if let Some(group_region) = &group.region_id {
-                    if group_region == client_region {
-                        return Some(group.group_id.clone());
-                    }
+                if let Some(group_region) = &group.region_id
+                    && group_region == client_region
+                {
+                    return Some(group.group_id.clone());
                 }
             }
         }
@@ -128,10 +128,10 @@ impl RouteStrategy for CloseByVisitStrategy {
         // 优先级2: 匹配相同 Zone
         if let Some(client_zone) = &context.client_zone {
             for group in groups {
-                if let Some(group_zone) = &group.zone_id {
-                    if group_zone == client_zone {
-                        return Some(group.group_id.clone());
-                    }
+                if let Some(group_zone) = &group.zone_id
+                    && group_zone == client_zone
+                {
+                    return Some(group.group_id.clone());
                 }
             }
         }

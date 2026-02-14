@@ -86,10 +86,10 @@ impl RouteManager {
         self.rule_groups.retain(|(rid, _), _| rid != rule_id);
 
         // 删除ID映射
-        if let Some(rule) = self.rules.get(rule_id) {
-            if let Some(id) = rule.route_rule_id {
-                self.rule_id_map.remove(&id);
-            }
+        if let Some(rule) = self.rules.get(rule_id)
+            && let Some(id) = rule.route_rule_id
+        {
+            self.rule_id_map.remove(&id);
         }
 
         self.rules.remove(rule_id);

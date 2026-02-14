@@ -51,7 +51,7 @@ impl ClusterNode {
 
         // 解析 host:port
         let parts: Vec<&str> = url_clean.split(':').collect();
-        let address = parts.get(0).unwrap_or(&"127.0.0.1").to_string();
+        let address = parts.first().unwrap_or(&"127.0.0.1").to_string();
         let port = parts.get(1)
             .and_then(|p| p.parse().ok())
             .unwrap_or(8080);

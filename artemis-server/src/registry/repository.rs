@@ -62,7 +62,7 @@ impl RegistryRepository {
 
             services_map
                 .entry(service_id)
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push(instance);
         }
 
