@@ -1,4 +1,5 @@
 pub mod change;
+pub mod group;
 pub mod instance;
 pub mod lease;
 pub mod management;
@@ -8,6 +9,9 @@ pub mod route;
 pub mod service;
 
 pub use change::{ChangeType, InstanceChange};
+pub use group::{
+    GroupInstance, GroupOperation, GroupStatus, GroupTag, GroupType, ServiceGroup,
+};
 pub use instance::{Instance, InstanceKey, InstanceStatus};
 pub use lease::Lease;
 pub use management::{
@@ -18,5 +22,5 @@ pub use management::{
 };
 pub use replication::*;
 pub use request::*;
-pub use route::{Group, GroupStatus, RouteRule, RouteRuleGroup, RouteRuleStatus, RouteStrategy};
-pub use service::{Service, ServiceGroup};
+pub use route::{Group, RouteRule, RouteRuleGroup, RouteRuleStatus, RouteStrategy};
+pub use service::Service;
