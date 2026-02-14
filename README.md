@@ -508,7 +508,7 @@ docker-compose down
 - [**产品规格**](docs/artemis-rust-rewrite-specification.md) - 完整的产品需求和规格说明
 - [**设计文档**](docs/plans/2026-02-13-artemis-rust-design.md) - 架构设计、模块结构、数据模型
 - [**实施计划**](docs/plans/2026-02-13-artemis-rust-implementation.md) - 分阶段开发路线图 (已完成)
-- [**完成报告**](PROJECT_COMPLETION.md) - 详细的项目完成报告和统计数据
+- [**完成报告**](docs/PROJECT_COMPLETION.md) - 详细的项目完成报告和统计数据
 
 ### 使用文档
 
