@@ -1,6 +1,7 @@
 use super::instance::InstanceKey;
 use super::request::ResponseStatus;
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
 /// 实例操作类型
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -10,6 +11,15 @@ pub enum InstanceOperation {
     PullIn,
     /// 拉出 (下线服务)
     PullOut,
+}
+
+impl fmt::Display for InstanceOperation {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            InstanceOperation::PullIn => write!(f, "pullin"),
+            InstanceOperation::PullOut => write!(f, "pullout"),
+        }
+    }
 }
 
 /// 实例操作记录
@@ -92,6 +102,25 @@ pub enum ServerOperation {
     PullIn,
     /// 拉出整台服务器
     PullOut,
+}
+
+impl fmt::Display for ServerOperation {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ServerOperation::PullIn => write!(f, "pullin"),
+            ServerOperation::PullOut => write!(f, "pullout"),
+        }
+    }
+}
+
+/// 服务器操作记录
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ServerOperationRecord {
+    pub server_id: String,
+    pub region_id: String,
+    pub operation: ServerOperation,
+    pub operator_id: String,
+    pub operation_time: i64,
 }
 
 /// 操作服务器请求

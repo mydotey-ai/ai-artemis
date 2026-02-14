@@ -55,7 +55,7 @@ impl RegistryRepository {
                 let inst = entry.value();
                 let matches_service = entry.key().service_id == service_id_lower;
                 let matches_group = inst.group_id.as_deref() == Some(group_id);
-                let matches_region = region_id.map_or(true, |rid| inst.region_id == rid);
+                let matches_region = region_id.is_none_or(|rid| inst.region_id == rid);
 
                 matches_service && matches_group && matches_region
             })

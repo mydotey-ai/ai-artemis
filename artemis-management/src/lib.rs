@@ -1,9 +1,14 @@
 pub mod api;
-pub mod dao;
 pub mod group;
 pub mod instance;
 pub mod route;
+pub mod zone;
+pub mod canary;
+pub mod audit;
 
 pub use group::GroupManager;
 pub use instance::InstanceManager;
 pub use route::RouteManager;
+pub use zone::ZoneManager;
+pub use canary::CanaryManager;
+pub use audit::AuditManager;

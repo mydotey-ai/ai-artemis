@@ -55,6 +55,22 @@ pub async fn run_server(state: AppState, addr: SocketAddr) -> anyhow::Result<()>
         .route("/api/routing/rules/{rule_id}/groups", get(crate::api::routing::get_rule_groups))
         .route("/api/routing/rules/{rule_id}/groups/{group_id}", axum::routing::delete(crate::api::routing::remove_rule_group))
         .route("/api/routing/rules/{rule_id}/groups/{group_id}", axum::routing::patch(crate::api::routing::update_rule_group))
+        // Zone management endpoints
+        .route("/api/management/zone/pull-out", post(crate::api::zone::pull_out_zone))
+        .route("/api/management/zone/pull-in", post(crate::api::zone::pull_in_zone))
+        .route("/api/management/zone/status/{zone_id}/{region_id}", get(crate::api::zone::get_zone_status))
+        .route("/api/management/zone/operations", get(crate::api::zone::list_zone_operations))
+        .route("/api/management/zone/{zone_id}/{region_id}", axum::routing::delete(crate::api::zone::delete_zone_operation))
+        // Canary release endpoints
+        .route("/api/management/canary/config", post(crate::api::canary::set_canary_config))
+        .route("/api/management/canary/config/{service_id}", get(crate::api::canary::get_canary_config))
+        .route("/api/management/canary/enable", post(crate::api::canary::enable_canary))
+        .route("/api/management/canary/config/{service_id}", axum::routing::delete(crate::api::canary::delete_canary_config))
+        .route("/api/management/canary/configs", get(crate::api::canary::list_canary_configs))
+        // Audit log endpoints
+        .route("/api/management/audit/logs", get(crate::api::audit::query_logs))
+        .route("/api/management/audit/instance-logs", get(crate::api::audit::query_instance_logs))
+        .route("/api/management/audit/server-logs", get(crate::api::audit::query_server_logs))
         .route("/ws", get(crate::websocket::ws_handler))
         .layer(CorsLayer::permissive())
         .with_state(state);

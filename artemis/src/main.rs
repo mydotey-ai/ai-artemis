@@ -158,6 +158,9 @@ async fn start_server(config_path: Option<String>, addr_override: Option<String>
     // 7. Initialize routing components
     let group_manager = Arc::new(GroupManager::new());
     let route_manager = Arc::new(RouteManager::new());
+    let zone_manager = Arc::new(artemis_management::ZoneManager::new());
+    let canary_manager = Arc::new(artemis_management::CanaryManager::new());
+    let audit_manager = Arc::new(artemis_management::AuditManager::new());
     let route_engine = Arc::new(RouteEngine::new());
 
     // 8. Create discovery service with filters
@@ -188,6 +191,9 @@ async fn start_server(config_path: Option<String>, addr_override: Option<String>
         instance_manager,
         group_manager,
         route_manager,
+        zone_manager,
+        canary_manager,
+        audit_manager,
     };
 
     // 10. Start server

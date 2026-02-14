@@ -47,7 +47,8 @@ tokio-tungstenite = "0.28.0"
 # 数据库
 sqlx = { version = "0.8", features = [
     "runtime-tokio",
-    "mysql",
+    "sqlite",
+    "migrate",
     "chrono",
     "json",
 ] }

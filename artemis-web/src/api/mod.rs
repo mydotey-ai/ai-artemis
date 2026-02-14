@@ -1,6 +1,9 @@
+pub mod audit;
+pub mod canary;
 pub mod discovery;
 pub mod management;
 pub mod metrics;
 pub mod registry;
 pub mod replication;
 pub mod routing;
+pub mod zone;
