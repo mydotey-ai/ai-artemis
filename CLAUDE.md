@@ -54,7 +54,18 @@
 - ✅ **11 个单元测试** - InstanceManager 核心逻辑测试
 - ✅ **13 步集成测试** - test-instance-management.sh
 
-#### Phase 13: 生产就绪特性 (P1 - 已完成)
+#### Phase 13: 分组路由功能 (P2 - 已完成)
+- ✅ **数据模型** - ServiceGroup, RouteRuleGroup, RouteContext
+- ✅ **路由策略** - WeightedRoundRobin (加权轮询), CloseByVisit (就近访问)
+- ✅ **路由引擎** - 统一的路由规则应用引擎
+- ✅ **分组管理** - GroupManager 完整 CRUD (创建/查询/更新/删除)
+- ✅ **规则管理** - RouteManager 完整 CRUD + 发布/停用
+- ✅ **服务发现集成** - GroupRoutingFilter 自动应用路由规则
+- ✅ **HTTP API** - 21 个核心端点 (分组、规则、关联、标签、实例查询)
+- ✅ **50+ 单元测试** - 路由策略、引擎、管理器测试
+- ✅ **13 步集成测试** - test-group-routing.sh 验证完整流程
+
+#### Phase 14: 生产就绪特性 (P1 - 已完成)
 - ✅ **性能优化** - DashMap 无锁并发、零拷贝设计
 - ✅ **监控集成** - Prometheus metrics 导出
 - ✅ **健康检查** - HTTP 健康检查端点
@@ -67,6 +78,7 @@
 - ✅ **本地集群管理** - cluster.sh 脚本,一键启动/停止多节点集群
 - ✅ **集群 API 测试** - test-cluster-api.sh 脚本,完整的集群 API 测试
 - ✅ **实例管理测试** - test-instance-management.sh 脚本,13 步集成测试
+- ✅ **分组路由测试** - test-group-routing.sh 脚本,13 步集成测试验证加权路由
 
 ## 项目文档
 
@@ -87,6 +99,7 @@
 - **复制测试结果**: `docs/REPLICATION_TEST_RESULTS.md` - 复制功能测试验证
 - **实例管理完成**: `docs/INSTANCE_MANAGEMENT_COMPLETE.md` - 实例管理功能实现
 - **实例管理验证**: `docs/INSTANCE_MANAGEMENT_VERIFICATION.md` - 实例管理测试报告
+- **分组路由完成**: `docs/PHASE_13_COMPLETION_REPORT.md` - 分组路由功能完整实现报告
 - **功能差距分析**: `docs/FEATURE_GAP_ANALYSIS.md` - Java vs Rust 功能对比
 - **项目状态报告**: `docs/PROJECT_STATUS_2026-02-14.md` - 完整的项目状态总结
 - **实现状态**: `docs/IMPLEMENTATION_STATUS.md` - 实现进度和状态跟踪
@@ -258,18 +271,19 @@ cargo build --workspace
 4. **内存优化**: 内存占用减少 **50%+** (4GB → 2GB)
 5. **实时数据一致性**: 实现缓存同步机制,服务变更实时生效,消除查询延迟
 6. **集群复制优化**: 心跳批处理窗口 (100ms),网络请求减少 **90%+**,复制延迟 **< 100ms**
-7. **生产就绪**: 完整的监控、健康检查、优雅关闭、Docker 支持
+7. **分组路由**: 支持加权轮询和就近访问策略,实现灵活的流量分配
+8. **生产就绪**: 完整的监控、健康检查、优雅关闭、Docker 支持
 
 ### 📊 交付成果
 
 - ✅ **所有核心任务**全部完成 (100%)
-- ✅ **28 个 Git 提交**,清晰的开发历史
-- ✅ **5,022 行代码** (纯 Rust,不含测试)
+- ✅ **30+ Git 提交**,清晰的开发历史
+- ✅ **6,500+ 行代码** (纯 Rust,不含测试)
 - ✅ **6 个 crate** 模块化架构
-- ✅ **49 个单元测试** + 2 个集成测试脚本 + 性能基准
+- ✅ **100+ 单元测试** + 3 个集成测试脚本 + 性能基准
 - ✅ **零编译警告** (cargo clippy)
-- ✅ **完整文档**覆盖 (18+ 文档文件)
-- ✅ **自动化测试工具** (cluster.sh + test-cluster-api.sh + test-instance-management.sh)
+- ✅ **完整文档**覆盖 (20+ 文档文件)
+- ✅ **自动化测试工具** (cluster.sh + test-cluster-api.sh + test-instance-management.sh + test-group-routing.sh)
 
 ### 🏆 工程实践
 
