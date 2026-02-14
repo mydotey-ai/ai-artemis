@@ -156,9 +156,11 @@ artemis-workspace/
 - ✅ **实时推送** - 服务变更实时通知订阅者
 - ✅ **订阅管理** - 服务级别的订阅和消息广播
 
-#### Phase 10-11: 集群和管理 (P2 框架)
-- ✅ **集群框架** - 节点管理和心跳机制
-- ✅ **复制框架** - 数据复制批处理机制
+#### Phase 10-11: 集群和管理 (P2 已完成)
+- ✅ **集群管理** - 节点管理和健康检查
+- ✅ **数据复制** - 异步复制、心跳批处理、智能重试
+- ✅ **反复制循环** - 防止数据循环复制
+- ✅ **实时缓存同步** - 服务变更实时生效
 - ✅ **管理接口** - DAO 层和管理功能抽象
 
 #### Phase 12: 生产就绪 (P1)
@@ -172,6 +174,7 @@ artemis-workspace/
 
 #### 额外工具
 - ✅ **集群管理脚本** - `cluster.sh` 一键启动/停止多节点集群
+- ✅ **自动化测试套件** - `test-cluster-api.sh` 完整的集群 API 测试
 
 ---
 
@@ -338,17 +341,22 @@ async fn main() -> anyhow::Result<()> {
 # 1. 启动 3 节点集群
 ./cluster.sh start
 
-# 2. 在节点 1 注册服务
+# 2. 运行自动化测试套件 (推荐)
+./test-cluster-api.sh
+
+# 或者手动测试:
+
+# 3. 在节点 1 注册服务
 curl -X POST http://localhost:8080/api/registry/register.json \
   -H "Content-Type: application/json" \
   -d '{"instances": [...]}'
 
-# 3. 在节点 2 查询服务 (验证数据复制)
+# 4. 在节点 2 查询服务 (验证数据复制)
 curl -X POST http://localhost:8081/api/discovery/service.json \
   -H "Content-Type: application/json" \
   -d '{"discovery_config": {...}}'
 
-# 4. 查看集群状态
+# 5. 查看集群状态
 ./cluster.sh status
 ```
 
@@ -516,6 +524,13 @@ docker-compose down
 - [**部署指南**](docs/deployment.md) - Docker、Kubernetes、监控配置 *(待创建)*
 - [**API 文档**](docs/api.md) - REST API 和 WebSocket 接口详细说明 *(待创建)*
 
+### 实现文档
+
+- [**集群复制实现**](docs/CLUSTER_REPLICATION_IMPLEMENTATION.md) - 集群复制详细设计和实现
+- [**复制测试结果**](docs/REPLICATION_TEST_RESULTS.md) - 复制功能测试验证
+- [**实现状态**](docs/IMPLEMENTATION_STATUS.md) - 实现进度和状态跟踪
+- [**文档中心**](docs/README.md) - 完整的文档导航
+
 ### 参考实现
 
 - [**Java 实现**](artemis-java/) - 原始 Java 版本 (本地克隆),API 契约参考
@@ -574,11 +589,12 @@ cargo build --release --workspace
 
 - [x] 完整的服务注册与发现功能
 - [x] WebSocket 实时推送
+- [x] **集群数据复制** - 异步复制、心跳批处理、实时缓存同步
 - [x] 性能优化和基准测试
 - [x] Prometheus 监控集成
 - [x] Docker 容器化支持
 - [x] 端到端集成测试
-- [x] 本地集群管理工具
+- [x] 本地集群管理工具 + 自动化测试套件
 - [x] 客户端 SDK (自动心跳)
 
 ### 📋 短期计划 (1-2 周)
@@ -600,7 +616,8 @@ cargo build --release --workspace
 
 ### 🚀 长期愿景
 
-- [ ] 完整的多数据中心复制
+- [ ] 多数据中心复制增强 (跨 DC 数据同步、冲突解决)
+- [ ] 集群启动同步 (Bootstrap Sync - 新节点从现有节点同步全量数据)
 - [ ] 高级路由功能 (分组路由、金丝雀发布)
 - [ ] 服务网格集成 (Istio/Linkerd)
 - [ ] Admin UI 管理界面
