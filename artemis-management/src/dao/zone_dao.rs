@@ -1,12 +1,12 @@
 use artemis_core::model::{ZoneOperation, ZoneOperationRecord};
-use sqlx::{SqlitePool, Row};
+use sqlx::{Pool, Any, Row};
 
 pub struct ZoneOperationDao {
-    pool: SqlitePool,
+    pool: Pool<Any>,
 }
 
 impl ZoneOperationDao {
-    pub fn new(pool: SqlitePool) -> Self {
+    pub fn new(pool: Pool<Any>) -> Self {
         Self { pool }
     }
 

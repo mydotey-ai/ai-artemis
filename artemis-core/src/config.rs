@@ -117,9 +117,20 @@ pub struct RegistryConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DatabaseConfig {
+    /// 数据库类型: sqlite, mysql
+    #[serde(default = "default_db_type")]
+    pub db_type: String,
+    /// 数据库连接 URL
+    /// SQLite: "sqlite://artemis.db" 或 "sqlite::memory:"
+    /// MySQL: "mysql://user:password@localhost:3306/artemis"
     pub url: String,
+    /// 最大连接数
+    #[serde(default = "default_max_connections")]
     pub max_connections: u32,
 }
+
+fn default_db_type() -> String { "sqlite".to_string() }
+fn default_max_connections() -> u32 { 10 }
 
 // Default functions
 fn default_node_id() -> String { uuid::Uuid::new_v4().to_string() }

@@ -106,8 +106,12 @@ async fn start_server(config_path: Option<String>, addr_override: Option<String>
 
     // 3a. Initialize database (optional)
     let database = if let Some(db_config) = &config.database {
-        println!("Initializing database: {}", db_config.url);
-        let db = Arc::new(Database::new(&db_config.url).await?);
+        println!(
+            "Initializing database: {} (type: {})",
+            db_config.url,
+            db_config.db_type
+        );
+        let db = Arc::new(Database::new(&db_config.url, db_config.max_connections).await?);
 
         // 运行数据库迁移
         db.run_migrations().await?;

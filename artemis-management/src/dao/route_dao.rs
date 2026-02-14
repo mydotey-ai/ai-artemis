@@ -1,13 +1,13 @@
 use artemis_core::model::{RouteRule, RouteRuleStatus, RouteStrategy};
 use artemis_core::model::service::ServiceGroup;  // service.rs中的ServiceGroup,有weight字段
-use sqlx::{SqlitePool, Row};
+use sqlx::{Pool, Any, Row};
 
 pub struct RouteRuleDao {
-    pool: SqlitePool,
+    pool: Pool<Any>,
 }
 
 impl RouteRuleDao {
-    pub fn new(pool: SqlitePool) -> Self {
+    pub fn new(pool: Pool<Any>) -> Self {
         Self { pool }
     }
 

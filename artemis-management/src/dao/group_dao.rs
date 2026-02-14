@@ -1,12 +1,12 @@
 use artemis_core::model::{ServiceGroup, GroupTag, GroupType, GroupStatus};
-use sqlx::{SqlitePool, Row};
+use sqlx::{Pool, Any, Row};
 
 pub struct GroupDao {
-    pool: SqlitePool,
+    pool: Pool<Any>,
 }
 
 impl GroupDao {
-    pub fn new(pool: SqlitePool) -> Self {
+    pub fn new(pool: Pool<Any>) -> Self {
         Self { pool }
     }
 

@@ -1,0 +1,37 @@
+# Artemis 配置文件 - SQLite 数据库示例
+# 用于开发和测试环境
+
+[server]
+node_id = "node-dev"
+listen_addr = "0.0.0.0:8080"
+peer_port = 9090
+region = "dev"
+zone = "local"
+
+[cluster]
+enabled = false
+
+[replication]
+enabled = false
+
+[lease]
+ttl_secs = 30
+cleanup_interval_secs = 60
+
+[cache]
+enabled = true
+expiry_secs = 300
+
+[ratelimit]
+enabled = true
+requests_per_second = 10000
+burst_size = 5000
+
+[logging]
+level = "info"
+format = "pretty"
+
+[database]
+db_type = "sqlite"
+url = "sqlite://artemis.db"
+max_connections = 10

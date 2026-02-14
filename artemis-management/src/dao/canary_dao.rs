@@ -1,12 +1,12 @@
 use artemis_core::model::CanaryConfig;
-use sqlx::{SqlitePool, Row};
+use sqlx::{Pool, Any, Row};
 
 pub struct CanaryConfigDao {
-    pool: SqlitePool,
+    pool: Pool<Any>,
 }
 
 impl CanaryConfigDao {
-    pub fn new(pool: SqlitePool) -> Self {
+    pub fn new(pool: Pool<Any>) -> Self {
         Self { pool }
     }
 
