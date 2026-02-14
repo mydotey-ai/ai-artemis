@@ -228,6 +228,45 @@ level = "info"                     # 日志级别: trace, debug, info, warn, err
 format = "pretty"                  # 日志格式: json, pretty
 ```
 
+## 测试工具
+
+### 自动化 API 测试
+
+项目提供了 `test-cluster-api.sh` 脚本,用于自动化测试集群 API 功能:
+
+```bash
+# 使用默认配置测试 (基础端口 8080,3 个节点)
+./test-cluster-api.sh
+
+# 自定义基础端口和节点数
+./test-cluster-api.sh 8080 3
+
+# 测试 5 节点集群
+./test-cluster-api.sh 8080 5
+```
+
+**测试内容包括:**
+1. ✓ 健康检查 - 验证所有节点运行正常
+2. ✓ 服务注册 - 在第一个节点注册实例
+3. ✓ 数据复制 - 验证实例复制到所有节点
+4. ✓ 服务发现 - 在所有节点查询服务
+5. ✓ 心跳续约 - 测试租约续期
+6. ✓ Prometheus 指标 - 检查监控指标
+7. ✓ 服务注销 - 删除实例并验证同步
+
+**依赖要求:**
+- `curl` - HTTP 客户端
+- `jq` - JSON 处理工具
+
+**安装依赖:**
+```bash
+# Ubuntu/Debian
+sudo apt-get install curl jq
+
+# macOS
+brew install curl jq
+```
+
 ## 使用场景
 
 ### 开发测试
@@ -236,18 +275,35 @@ format = "pretty"                  # 日志格式: json, pretty
 # 启动小型集群进行开发测试
 ./cluster.sh start 3
 
-# 模拟服务注册
-curl -X POST http://127.0.0.1:8080/api/v1/registry/instances \
+# 运行自动化测试验证功能
+./test-cluster-api.sh
+
+# 或手动测试服务注册
+curl -X POST http://127.0.0.1:8080/api/registry/register.json \
   -H "Content-Type: application/json" \
   -d '{
-    "serviceId": "test-service",
-    "instanceId": "instance-1",
-    "ip": "192.168.1.100",
-    "port": 8080
+    "instances": [{
+      "region_id": "local",
+      "zone_id": "zone1",
+      "service_id": "test-service",
+      "instance_id": "instance-1",
+      "ip": "192.168.1.100",
+      "port": 8080,
+      "url": "http://192.168.1.100:8080",
+      "status": "up"
+    }]
   }'
 
 # 在其他节点验证数据复制
-curl http://127.0.0.1:8081/api/v1/discovery/instances/test-service
+curl -X POST http://127.0.0.1:8081/api/discovery/service.json \
+  -H "Content-Type: application/json" \
+  -d '{
+    "discovery_config": {
+      "service_id": "test-service",
+      "region_id": "local",
+      "zone_id": "zone1"
+    }
+  }'
 ```
 
 ### 性能测试
@@ -284,19 +340,76 @@ curl http://127.0.0.1:8082/health
 ### 注册服务
 
 ```bash
-POST http://127.0.0.1:8080/api/v1/registry/instances
+POST http://127.0.0.1:8080/api/registry/register.json
+Content-Type: application/json
+
+{
+  "instances": [{
+    "region_id": "local",
+    "zone_id": "zone1",
+    "service_id": "my-service",
+    "instance_id": "instance-1",
+    "ip": "192.168.1.100",
+    "port": 8080,
+    "url": "http://192.168.1.100:8080",
+    "status": "up"
+  }]
+}
 ```
 
 ### 心跳续约
 
 ```bash
-PUT http://127.0.0.1:8080/api/v1/registry/instances/{serviceId}/{instanceId}
+POST http://127.0.0.1:8080/api/registry/heartbeat.json
+Content-Type: application/json
+
+{
+  "instance_keys": [{
+    "region_id": "local",
+    "zone_id": "zone1",
+    "service_id": "my-service",
+    "group_id": "",
+    "instance_id": "instance-1"
+  }]
+}
 ```
 
 ### 发现服务
 
 ```bash
-GET http://127.0.0.1:8080/api/v1/discovery/instances/{serviceId}
+POST http://127.0.0.1:8080/api/discovery/service.json
+Content-Type: application/json
+
+{
+  "discovery_config": {
+    "service_id": "my-service",
+    "region_id": "local",
+    "zone_id": "zone1"
+  }
+}
+```
+
+### 查询所有服务
+
+```bash
+GET http://127.0.0.1:8080/api/discovery/services.json?region_id=local&zone_id=zone1
+```
+
+### 注销服务
+
+```bash
+POST http://127.0.0.1:8080/api/registry/unregister.json
+Content-Type: application/json
+
+{
+  "instance_keys": [{
+    "region_id": "local",
+    "zone_id": "zone1",
+    "service_id": "my-service",
+    "group_id": "",
+    "instance_id": "instance-1"
+  }]
+}
 ```
 
 ### 健康检查
@@ -305,10 +418,43 @@ GET http://127.0.0.1:8080/api/v1/discovery/instances/{serviceId}
 GET http://127.0.0.1:8080/health
 ```
 
+### Prometheus 指标
+
+```bash
+GET http://127.0.0.1:8080/metrics
+```
+
 ### WebSocket 实时推送
 
 ```bash
-WS ws://127.0.0.1:8080/api/v1/discovery/subscribe/{serviceId}
+# 连接 WebSocket
+WS ws://127.0.0.1:8080/ws
+
+# 发送订阅消息
+{
+  "subscribe": {
+    "service_id": "my-service"
+  }
+}
+
+# 接收服务变更通知
+{
+  "service_update": {
+    "service": {
+      "region_id": "local",
+      "zone_id": "zone1",
+      "service_id": "my-service",
+      "instances": [...]
+    }
+  }
+}
+
+# 取消订阅
+{
+  "unsubscribe": {
+    "service_id": "my-service"
+  }
+}
 ```
 
 ## 故障排查
