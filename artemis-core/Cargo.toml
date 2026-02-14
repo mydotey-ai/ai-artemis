@@ -11,5 +11,5 @@ thiserror = { workspace = true }
 async-trait = { workspace = true }
 parking_lot = { workspace = true }
 uuid = { workspace = true }
-humantime-serde = "1.1"
+humantime-serde = { workspace = true }
 tracing = { workspace = true }

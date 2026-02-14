@@ -83,5 +83,15 @@ async-trait = "0.1"
 bytes = "1.8"
 futures = "0.3"
 
+# 人性化时间处理
+humantime-serde = "1.1"
+
+# 监控和指标
+prometheus = "0.13"
+lazy_static = "1.5"
+
+# 配置解析
+toml = "0.9"
+
 # 性能测试
 criterion = { version = "0.8", features = ["async_tokio"] }
