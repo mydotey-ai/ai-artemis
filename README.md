@@ -161,9 +161,19 @@ artemis-workspace/
 - ✅ **数据复制** - 异步复制、心跳批处理、智能重试
 - ✅ **反复制循环** - 防止数据循环复制
 - ✅ **实时缓存同步** - 服务变更实时生效
+- ✅ **实例管理** - 实例拉入/拉出、服务器批量操作
 - ✅ **管理接口** - DAO 层和管理功能抽象
 
-#### Phase 12: 生产就绪 (P1)
+#### Phase 12: 分组路由 (P2 已完成)
+- ✅ **分组管理** - 创建、查询、更新、删除服务分组
+- ✅ **路由策略** - 加权轮询 (WeightedRoundRobin)、就近访问 (CloseByVisit)
+- ✅ **路由引擎** - 统一的路由规则应用引擎
+- ✅ **规则管理** - 路由规则 CRUD、发布/停用
+- ✅ **服务发现集成** - 自动应用路由规则过滤实例
+- ✅ **标签管理** - 分组标签的增删改查
+- ✅ **HTTP API** - 21 个核心端点完整实现
+
+#### Phase 13: 生产就绪 (P1)
 - ✅ **性能优化** - DashMap 无锁并发、零拷贝设计
 - ✅ **监控集成** - Prometheus metrics 导出
 - ✅ **健康检查** - HTTP 健康检查端点
@@ -175,6 +185,8 @@ artemis-workspace/
 #### 额外工具
 - ✅ **集群管理脚本** - `cluster.sh` 一键启动/停止多节点集群
 - ✅ **自动化测试套件** - `test-cluster-api.sh` 完整的集群 API 测试
+- ✅ **实例管理测试** - `test-instance-management.sh` 实例拉入拉出测试
+- ✅ **分组路由测试** - `test-group-routing.sh` 加权路由功能验证
 
 ---
 
@@ -182,6 +194,7 @@ artemis-workspace/
 
 ### REST API 端点
 
+#### 核心 API
 ```
 POST /api/registry/register.json       # 注册服务实例
 POST /api/registry/heartbeat.json      # 心跳续约
@@ -190,6 +203,45 @@ POST /api/discovery/service.json       # 查询服务实例
 GET  /health                            # 健康检查
 GET  /metrics                           # Prometheus 指标
 WS   /api/v1/discovery/subscribe/{id}  # WebSocket 订阅
+```
+
+#### 分组路由 API
+```
+# 分组管理
+POST   /api/routing/groups                      # 创建分组
+GET    /api/routing/groups                      # 列出分组
+GET    /api/routing/groups/by-id/{group_id}    # 按 ID 查询
+DELETE /api/routing/groups/{group_key}          # 删除分组
+PATCH  /api/routing/groups/{group_key}          # 更新分组
+
+# 分组标签
+POST   /api/routing/groups/{group_key}/tags         # 添加标签
+GET    /api/routing/groups/{group_key}/tags         # 获取标签
+DELETE /api/routing/groups/{group_key}/tags/{key}   # 删除标签
+
+# 分组实例
+GET    /api/routing/groups/{group_key}/instances    # 查询分组实例
+
+# 路由规则
+POST   /api/routing/rules                       # 创建规则
+GET    /api/routing/rules                       # 列出规则
+GET    /api/routing/rules/{rule_id}             # 查询规则
+DELETE /api/routing/rules/{rule_id}             # 删除规则
+PATCH  /api/routing/rules/{rule_id}             # 更新规则
+POST   /api/routing/rules/{rule_id}/publish     # 发布规则
+POST   /api/routing/rules/{rule_id}/unpublish   # 停用规则
+
+# 规则分组关联
+POST   /api/routing/rules/{rule_id}/groups           # 添加分组
+GET    /api/routing/rules/{rule_id}/groups           # 查询分组
+DELETE /api/routing/rules/{rule_id}/groups/{group}   # 删除分组
+PATCH  /api/routing/rules/{rule_id}/groups/{group}   # 更新权重
+```
+
+#### 实例管理 API
+```
+POST /api/management/instance/operate-instance.json  # 实例拉入拉出
+POST /api/management/server/operate-server.json      # 服务器批量操作
 ```
 
 ### 注册服务实例
@@ -334,6 +386,92 @@ curl -X POST http://localhost:8080/api/management/server/operate-server.json \
 运行集成测试:
 ```bash
 ./test-instance-management.sh
+```
+
+### 分组路由 (Group Routing)
+
+分组路由功能允许您将实例划分为不同的分组,并根据路由策略控制流量分配。
+
+#### 创建分组
+
+```bash
+# 创建生产环境分组
+curl -X POST http://localhost:8080/api/routing/groups \
+  -H "Content-Type: application/json" \
+  -d '{
+    "service_id": "my-service",
+    "region_id": "us-east",
+    "zone_id": "zone-1",
+    "name": "production",
+    "group_type": "physical",
+    "description": "生产环境分组"
+  }'
+
+# 创建测试环境分组
+curl -X POST http://localhost:8080/api/routing/groups \
+  -H "Content-Type: application/json" \
+  -d '{
+    "service_id": "my-service",
+    "region_id": "us-east",
+    "zone_id": "zone-1",
+    "name": "canary",
+    "group_type": "physical",
+    "description": "金丝雀发布分组"
+  }'
+```
+
+#### 创建路由规则
+
+```bash
+# 创建加权路由规则 (90% 生产, 10% 金丝雀)
+curl -X POST http://localhost:8080/api/routing/rules \
+  -H "Content-Type: application/json" \
+  -d '{
+    "route_id": "canary-release",
+    "service_id": "my-service",
+    "name": "金丝雀发布",
+    "description": "90% 流量到生产,10% 到金丝雀",
+    "strategy": "weighted-round-robin"
+  }'
+
+# 添加生产分组 (权重 90)
+curl -X POST http://localhost:8080/api/routing/rules/canary-release/groups \
+  -H "Content-Type: application/json" \
+  -d '{
+    "group_id": "production",
+    "weight": 90,
+    "region_id": "us-east"
+  }'
+
+# 添加金丝雀分组 (权重 10)
+curl -X POST http://localhost:8080/api/routing/rules/canary-release/groups \
+  -H "Content-Type: application/json" \
+  -d '{
+    "group_id": "canary",
+    "weight": 10,
+    "region_id": "us-east"
+  }'
+
+# 发布路由规则
+curl -X POST http://localhost:8080/api/routing/rules/canary-release/publish
+```
+
+#### 路由策略
+
+支持两种路由策略:
+
+1. **加权轮询** (`weighted-round-robin`): 按权重比例分配流量
+2. **就近访问** (`close-by-visit`): 优先返回同区域/可用区的实例
+
+**功能特点**:
+- ✅ **灵活的流量控制**: 支持加权路由和就近访问策略
+- ✅ **动态调整**: 实时更新分组权重,无需重启服务
+- ✅ **标签管理**: 支持给分组添加自定义标签
+- ✅ **实例查询**: 查询特定分组的实例列表
+
+运行集成测试:
+```bash
+./test-group-routing.sh
 ```
 
 ### 客户端 SDK 使用
@@ -669,11 +807,13 @@ cargo build --release --workspace
 - [x] 完整的服务注册与发现功能
 - [x] WebSocket 实时推送
 - [x] **集群数据复制** - 异步复制、心跳批处理、实时缓存同步
+- [x] **实例管理** - 实例拉入拉出、服务器批量操作
+- [x] **分组路由** - 加权轮询、就近访问、21 个完整 API
 - [x] 性能优化和基准测试
 - [x] Prometheus 监控集成
 - [x] Docker 容器化支持
 - [x] 端到端集成测试
-- [x] 本地集群管理工具 + 自动化测试套件
+- [x] 本地集群管理工具 + 自动化测试套件 (4 个脚本)
 - [x] 客户端 SDK (自动心跳)
 
 ### 📋 短期计划 (1-2 周)
@@ -697,7 +837,7 @@ cargo build --release --workspace
 
 - [ ] 多数据中心复制增强 (跨 DC 数据同步、冲突解决)
 - [ ] 集群启动同步 (Bootstrap Sync - 新节点从现有节点同步全量数据)
-- [ ] 高级路由功能 (分组路由、金丝雀发布)
+- [ ] 路由功能增强 (条件路由、灰度发布、A/B 测试)
 - [ ] 服务网格集成 (Istio/Linkerd)
 - [ ] Admin UI 管理界面
 - [ ] 多语言客户端 SDK (Java/Python/Go)
