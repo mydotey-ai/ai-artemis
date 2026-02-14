@@ -33,22 +33,28 @@ pub enum RouteRuleStatus {
     Inactive,
 }
 
-/// 路由规则与分组的关联 (包含权重)
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// 路由规则分组关联 (带权重)
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct RouteRuleGroup {
-    /// 关联 ID
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub route_rule_group_id: Option<i64>,
     /// 路由规则 ID
-    pub route_rule_id: i64,
+    pub route_rule_id: String,
     /// 分组 ID
-    pub group_id: i64,
-    /// 已发布的权重 (生效中)
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub weight: Option<u32>,
-    /// 未发布的权重 (待发布)
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub unreleased_weight: Option<u32>,
+    pub group_id: String,
+    /// 权重 (1-100)
+    pub weight: u32,
+    /// 是否可发布
+    pub unreleasable: bool,
+}
+
+impl RouteRuleGroup {
+    pub fn new(route_rule_id: String, group_id: String, weight: u32) -> Self {
+        Self {
+            route_rule_id,
+            group_id,
+            weight: weight.clamp(1, 100),
+            unreleasable: false,
+        }
+    }
 }
 
 /// 路由策略
@@ -100,5 +106,19 @@ impl Group {
     /// 生成分组唯一键: service_id:region_id:zone_id:name
     pub fn group_key(&self) -> String {
         format!("{}:{}:{}:{}", self.service_id, self.region_id, self.zone_id, self.name)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_route_rule_group_weight_clamp() {
+        let group = RouteRuleGroup::new("r1".to_string(), "g1".to_string(), 150);
+        assert_eq!(group.weight, 100);
+
+        let group = RouteRuleGroup::new("r1".to_string(), "g1".to_string(), 0);
+        assert_eq!(group.weight, 1);
     }
 }
