@@ -82,27 +82,63 @@
 
 ## 项目文档
 
-### 核心文档
+文档已重新组织,按主题分类:
+
+### 📁 文档目录结构
+```
+docs/
+├── README.md                           # 文档中心导航
+├── artemis-rust-rewrite-specification.md  # 产品规格说明
+├── deployment.md                       # 部署指南
+├── plans/                              # 设计和计划
+│   ├── design.md                       # 架构设计
+│   ├── implementation-roadmap.md       # 实施路线图
+│   └── phases/                         # Phase 详细计划 (1-13)
+├── reports/                            # 项目报告
+│   ├── project-completion.md           # 项目完成总报告
+│   ├── project-status.md               # 项目状态快照
+│   ├── implementation-status.md        # 实施状态跟踪
+│   ├── features/                       # 功能实现报告
+│   │   ├── cluster-replication.md
+│   │   ├── instance-management.md
+│   │   ├── group-routing.md
+│   │   └── feature-comparison.md
+│   └── performance/                    # 性能报告
+│       ├── performance-report.md
+│       ├── optimizations.md
+│       └── replication-test-results.md
+└── archive/                            # 历史文档归档
+```
+
+### 📚 核心文档
 - **产品规格**: `docs/artemis-rust-rewrite-specification.md` - 完整的产品需求和规格说明
-- **详细设计**: `docs/plans/2026-02-13-artemis-rust-design.md` - 架构设计、模块结构、数据模型
-- **实现计划**: `docs/plans/2026-02-13-artemis-rust-implementation.md` - 分阶段实施计划(已完成)
+- **架构设计**: `docs/plans/design.md` - 系统架构、模块结构、数据模型
+- **实施路线图**: `docs/plans/implementation-roadmap.md` - 分阶段实施计划(已完成)
+- **文档导航**: `docs/README.md` - 完整的文档索引和导航
 
-### 参考实现
-- **Java 实现**: `artemis-java/` 目录包含原始 Java 实现的本地克隆,可作为 API 契约和设计模式的参考
+### 📊 项目报告
+- **项目完成报告**: `docs/reports/project-completion.md` - 完整的项目成果总结
+- **项目状态快照**: `docs/reports/project-status.md` - 当前项目状态
+- **实施状态跟踪**: `docs/reports/implementation-status.md` - 各 Phase 完成状态
 
-### 使用文档
+### 🚀 功能实现报告
+- **集群复制**: `docs/reports/features/cluster-replication.md` - 集群复制详细实现
+- **实例管理**: `docs/reports/features/instance-management.md` - 实例拉入拉出功能
+- **分组路由**: `docs/reports/features/group-routing.md` - 分组路由完整实现
+- **功能对比**: `docs/reports/features/feature-comparison.md` - Rust vs Java 功能对比
+
+### ⚡ 性能报告
+- **性能基准测试**: `docs/reports/performance/performance-report.md` - 完整的性能测试结果
+- **性能优化措施**: `docs/reports/performance/optimizations.md` - 性能优化技术细节
+- **复制测试结果**: `docs/reports/performance/replication-test-results.md` - 集群复制性能
+
+### 📖 使用文档
 - **集群管理**: `CLUSTER.md` - 本地多节点集群启动和管理指南
-- **部署指南**: `README.md` - 快速开始、API 示例、Docker 部署
+- **快速开始**: `README.md` - 项目概览、API 示例、Docker 部署
+- **部署指南**: `docs/deployment.md` - Docker、Kubernetes 部署配置
 
-### 实现文档
-- **集群复制实现**: `docs/CLUSTER_REPLICATION_IMPLEMENTATION.md` - 集群复制详细设计和实现
-- **复制测试结果**: `docs/REPLICATION_TEST_RESULTS.md` - 复制功能测试验证
-- **实例管理完成**: `docs/INSTANCE_MANAGEMENT_COMPLETE.md` - 实例管理功能实现
-- **实例管理验证**: `docs/INSTANCE_MANAGEMENT_VERIFICATION.md` - 实例管理测试报告
-- **分组路由完成**: `docs/PHASE_13_COMPLETION_REPORT.md` - 分组路由功能完整实现报告
-- **功能差距分析**: `docs/FEATURE_GAP_ANALYSIS.md` - Java vs Rust 功能对比
-- **项目状态报告**: `docs/PROJECT_STATUS_2026-02-14.md` - 完整的项目状态总结
-- **实现状态**: `docs/IMPLEMENTATION_STATUS.md` - 实现进度和状态跟踪
+### 🔍 参考实现
+- **Java 实现**: `artemis-java/` - 原始 Java 实现的本地克隆,API 契约参考
 
 ## 技术架构
 
