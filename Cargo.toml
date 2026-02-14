@@ -24,7 +24,11 @@ tokio-util = { version = "0.7", features = ["codec"] }
 # Web框架
 axum = { version = "0.8", features = ["ws", "macros"] }
 tower = { version = "0.5", features = ["full"] }
-tower-http = { version = "0.6", features = ["cors", "trace", "compression-full"] }
+tower-http = { version = "0.6", features = [
+    "cors",
+    "trace",
+    "compression-full",
+] }
 
 # 序列化
 serde = { version = "1.0", features = ["derive"] }
@@ -38,23 +42,28 @@ parking_lot = "0.12"
 reqwest = { version = "0.13", features = ["json"] }
 
 # WebSocket
-tokio-tungstenite = "0.24"
+tokio-tungstenite = "0.28.0"
 
 # 数据库
-sqlx = { version = "0.8", features = ["runtime-tokio", "mysql", "chrono", "json"] }
+sqlx = { version = "0.8", features = [
+    "runtime-tokio",
+    "mysql",
+    "chrono",
+    "json",
+] }
 
 # 时间处理
 chrono = { version = "0.4", features = ["serde"] }
 
 # 限流
-governor = "0.7"
+governor = "0.10.4"
 
 # 日志和追踪
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 
 # 配置
-config = "0.14"
+config = "0.15.19"
 figment = { version = "0.10", features = ["toml", "env"] }
 
 # 错误处理

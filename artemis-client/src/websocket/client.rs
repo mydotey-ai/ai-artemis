@@ -72,7 +72,7 @@ impl WebSocketClient {
             service_id: service_id.clone(),
         };
         let json = serde_json::to_string(&subscribe_msg)?;
-        write.send(Message::Text(json)).await?;
+        write.send(Message::Text(json.into())).await?;
 
         info!("Subscribed to service: {}", service_id);
 
