@@ -19,6 +19,8 @@ anyhow = { workspace = true }
 
 [dev-dependencies]
 criterion = { workspace = true }
+artemis-web = { path = "../artemis-web" }
+artemis-client = { path = "../artemis-client" }
 
 [[bench]]
 name = "performance"
