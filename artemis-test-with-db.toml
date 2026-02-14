@@ -1,0 +1,39 @@
+# Artemis Configuration with Database Persistence
+[server]
+node_id = "test-node-1"
+listen_addr = "127.0.0.1:8080"
+peer_port = 9090
+region = "us-east"
+zone = "zone-1"
+
+[cluster]
+enabled = false
+
+[replication]
+enabled = true
+timeout_secs = 5
+batch_size = 100
+batch_interval_ms = 100
+max_retries = 3
+
+[lease]
+ttl_secs = 30
+cleanup_interval_secs = 60
+
+[cache]
+enabled = true
+expiry_secs = 300
+
+[ratelimit]
+enabled = true
+requests_per_second = 10000
+burst_size = 5000
+
+[logging]
+level = "info"
+format = "pretty"
+
+# Database configuration - enables persistence
+[database]
+url = "sqlite://artemis-test.db"
+max_connections = 10

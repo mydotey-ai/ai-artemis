@@ -5,12 +5,17 @@ use chrono::Utc;
 use dashmap::DashMap;
 use std::sync::Arc;
 use tracing::info;
+use crate::db::Database;
+use crate::dao::ZoneOperationDao;
 
 /// Zone 管理器
 #[derive(Clone)]
 pub struct ZoneManager {
     /// Zone 操作存储: zone_key (zone_id:region_id) -> ZoneOperationRecord
     operations: Arc<DashMap<String, ZoneOperationRecord>>,
+
+    /// 可选数据库支持 - 用于持久化
+    database: Option<Arc<Database>>,
 }
 
 impl Default for ZoneManager {
@@ -21,8 +26,13 @@ impl Default for ZoneManager {
 
 impl ZoneManager {
     pub fn new() -> Self {
+        Self::with_database(None)
+    }
+
+    pub fn with_database(database: Option<Arc<Database>>) -> Self {
         Self {
             operations: Arc::new(DashMap::new()),
+            database,
         }
     }
 
@@ -48,7 +58,19 @@ impl ZoneManager {
             operation_time: Utc::now().timestamp(),
         };
 
-        self.operations.insert(zone_key, record);
+        self.operations.insert(zone_key, record.clone());
+
+        // 持久化到数据库
+        if let Some(db) = &self.database {
+            let dao = ZoneOperationDao::new(db.pool().clone());
+            let record_clone = record.clone();
+            tokio::spawn(async move {
+                if let Err(e) = dao.insert_operation(&record_clone).await {
+                    tracing::error!("Failed to persist zone operation to database: {}", e);
+                }
+            });
+        }
+
         Ok(())
     }
 
@@ -68,6 +90,19 @@ impl ZoneManager {
 
         // 移除拉出记录
         self.operations.remove(&zone_key);
+
+        // 从数据库删除
+        if let Some(db) = &self.database {
+            let dao = ZoneOperationDao::new(db.pool().clone());
+            let zone_id_owned = zone_id.to_string();
+            let region_id_owned = region_id.to_string();
+            tokio::spawn(async move {
+                if let Err(e) = dao.delete_operation(&zone_id_owned, &region_id_owned).await {
+                    tracing::error!("Failed to delete zone operation from database: {}", e);
+                }
+            });
+        }
+
         Ok(())
     }
 

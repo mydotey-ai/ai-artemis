@@ -1,4 +1,5 @@
 use artemis_core::model::{RouteRule, RouteRuleStatus, RouteStrategy};
+use artemis_core::model::service::ServiceGroup;  // service.rs中的ServiceGroup,有weight字段
 use sqlx::{SqlitePool, Row};
 
 pub struct RouteRuleDao {
@@ -11,7 +12,6 @@ impl RouteRuleDao {
     }
 
     /// 插入路由规则
-    /// TODO: 实现分组关联的持久化 (groups字段)
     pub async fn insert_rule(&self, rule: &RouteRule) -> anyhow::Result<()> {
         let status_str = match rule.status {
             RouteRuleStatus::Active => "active",
@@ -39,6 +39,51 @@ impl RouteRuleDao {
         .execute(&self.pool)
         .await?;
 
+        // 插入规则分组关联
+        for group in &rule.groups {
+            self.insert_rule_group(&rule.route_id, group).await?;
+        }
+
+        Ok(())
+    }
+
+    /// 更新路由规则
+    pub async fn update_rule(&self, rule: &RouteRule) -> anyhow::Result<()> {
+        let status_str = match rule.status {
+            RouteRuleStatus::Active => "active",
+            RouteRuleStatus::Inactive => "inactive",
+        };
+
+        let strategy_str = match rule.strategy {
+            RouteStrategy::WeightedRoundRobin => "weighted-round-robin",
+            RouteStrategy::CloseByVisit => "close-by-visit",
+        };
+
+        sqlx::query(
+            r#"
+            UPDATE service_route_rule
+            SET name = ?, description = ?, status = ?, strategy = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE route_id = ?
+            "#
+        )
+        .bind(&rule.name)
+        .bind(&rule.description)
+        .bind(status_str)
+        .bind(strategy_str)
+        .bind(&rule.route_id)
+        .execute(&self.pool)
+        .await?;
+
+        // 删除旧的规则分组关联并插入新的
+        sqlx::query("DELETE FROM service_route_rule_group WHERE rule_id = ?")
+            .bind(&rule.route_id)
+            .execute(&self.pool)
+            .await?;
+
+        for group in &rule.groups {
+            self.insert_rule_group(&rule.route_id, group).await?;
+        }
+
         Ok(())
     }
 
@@ -51,7 +96,7 @@ impl RouteRuleDao {
         Ok(())
     }
 
-    /// 获取路由规则 - 简化版
+    /// 获取路由规则 (不加载groups,由Manager负责加载)
     pub async fn get_rule(&self, rule_id: &str) -> anyhow::Result<Option<RouteRule>> {
         let row = sqlx::query(
             r#"
@@ -86,14 +131,14 @@ impl RouteRuleDao {
                     description: row.get("description"),
                     status,
                     strategy,
-                    groups: vec![], // TODO: 从数据库加载groups
+                    groups: vec![], // Manager通过get_rule_group_ids加载
                 }))
             }
             None => Ok(None),
         }
     }
 
-    /// 列出所有路由规则 - 简化版
+    /// 列出所有路由规则 (不加载groups)
     pub async fn list_rules(&self) -> anyhow::Result<Vec<RouteRule>> {
         let rows = sqlx::query(
             r#"
@@ -126,10 +171,52 @@ impl RouteRuleDao {
                 description: row.get("description"),
                 status,
                 strategy,
-                groups: vec![], // TODO: 从数据库加载groups
+                groups: vec![], // Manager负责加载
             });
         }
 
         Ok(rules)
+    }
+
+    /// 插入规则分组关联 (存储group_key和weight)
+    async fn insert_rule_group(&self, rule_id: &str, group: &ServiceGroup) -> anyhow::Result<()> {
+        let weight = group.weight.unwrap_or(100);
+
+        sqlx::query(
+            r#"
+            INSERT INTO service_route_rule_group (rule_id, group_id, weight, region_id)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(rule_id, group_id) DO UPDATE SET weight = excluded.weight
+            "#
+        )
+        .bind(rule_id)
+        .bind(&group.group_key)
+        .bind(weight as i32)
+        .bind("")  // region_id 暂时为空
+        .execute(&self.pool)
+        .await?;
+        Ok(())
+    }
+
+    /// 获取规则关联的所有group_id列表
+    pub async fn get_rule_group_ids(&self, rule_id: &str) -> anyhow::Result<Vec<(String, u32)>> {
+        let rows = sqlx::query(
+            r#"
+            SELECT group_id, weight
+            FROM service_route_rule_group
+            WHERE rule_id = ?
+            "#
+        )
+        .bind(rule_id)
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(rows
+            .into_iter()
+            .map(|row| {
+                let weight: i32 = row.get("weight");
+                (row.get::<String, _>("group_id"), weight as u32)
+            })
+            .collect())
     }
 }

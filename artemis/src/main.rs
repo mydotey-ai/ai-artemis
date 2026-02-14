@@ -1,5 +1,5 @@
 use artemis_core::config::ArtemisConfig;
-use artemis_management::{GroupManager, InstanceManager, RouteManager};
+use artemis_management::{GroupManager, InstanceManager, RouteManager, Database, ConfigLoader};
 use artemis_server::{
     cache::VersionedCacheManager, cluster::ClusterManager, discovery::DiscoveryServiceImpl,
     lease::LeaseManager, registry::RegistryRepository, replication::ReplicationManager,
@@ -104,6 +104,21 @@ async fn start_server(config_path: Option<String>, addr_override: Option<String>
     println!("Region: {}, Zone: {}", config.server.region, config.server.zone);
     println!("Cluster mode: {}", if config.cluster.enabled { "enabled" } else { "disabled" });
 
+    // 3a. Initialize database (optional)
+    let database = if let Some(db_config) = &config.database {
+        println!("Initializing database: {}", db_config.url);
+        let db = Arc::new(Database::new(&db_config.url).await?);
+
+        // 运行数据库迁移
+        db.run_migrations().await?;
+        println!("Database migrations completed");
+
+        Some(db)
+    } else {
+        println!("Database disabled - using in-memory storage only");
+        None
+    };
+
     // 3. Initialize core components
     let repository = RegistryRepository::new();
     let lease_manager = Arc::new(LeaseManager::new(
@@ -155,13 +170,27 @@ async fn start_server(config_path: Option<String>, addr_override: Option<String>
     // 6. Initialize management components
     let instance_manager = Arc::new(InstanceManager::new());
 
-    // 7. Initialize routing components
-    let group_manager = Arc::new(GroupManager::new());
-    let route_manager = Arc::new(RouteManager::new());
-    let zone_manager = Arc::new(artemis_management::ZoneManager::new());
-    let canary_manager = Arc::new(artemis_management::CanaryManager::new());
+    // 7. Initialize routing components (with optional database)
+    let group_manager = Arc::new(GroupManager::with_database(database.clone()));
+    let route_manager = Arc::new(RouteManager::with_database(database.clone()));
+    let zone_manager = Arc::new(artemis_management::ZoneManager::with_database(database.clone()));
+    let canary_manager = Arc::new(artemis_management::CanaryManager::with_database(database.clone()));
     let audit_manager = Arc::new(artemis_management::AuditManager::new());
     let route_engine = Arc::new(RouteEngine::new());
+
+    // 7a. Load persisted configurations from database
+    if let Some(ref db) = database {
+        println!("Loading persisted configurations from database...");
+        let loader = ConfigLoader::new(
+            db.clone(),
+            group_manager.clone(),
+            route_manager.clone(),
+            zone_manager.clone(),
+            canary_manager.clone(),
+        );
+        loader.load_all().await?;
+        println!("Configurations loaded successfully");
+    }
 
     // 8. Create discovery service with filters
     let mut discovery_service = DiscoveryServiceImpl::new(repository, cache.clone());

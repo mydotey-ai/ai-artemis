@@ -10,6 +10,8 @@ use dashmap::DashMap;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicI64, Ordering};
 use tracing::info;
+use crate::db::Database;
+use crate::dao::RouteRuleDao;
 
 /// 路由规则管理器
 #[derive(Clone)]
@@ -25,15 +27,23 @@ pub struct RouteManager {
 
     /// ID 生成器
     next_id: Arc<AtomicI64>,
+
+    /// 可选数据库支持 - 用于持久化
+    database: Option<Arc<Database>>,
 }
 
 impl RouteManager {
     pub fn new() -> Self {
+        Self::with_database(None)
+    }
+
+    pub fn with_database(database: Option<Arc<Database>>) -> Self {
         Self {
             rules: Arc::new(DashMap::new()),
             rule_id_map: Arc::new(DashMap::new()),
             rule_groups: Arc::new(DashMap::new()),
             next_id: Arc::new(AtomicI64::new(1)),
+            database,
         }
     }
 
@@ -52,7 +62,19 @@ impl RouteManager {
         }
 
         info!("Creating route rule: {}", rule.route_id);
-        self.rules.insert(rule.route_id.clone(), rule);
+        self.rules.insert(rule.route_id.clone(), rule.clone());
+
+        // 持久化到数据库
+        if let Some(db) = &self.database {
+            let dao = RouteRuleDao::new(db.pool().clone());
+            let rule_clone = rule.clone();
+            tokio::spawn(async move {
+                if let Err(e) = dao.insert_rule(&rule_clone).await {
+                    tracing::error!("Failed to persist route rule to database: {}", e);
+                }
+            });
+        }
+
         Ok(())
     }
 
@@ -71,7 +93,19 @@ impl RouteManager {
         }
 
         info!("Updating route rule: {}", rule.route_id);
-        self.rules.insert(rule.route_id.clone(), rule);
+        self.rules.insert(rule.route_id.clone(), rule.clone());
+
+        // 持久化到数据库
+        if let Some(db) = &self.database {
+            let dao = RouteRuleDao::new(db.pool().clone());
+            let rule_clone = rule.clone();
+            tokio::spawn(async move {
+                if let Err(e) = dao.update_rule(&rule_clone).await {
+                    tracing::error!("Failed to update route rule in database: {}", e);
+                }
+            });
+        }
+
         Ok(())
     }
 
@@ -93,6 +127,18 @@ impl RouteManager {
         }
 
         self.rules.remove(rule_id);
+
+        // 从数据库删除
+        if let Some(db) = &self.database {
+            let dao = RouteRuleDao::new(db.pool().clone());
+            let rule_id_owned = rule_id.to_string();
+            tokio::spawn(async move {
+                if let Err(e) = dao.delete_rule(&rule_id_owned).await {
+                    tracing::error!("Failed to delete route rule from database: {}", e);
+                }
+            });
+        }
+
         Ok(())
     }
 

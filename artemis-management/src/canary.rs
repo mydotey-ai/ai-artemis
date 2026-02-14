@@ -4,12 +4,17 @@ use artemis_core::model::CanaryConfig;
 use dashmap::DashMap;
 use std::sync::Arc;
 use tracing::info;
+use crate::db::Database;
+use crate::dao::CanaryConfigDao;
 
 /// 金丝雀配置管理器
 #[derive(Clone)]
 pub struct CanaryManager {
     /// 金丝雀配置存储: service_id -> CanaryConfig
     configs: Arc<DashMap<String, CanaryConfig>>,
+
+    /// 可选数据库支持 - 用于持久化
+    database: Option<Arc<Database>>,
 }
 
 impl Default for CanaryManager {
@@ -20,8 +25,13 @@ impl Default for CanaryManager {
 
 impl CanaryManager {
     pub fn new() -> Self {
+        Self::with_database(None)
+    }
+
+    pub fn with_database(database: Option<Arc<Database>>) -> Self {
         Self {
             configs: Arc::new(DashMap::new()),
+            database,
         }
     }
 
@@ -32,7 +42,19 @@ impl CanaryManager {
             config.service_id, config.ip_whitelist
         );
 
-        self.configs.insert(config.service_id.clone(), config);
+        self.configs.insert(config.service_id.clone(), config.clone());
+
+        // 持久化到数据库
+        if let Some(db) = &self.database {
+            let dao = CanaryConfigDao::new(db.pool().clone());
+            let config_clone = config.clone();
+            tokio::spawn(async move {
+                if let Err(e) = dao.upsert_config(&config_clone).await {
+                    tracing::error!("Failed to persist canary config to database: {}", e);
+                }
+            });
+        }
+
         Ok(())
     }
 
@@ -49,6 +71,18 @@ impl CanaryManager {
                 "Set canary enabled={} for service: {}",
                 enabled, service_id
             );
+
+            // 持久化到数据库
+            if let Some(db) = &self.database {
+                let dao = CanaryConfigDao::new(db.pool().clone());
+                let service_id_owned = service_id.to_string();
+                tokio::spawn(async move {
+                    if let Err(e) = dao.set_enabled(&service_id_owned, enabled).await {
+                        tracing::error!("Failed to update canary enabled status in database: {}", e);
+                    }
+                });
+            }
+
             Ok(())
         } else {
             anyhow::bail!("Canary config not found for service: {}", service_id)
@@ -71,6 +105,18 @@ impl CanaryManager {
     pub fn remove_config(&self, service_id: &str) -> anyhow::Result<()> {
         self.configs.remove(service_id);
         info!("Removed canary config for service: {}", service_id);
+
+        // 从数据库删除
+        if let Some(db) = &self.database {
+            let dao = CanaryConfigDao::new(db.pool().clone());
+            let service_id_owned = service_id.to_string();
+            tokio::spawn(async move {
+                if let Err(e) = dao.delete_config(&service_id_owned).await {
+                    tracing::error!("Failed to delete canary config from database: {}", e);
+                }
+            });
+        }
+
         Ok(())
     }
 

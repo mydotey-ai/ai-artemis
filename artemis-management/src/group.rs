@@ -10,6 +10,8 @@ use artemis_core::model::{GroupOperation, GroupTag, ServiceGroup};
 use dashmap::DashMap;
 use std::sync::Arc;
 use tracing::info;
+use crate::db::Database;
+use crate::dao::GroupDao;
 
 /// 服务分组管理器
 #[derive(Clone)]
@@ -35,10 +37,17 @@ pub struct GroupManager {
 
     /// 下一个操作 ID
     next_operation_id: Arc<DashMap<(), i64>>,
+
+    /// 可选数据库支持 - 用于持久化
+    database: Option<Arc<Database>>,
 }
 
 impl GroupManager {
     pub fn new() -> Self {
+        Self::with_database(None)
+    }
+
+    pub fn with_database(database: Option<Arc<Database>>) -> Self {
         let next_group_id = Arc::new(DashMap::new());
         next_group_id.insert((), 1);
 
@@ -53,6 +62,7 @@ impl GroupManager {
             operations: Arc::new(DashMap::new()),
             next_group_id,
             next_operation_id,
+            database,
         }
     }
 
@@ -95,7 +105,19 @@ impl GroupManager {
 
         info!("Creating group: {} (ID: {})", group_key, group_id);
         self.group_id_map.insert(group_id, group_key.clone());
-        self.groups.insert(group_key, group);
+        self.groups.insert(group_key.clone(), group.clone());
+
+        // 持久化到数据库
+        if let Some(db) = &self.database {
+            let dao = GroupDao::new(db.pool().clone());
+            let group_clone = group.clone();
+            tokio::spawn(async move {
+                if let Err(e) = dao.insert_group(&group_clone).await {
+                    tracing::error!("Failed to persist group to database: {}", e);
+                }
+            });
+        }
+
         Ok(())
     }
 
@@ -124,7 +146,19 @@ impl GroupManager {
         updated_group.updated_at = Some(now);
 
         info!("Updating group: {}", group_key);
-        self.groups.insert(group_key, updated_group);
+        self.groups.insert(group_key.clone(), updated_group.clone());
+
+        // 持久化到数据库
+        if let Some(db) = &self.database {
+            let dao = GroupDao::new(db.pool().clone());
+            let group_clone = updated_group.clone();
+            tokio::spawn(async move {
+                if let Err(e) = dao.update_group(&group_clone).await {
+                    tracing::error!("Failed to update group in database: {}", e);
+                }
+            });
+        }
+
         Ok(())
     }
 
@@ -171,6 +205,18 @@ impl GroupManager {
 
         // 删除分组
         self.groups.remove(group_key);
+
+        // 从数据库删除
+        if let Some(db) = &self.database {
+            let dao = GroupDao::new(db.pool().clone());
+            let group_key_owned = group_key.to_string();
+            tokio::spawn(async move {
+                if let Err(e) = dao.delete_group(&group_key_owned).await {
+                    tracing::error!("Failed to delete group from database: {}", e);
+                }
+            });
+        }
+
         Ok(())
     }
 
