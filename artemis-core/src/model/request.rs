@@ -92,6 +92,21 @@ pub struct GetServicesDeltaResponse {
     pub current_timestamp: i64,
 }
 
+// ===== 批量发现 =====
+
+/// Batch service lookup request (query multiple services at once)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LookupServicesRequest {
+    pub discovery_configs: Vec<DiscoveryConfig>,
+}
+
+/// Batch service lookup response
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LookupServicesResponse {
+    pub response_status: ResponseStatus,
+    pub services: Vec<Service>,
+}
+
 // ===== 通用响应状态 =====
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

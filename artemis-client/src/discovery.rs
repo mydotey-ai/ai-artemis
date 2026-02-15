@@ -96,6 +96,37 @@ impl DiscoveryClient {
         Ok(result.services)
     }
 
+    /// Batch query multiple services at once.
+    ///
+    /// Sends a single request with multiple discovery configs and returns
+    /// all matching services. Results are cached with the configured TTL.
+    pub async fn get_services_batch(
+        &self,
+        configs: Vec<DiscoveryConfig>,
+    ) -> Result<Vec<Service>> {
+        if configs.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let url = format!("{}/api/discovery/lookup", self.config.server_urls[0]);
+        let request = LookupServicesRequest {
+            discovery_configs: configs,
+        };
+
+        let resp = self.client.post(&url).json(&request).send().await?;
+        let response: LookupServicesResponse = resp.json().await?;
+
+        // Update cache with results
+        let ttl = self.config.cache_ttl();
+        let mut cache = self.cache.write();
+        for service in &response.services {
+            let cached = CachedService::new(service.clone(), ttl);
+            cache.insert(service.service_id.clone(), cached);
+        }
+
+        Ok(response.services)
+    }
+
     /// Get all cached services that have not expired
     pub fn get_cached_services(&self) -> Vec<Service> {
         self.cache
@@ -119,6 +150,32 @@ mod tests {
             logic_instances: None,
             route_rules: None,
         }
+    }
+
+    #[test]
+    fn test_batch_request_construction() {
+        let configs = vec![
+            DiscoveryConfig {
+                service_id: "service1".into(),
+                region_id: "region1".into(),
+                zone_id: "zone1".into(),
+                discovery_data: None,
+            },
+            DiscoveryConfig {
+                service_id: "service2".into(),
+                region_id: "region1".into(),
+                zone_id: "zone1".into(),
+                discovery_data: None,
+            },
+        ];
+
+        let request = LookupServicesRequest {
+            discovery_configs: configs,
+        };
+
+        assert_eq!(request.discovery_configs.len(), 2);
+        assert_eq!(request.discovery_configs[0].service_id, "service1");
+        assert_eq!(request.discovery_configs[1].service_id, "service2");
     }
 
     #[test]
