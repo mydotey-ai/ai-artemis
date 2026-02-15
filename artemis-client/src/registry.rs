@@ -3,7 +3,7 @@ use crate::{ClientConfig, Result};
 use artemis_core::model::*;
 use reqwest::Client;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 use tokio::time;
 use tracing::{error, info, warn};
 
@@ -124,6 +124,7 @@ impl RegistryClient {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::time::Duration;
 
     #[tokio::test]
     async fn test_heartbeat_ttl_check() {

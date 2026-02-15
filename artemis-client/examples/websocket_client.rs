@@ -3,10 +3,14 @@ use std::sync::Arc;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    tracing_subscriber::fmt::init();
+    // Use DEBUG level to observe ping/pong health check messages
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::DEBUG)
+        .init();
 
     let config = ClientConfig {
         server_urls: vec!["http://localhost:8080".to_string()],
+        websocket_ping_interval_secs: 10, // Ping every 10 seconds
         ..Default::default()
     };
 

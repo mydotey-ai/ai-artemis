@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::mpsc;
 use tokio_tungstenite::{connect_async, tungstenite::Message};
-use tracing::{error, info};
+use tracing::{debug, error, info, warn};
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "type")]
@@ -50,7 +50,23 @@ impl WebSocketClient {
         (Self { config, change_tx }, change_rx)
     }
 
-    /// 连接WebSocket并订阅服务
+    /// Create an unsubscribe message for a given service.
+    ///
+    /// This can be used to manually send an unsubscribe message
+    /// through the WebSocket connection.
+    pub fn create_unsubscribe_message(service_id: String) -> String {
+        serde_json::json!({
+            "type": "unsubscribe",
+            "service_id": service_id
+        })
+        .to_string()
+    }
+
+    /// Connect to WebSocket and subscribe to service changes.
+    ///
+    /// Includes periodic ping/pong health checking to detect broken connections.
+    /// Ping messages are sent at the interval configured in `websocket_ping_interval_secs`.
+    /// The connection loop breaks on ping failure, server close, or stream errors.
     pub async fn connect_and_subscribe(self: Arc<Self>, service_id: String) -> Result<()> {
         let ws_url =
             self.config.server_urls[0].replace("http://", "ws://").replace("https://", "wss://");
@@ -61,42 +77,75 @@ impl WebSocketClient {
         let (ws_stream, _) = connect_async(&url).await?;
         let (mut write, mut read) = ws_stream.split();
 
-        // 发送订阅消息
+        // Send subscribe message
         let subscribe_msg = ClientMessage::Subscribe { service_id: service_id.clone() };
         let json = serde_json::to_string(&subscribe_msg)?;
         write.send(Message::Text(json.into())).await?;
 
         info!("Subscribed to service: {}", service_id);
 
-        // 接收消息
-        while let Some(msg) = read.next().await {
-            match msg {
-                Ok(Message::Text(text)) => {
-                    if let Ok(server_msg) = serde_json::from_str::<ServerMessage>(&text) {
-                        match server_msg {
-                            ServerMessage::ServiceChange { changes, .. } => {
-                                info!("Received {} changes", changes.len());
-                                let _ = self.change_tx.send(changes);
-                            }
-                            ServerMessage::Subscribed { service_id } => {
-                                info!("Confirmed subscription to: {}", service_id);
-                            }
-                            ServerMessage::Error { message } => {
-                                error!("Server error: {}", message);
-                            }
-                            _ => {}
-                        }
+        // Ping interval timer
+        let mut ping_interval =
+            tokio::time::interval(self.config.websocket_ping_interval());
+
+        loop {
+            tokio::select! {
+                // Periodically send ping
+                _ = ping_interval.tick() => {
+                    debug!("Sending WebSocket ping");
+                    if let Err(e) = write.send(Message::Ping(vec![].into())).await {
+                        error!("Failed to send ping: {}", e);
+                        break;
                     }
                 }
-                Ok(Message::Close(_)) => {
-                    info!("WebSocket connection closed");
-                    break;
+
+                // Receive messages
+                msg = read.next() => {
+                    match msg {
+                        Some(Ok(Message::Text(text))) => {
+                            if let Ok(server_msg) = serde_json::from_str::<ServerMessage>(&text) {
+                                match server_msg {
+                                    ServerMessage::ServiceChange { changes, .. } => {
+                                        info!("Received {} changes", changes.len());
+                                        let _ = self.change_tx.send(changes);
+                                    }
+                                    ServerMessage::Subscribed { service_id } => {
+                                        info!("Confirmed subscription to: {}", service_id);
+                                    }
+                                    ServerMessage::Error { message } => {
+                                        error!("Server error: {}", message);
+                                    }
+                                    ServerMessage::Pong => {
+                                        debug!("Received application-level pong from server");
+                                    }
+                                }
+                            }
+                        }
+                        Some(Ok(Message::Pong(_))) => {
+                            debug!("Received pong from server");
+                        }
+                        Some(Ok(Message::Ping(data))) => {
+                            debug!("Received ping from server, sending pong");
+                            if let Err(e) = write.send(Message::Pong(data)).await {
+                                error!("Failed to send pong: {}", e);
+                                break;
+                            }
+                        }
+                        Some(Ok(Message::Close(_))) => {
+                            info!("WebSocket connection closed by server");
+                            break;
+                        }
+                        Some(Err(e)) => {
+                            error!("WebSocket error: {}", e);
+                            break;
+                        }
+                        None => {
+                            warn!("WebSocket stream ended");
+                            break;
+                        }
+                        _ => {}
+                    }
                 }
-                Err(e) => {
-                    error!("WebSocket error: {}", e);
-                    break;
-                }
-                _ => {}
             }
         }
 
