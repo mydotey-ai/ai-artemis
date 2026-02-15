@@ -9,6 +9,7 @@ pub mod route;
 pub mod service;
 pub mod zone;
 pub mod canary;
+pub mod status;
 
 pub use change::{ChangeType, InstanceChange};
 pub use group::{
@@ -28,3 +29,4 @@ pub use route::{Group, RouteRule, RouteRuleGroup, RouteRuleStatus, RouteStrategy
 pub use service::Service;
 pub use zone::*;
 pub use canary::*;
+pub use status::*;

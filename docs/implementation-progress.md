@@ -124,22 +124,80 @@
 
 ---
 
+## ✅ Phase 21 完成详情
+
+### Phase 21: 状态查询 API ✅
+
+#### Task 21.1: 数据模型定义 ✅
+- **文件**: `artemis-core/src/model/status.rs` (新建, 206行)
+- **变更**:
+  - 定义 6 个请求结构体 (Node, Cluster, Leases, Config, Deployment + Legacy)
+  - 定义 6 个响应结构体
+  - 定义辅助结构 (ServiceNodeStatus, ServiceNode, LeaseStatus)
+  - 重用 ResponseStatus (来自 request 模块)
+
+#### Task 21.2: StatusService 实现 ✅
+- **文件**: `artemis-server/src/status/service_impl.rs` (新建, 326行)
+- **实现**:
+  - `get_cluster_node_status()` - 返回当前节点状态
+  - `get_cluster_status()` - 返回集群所有节点状态
+  - `get_leases_status()` - 返回租约状态信息
+  - `get_legacy_leases_status()` - 兼容旧版租约 API
+  - `get_config_status()` - 返回配置信息
+  - `get_deployment_status()` - 返回部署信息
+  - 辅助函数: `parse_url()`, `format_timestamp()`
+- **集成**: ClusterManager, LeaseManager
+
+#### Task 21.3: LeaseManager 扩展 ✅
+- **文件**: `artemis-server/src/lease/manager.rs`
+- **变更**: 添加 `get_all_leases()` 方法用于状态查询
+
+#### Task 21.4: Lease 模型扩展 ✅
+- **文件**: `artemis-core/src/model/lease.rs`
+- **变更**: 添加 getter 方法 (`ttl_secs()`, `creation_time()`, `renewal_time()`, `eviction_time()`)
+
+#### Task 21.5: API 端点实现 ✅
+- **文件**: `artemis-web/src/api/status.rs` (新建, 142行)
+- **已实现的 12 个 API**:
+  - `POST/GET /api/status/node.json` - 节点状态
+  - `POST/GET /api/status/cluster.json` - 集群状态
+  - `POST/GET /api/status/leases.json` - 租约状态
+  - `POST/GET /api/status/legacy-leases.json` - 兼容旧版租约
+  - `POST/GET /api/status/config.json` - 配置状态
+  - `POST/GET /api/status/deployment.json` - 部署状态
+- **路由注册**: 所有 12 个 API 已在 server.rs 中注册
+
+#### Task 21.6: 集成测试 ✅
+- **文件**: `scripts/test-status-api.sh` (新建, 244行)
+- **测试场景** (15个测试步骤):
+  1. ✅ 注册测试实例
+  2-3. ✅ Node Status API (POST + GET)
+  4-5. ✅ Cluster Status API (POST + GET)
+  6-8. ✅ Leases Status API (POST + GET + 过滤)
+  9-10. ✅ Legacy Leases Status API (POST + GET)
+  11-12. ✅ Config Status API (POST + GET)
+  13-14. ✅ Deployment Status API (POST + GET)
+  15. ✅ 清理测试数据
+- **测试覆盖**: 12/12 APIs 全部覆盖
+
+#### 其他修改
+- `artemis-core/src/model/mod.rs` - 导出 status 模块
+- `artemis-server/src/lib.rs` - 导出 StatusService
+- `artemis-server/Cargo.toml` - 添加 hostname 依赖
+- `Cargo.toml` - 添加 hostname 依赖
+- `artemis-web/src/state.rs` - 添加 status_service 字段
+- `artemis-web/src/api/mod.rs` - 导出 status 模块
+- `artemis/src/main.rs` - 初始化 StatusService
+
+---
+
 ## 🔄 进行中的工作
 
-暂无进行中的工作。Phase 19-20 已完成,准备开始 Phase 21。
+暂无进行中的工作。Phase 19-21 已完成,准备开始 Phase 22。
 
 ---
 
 ## 📋 待实施的 Phases
-
-### Phase 21: 状态查询 API (12 个 API)
-- **预估工时**: 4 天
-- **新增 API**:
-  - Node Status (2个: POST + GET)
-  - Cluster Status (2个: POST + GET)
-  - Leases (4个: POST + GET + Legacy)
-  - Config (2个: POST + GET)
-  - Deployment (2个: POST + GET)
 
 ### Phase 22: GET 查询参数支持 (6 个 API)
 - **预估工时**: 2 天
@@ -175,11 +233,11 @@
 |-------|------|---------|--------|
 | Phase 19 | ✅ 已完成 | 3/3 | 100% (DAO + Manager + API + 测试全部完成) |
 | Phase 20 | ✅ 已完成 | 1/1 | 100% (LoadBalancer + API + 测试全部完成) |
-| Phase 21 | ⏳ 待开始 | 12 | 0% |
+| Phase 21 | ✅ 已完成 | 12/12 | 100% (StatusService + 12 APIs + 测试全部完成) |
 | Phase 22 | ⏳ 待开始 | 6 | 0% |
 | Phase 23 | ⏳ 待开始 | 6 | 0% |
 | Phase 24 | ⏳ 待开始 | 6 | 0% |
-| **总计** | - | **34** | **12%** (4/34 APIs 完成) |
+| **总计** | - | **34** | **47%** (16/34 APIs 完成) |
 
 ---
 
@@ -225,5 +283,5 @@
 
 ---
 
-**最后更新**: 2026-02-15 (Phase 19-20 完成)
-**下一步**: 开始 Phase 21 实施 (状态查询 API - 12个API)
+**最后更新**: 2026-02-15 (Phase 19-21 完成)
+**下一步**: 开始 Phase 22 实施 (GET 查询参数支持 - 6个API)

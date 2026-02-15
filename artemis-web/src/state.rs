@@ -2,7 +2,7 @@ use crate::websocket::SessionManager;
 use artemis_management::{AuditManager, CanaryManager, GroupManager, InstanceManager, RouteManager, ZoneManager};
 use artemis_server::{
     cache::VersionedCacheManager, cluster::ClusterManager, discovery::{DiscoveryServiceImpl, LoadBalancer},
-    replication::ReplicationManager, RegistryServiceImpl,
+    replication::ReplicationManager, RegistryServiceImpl, StatusService,
 };
 use std::sync::Arc;
 
@@ -21,4 +21,5 @@ pub struct AppState {
     pub canary_manager: Arc<CanaryManager>,
     pub audit_manager: Arc<AuditManager>,
     pub load_balancer: Arc<LoadBalancer>,
+    pub status_service: Arc<StatusService>,
 }

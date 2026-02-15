@@ -82,6 +82,14 @@ impl LeaseManager {
     pub fn count(&self) -> usize {
         self.leases.len()
     }
+
+    /// 获取所有租约 (用于状态查询)
+    pub fn get_all_leases(&self) -> Vec<(InstanceKey, Arc<Lease>)> {
+        self.leases
+            .iter()
+            .map(|entry| (entry.key().clone(), entry.value().clone()))
+            .collect()
+    }
 }
 
 #[cfg(test)]

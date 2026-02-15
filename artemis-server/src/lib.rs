@@ -10,6 +10,8 @@ pub mod registry;
 pub mod replication;
 pub mod routing;
 pub mod storage;
+pub mod status;
 
 pub use change::InstanceChangeManager;
 pub use registry::RegistryServiceImpl;
+pub use status::StatusService;

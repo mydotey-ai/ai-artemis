@@ -40,6 +40,22 @@ impl Lease {
     pub fn key(&self) -> &InstanceKey {
         &self.key
     }
+
+    pub fn ttl_secs(&self) -> i64 {
+        self.ttl.as_secs() as i64
+    }
+
+    pub fn creation_time(&self) -> Instant {
+        self.creation_time
+    }
+
+    pub fn renewal_time(&self) -> Instant {
+        *self.renewal_time.lock()
+    }
+
+    pub fn eviction_time(&self) -> Option<Instant> {
+        *self.eviction_time.lock()
+    }
 }
 
 #[cfg(test)]

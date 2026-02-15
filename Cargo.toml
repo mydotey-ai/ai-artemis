@@ -88,6 +88,7 @@ async-trait = "0.1"
 # 其他工具
 bytes = "1.8"
 futures = "0.3"
+hostname = "0.4"
 
 # 人性化时间处理
 humantime-serde = "1.1"

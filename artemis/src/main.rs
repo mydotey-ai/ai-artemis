@@ -216,6 +216,17 @@ async fn start_server(config_path: Option<String>, addr_override: Option<String>
     // Load balancer for discovery lookup
     let load_balancer = Arc::new(artemis_server::discovery::LoadBalancer::new());
 
+    // Status service
+    let status_service = Arc::new(artemis_server::StatusService::new(
+        cluster_manager.clone(),
+        lease_manager,
+        config.server.node_id.clone(),
+        config.server.region.clone(),
+        config.server.zone.clone(),
+        format!("http://{}", config.server.listen_addr),
+        "artemis".to_string(), // app_id
+    ));
+
     // 9. Create AppState
     let state = AppState {
         registry_service,
@@ -231,6 +242,7 @@ async fn start_server(config_path: Option<String>, addr_override: Option<String>
         canary_manager,
         audit_manager,
         load_balancer,
+        status_service,
     };
 
     // 10. Start server
