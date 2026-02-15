@@ -32,6 +32,21 @@ async fn start_test_server(port: u16) -> tokio::task::JoinHandle<()> {
 
         let session_manager = Arc::new(artemis_web::websocket::SessionManager::new());
         let instance_manager = Arc::new(artemis_management::InstanceManager::new());
+        let group_manager = Arc::new(artemis_management::GroupManager::new());
+        let route_manager = Arc::new(artemis_management::RouteManager::new());
+        let zone_manager = Arc::new(artemis_management::ZoneManager::new());
+        let canary_manager = Arc::new(artemis_management::CanaryManager::new());
+        let audit_manager = Arc::new(artemis_management::AuditManager::new());
+        let load_balancer = Arc::new(artemis_server::discovery::LoadBalancer::new());
+        let status_service = Arc::new(artemis_server::StatusService::new(
+            None,                                  // cluster_manager
+            lease_manager.clone(),
+            format!("test-node-{}", port),        // node_id
+            "test-region".to_string(),            // region_id
+            "test-zone".to_string(),              // zone_id
+            format!("http://127.0.0.1:{}", port), // server_url
+            "test-app".to_string(),               // app_id
+        ));
 
         let app_state = AppState {
             registry_service,
@@ -41,6 +56,13 @@ async fn start_test_server(port: u16) -> tokio::task::JoinHandle<()> {
             cluster_manager: None,
             replication_manager: None,
             instance_manager,
+            group_manager,
+            route_manager,
+            zone_manager,
+            canary_manager,
+            audit_manager,
+            load_balancer,
+            status_service,
         };
 
         let addr: SocketAddr = format!("127.0.0.1:{}", port).parse().unwrap();
@@ -56,8 +78,9 @@ async fn test_full_lifecycle() {
 
     // 创建客户端配置
     let config = ClientConfig {
-        server_url: "http://127.0.0.1:18080".to_string(),
+        server_urls: vec!["http://127.0.0.1:18080".to_string()],
         heartbeat_interval_secs: 30,
+        ..Default::default() // 使用其他默认值
     };
 
     // 1. 注册实例
@@ -118,8 +141,9 @@ async fn test_multiple_instances() {
     time::sleep(Duration::from_millis(500)).await;
 
     let config = ClientConfig {
-        server_url: "http://127.0.0.1:18081".to_string(),
+        server_urls: vec!["http://127.0.0.1:18081".to_string()],
         heartbeat_interval_secs: 30,
+        ..Default::default()
     };
 
     let registry_client = Arc::new(RegistryClient::new(config.clone()));
@@ -170,8 +194,9 @@ async fn test_heartbeat_keeps_instance_alive() {
     time::sleep(Duration::from_millis(500)).await;
 
     let config = ClientConfig {
-        server_url: "http://127.0.0.1:18082".to_string(),
+        server_urls: vec!["http://127.0.0.1:18082".to_string()],
         heartbeat_interval_secs: 30,
+        ..Default::default()
     };
 
     let registry_client = Arc::new(RegistryClient::new(config.clone()));

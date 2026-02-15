@@ -54,7 +54,7 @@ impl RegistryServiceImpl {
     pub async fn batch_register(&self, request: BatchRegisterRequest) -> BatchRegisterResponse {
         info!("Batch registering {} instances from replication", request.instances.len());
 
-        let mut failed = Vec::new();
+        let failed = Vec::new();
         let mut affected_services = std::collections::HashSet::new();
 
         for instance in request.instances {

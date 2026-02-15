@@ -1,8 +1,6 @@
 use artemis_core::model::{
-    GetClusterNodeStatusRequest, GetClusterNodeStatusResponse, GetClusterStatusRequest,
-    GetClusterStatusResponse, GetConfigStatusRequest, GetConfigStatusResponse,
-    GetDeploymentStatusRequest, GetDeploymentStatusResponse, GetLeasesStatusRequest,
-    GetLeasesStatusResponse,
+    GetClusterNodeStatusRequest, GetClusterStatusRequest, GetConfigStatusRequest,
+    GetDeploymentStatusRequest, GetLeasesStatusRequest,
 };
 use axum::{
     extract::{Json, Query, State},

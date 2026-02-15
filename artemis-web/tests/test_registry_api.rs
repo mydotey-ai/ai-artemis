@@ -194,7 +194,7 @@ async fn test_heartbeat_success() {
     let reg_request = RegisterRequest {
         instances: vec![instance.clone()],
     };
-    registry::register(State(state.clone()), Json(reg_request)).await;
+    let _ = registry::register(State(state.clone()), Json(reg_request)).await;
 
     // 发送心跳
     let hb_request = HeartbeatRequest {
@@ -219,7 +219,7 @@ async fn test_heartbeat_multiple_instances() {
     let reg_request = RegisterRequest {
         instances: instances.clone(),
     };
-    registry::register(State(state.clone()), Json(reg_request)).await;
+    let _ = registry::register(State(state.clone()), Json(reg_request)).await;
 
     // 批量心跳
     let hb_request = HeartbeatRequest {
@@ -268,7 +268,7 @@ async fn test_heartbeat_extends_lease() {
     let reg_request = RegisterRequest {
         instances: vec![instance.clone()],
     };
-    registry::register(State(state.clone()), Json(reg_request)).await;
+    let _ = registry::register(State(state.clone()), Json(reg_request)).await;
 
     // 第一次心跳
     let hb_request1 = HeartbeatRequest {
@@ -301,7 +301,7 @@ async fn test_unregister_success() {
     let reg_request = RegisterRequest {
         instances: vec![instance.clone()],
     };
-    registry::register(State(state.clone()), Json(reg_request)).await;
+    let _ = registry::register(State(state.clone()), Json(reg_request)).await;
 
     // 注销
     let unreg_request = UnregisterRequest {
@@ -326,7 +326,7 @@ async fn test_unregister_multiple_instances() {
     let reg_request = RegisterRequest {
         instances: instances.clone(),
     };
-    registry::register(State(state.clone()), Json(reg_request)).await;
+    let _ = registry::register(State(state.clone()), Json(reg_request)).await;
 
     // 批量注销
     let unreg_request = UnregisterRequest {
@@ -375,7 +375,7 @@ async fn test_unregister_twice() {
     let reg_request = RegisterRequest {
         instances: vec![instance.clone()],
     };
-    registry::register(State(state.clone()), Json(reg_request)).await;
+    let _ = registry::register(State(state.clone()), Json(reg_request)).await;
 
     // 第一次注销
     let unreg_request1 = UnregisterRequest {
@@ -474,7 +474,7 @@ async fn test_concurrent_heartbeats() {
     let reg_request = RegisterRequest {
         instances: instances.clone(),
     };
-    registry::register(State(state.clone()), Json(reg_request)).await;
+    let _ = registry::register(State(state.clone()), Json(reg_request)).await;
 
     // 并发心跳
     let handles: Vec<_> = instances

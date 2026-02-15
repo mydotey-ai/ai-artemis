@@ -109,7 +109,7 @@ async fn test_get_service_success() {
     let reg_request = RegisterRequest {
         instances: instances.clone(),
     };
-    artemis_web::api::registry::register(State(state.clone()), Json(reg_request)).await;
+    let _ = artemis_web::api::registry::register(State(state.clone()), Json(reg_request)).await;
 
     // 等待缓存更新
     tokio::time::sleep(Duration::from_millis(100)).await;
@@ -165,7 +165,7 @@ async fn test_get_service_filters_down_instances() {
     let reg_request = RegisterRequest {
         instances: vec![inst1, inst2],
     };
-    artemis_web::api::registry::register(State(state.clone()), Json(reg_request)).await;
+    let _ = artemis_web::api::registry::register(State(state.clone()), Json(reg_request)).await;
 
     tokio::time::sleep(Duration::from_millis(100)).await;
 
@@ -194,7 +194,7 @@ async fn test_get_service_cache_version() {
     // 注册实例
     let instances = vec![create_test_instance("my-service", "inst-1")];
     let reg_request = RegisterRequest { instances };
-    artemis_web::api::registry::register(State(state.clone()), Json(reg_request)).await;
+    let _ = artemis_web::api::registry::register(State(state.clone()), Json(reg_request)).await;
 
     tokio::time::sleep(Duration::from_millis(100)).await;
 
@@ -207,7 +207,7 @@ async fn test_get_service_cache_version() {
             discovery_data: None,
         },
     };
-    let response1 = discovery::get_service(State(state.clone()), Json(request1)).await;
+    let _response1 = discovery::get_service(State(state.clone()), Json(request1)).await;
 
     // 第二次请求 (版本应该相同,因为数据没变)
     let request2 = GetServiceRequest {
@@ -218,7 +218,7 @@ async fn test_get_service_cache_version() {
             discovery_data: None,
         },
     };
-    let response2 = discovery::get_service(State(state), Json(request2)).await;
+    let _response2 = discovery::get_service(State(state), Json(request2)).await;
 
 }
 
@@ -238,7 +238,7 @@ async fn test_get_services_success() {
         create_test_instance("service-c", "inst-c1"),
     ];
     let reg_request = RegisterRequest { instances };
-    artemis_web::api::registry::register(State(state.clone()), Json(reg_request)).await;
+    let _ = artemis_web::api::registry::register(State(state.clone()), Json(reg_request)).await;
 
     tokio::time::sleep(Duration::from_millis(100)).await;
 
@@ -280,7 +280,7 @@ async fn test_get_services_groups_by_service_id() {
         create_test_instance("my-service", "inst-3"),
     ];
     let reg_request = RegisterRequest { instances };
-    artemis_web::api::registry::register(State(state.clone()), Json(reg_request)).await;
+    let _ = artemis_web::api::registry::register(State(state.clone()), Json(reg_request)).await;
 
     tokio::time::sleep(Duration::from_millis(100)).await;
 
@@ -311,7 +311,7 @@ async fn test_lookup_instance_random_strategy() {
         create_test_instance("my-service", "inst-3"),
     ];
     let reg_request = RegisterRequest { instances };
-    artemis_web::api::registry::register(State(state.clone()), Json(reg_request)).await;
+    let _ = artemis_web::api::registry::register(State(state.clone()), Json(reg_request)).await;
 
     tokio::time::sleep(Duration::from_millis(100)).await;
 
@@ -326,7 +326,7 @@ async fn test_lookup_instance_random_strategy() {
         strategy: Some("random".to_string()),
     };
 
-    let response = discovery::lookup_instance(State(state), Json(request)).await;
+    let _response = discovery::lookup_instance(State(state), Json(request)).await;
 
     // 应该返回一个实例
     // Note: 需要检查实际的响应类型
@@ -343,7 +343,7 @@ async fn test_lookup_instance_round_robin_strategy() {
         create_test_instance("my-service", "inst-3"),
     ];
     let reg_request = RegisterRequest { instances };
-    artemis_web::api::registry::register(State(state.clone()), Json(reg_request)).await;
+    let _ = artemis_web::api::registry::register(State(state.clone()), Json(reg_request)).await;
 
     tokio::time::sleep(Duration::from_millis(100)).await;
 
@@ -393,7 +393,7 @@ async fn test_concurrent_get_service() {
     // 注册实例
     let instances = vec![create_test_instance("my-service", "inst-1")];
     let reg_request = RegisterRequest { instances };
-    artemis_web::api::registry::register(State(state.clone()), Json(reg_request)).await;
+    let _ = artemis_web::api::registry::register(State(state.clone()), Json(reg_request)).await;
 
     tokio::time::sleep(Duration::from_millis(100)).await;
 
@@ -434,7 +434,7 @@ async fn test_concurrent_get_services() {
         create_test_instance("service-c", "inst-1"),
     ];
     let reg_request = RegisterRequest { instances };
-    artemis_web::api::registry::register(State(state.clone()), Json(reg_request)).await;
+    let _ = artemis_web::api::registry::register(State(state.clone()), Json(reg_request)).await;
 
     tokio::time::sleep(Duration::from_millis(100)).await;
 

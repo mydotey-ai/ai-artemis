@@ -270,6 +270,7 @@ impl StatusService {
 
     // ==================== Helper Functions ====================
 
+    #[allow(dead_code)]
     fn format_timestamp(ts: i64) -> String {
         let datetime = chrono::DateTime::from_timestamp(ts, 0);
         datetime

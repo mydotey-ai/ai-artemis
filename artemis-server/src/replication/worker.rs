@@ -526,6 +526,7 @@ mod tests {
         }
     }
 
+    #[allow(dead_code)]
     fn create_test_instance() -> Instance {
         Instance {
             region_id: "test".to_string(),
