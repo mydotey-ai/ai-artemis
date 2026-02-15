@@ -228,6 +228,65 @@ level = "info"                     # 日志级别: trace, debug, info, warn, err
 format = "pretty"                  # 日志格式: json, pretty
 ```
 
+## 数据库配置
+
+cluster.sh 支持通过环境变量配置数据库持久化:
+
+### 环境变量
+
+```bash
+DB_TYPE=sqlite      # 数据库类型: none (默认), sqlite, mysql
+DB_URL=...          # 自定义数据库连接URL (可选)
+DB_MAX_CONN=10      # 最大连接数 (默认10)
+```
+
+### 使用示例
+
+#### SQLite 模式 (共享数据库)
+
+```bash
+# 启动集群,所有节点共享同一个 SQLite 数据库
+DB_TYPE=sqlite ./cluster.sh start
+
+# 首次启动需要创建 schema
+sqlite3 .cluster/data/shared.db < artemis-management/migrations/001_initial_schema.sql
+
+# 数据持久化在 .cluster/data/shared.db
+# 优点: 数据持久化,配置简单
+# 缺点: SQLite 并发写入性能有限,适合开发测试
+```
+
+#### MySQL 模式 (生产环境)
+
+```bash
+# 使用 MySQL 数据库 (适合生产环境)
+DB_TYPE=mysql DB_URL="mysql://user:pass@host:3306/artemis" ./cluster.sh start
+
+# 优点: 高并发性能,适合生产环境
+# 需要: 提前创建数据库和用户
+```
+
+#### 无数据库模式 (默认)
+
+```bash
+# 纯内存模式,重启后数据丢失
+./cluster.sh start
+
+# 优点: 快速启动,无需配置
+# 缺点: 重启后数据丢失
+```
+
+### 目录结构 (SQLite 模式)
+
+```
+.cluster/
+├── config/          # 节点配置文件
+├── logs/            # 节点日志文件
+├── pids/            # 节点进程 PID 文件
+└── data/            # SQLite 数据库文件 (仅 SQLite 模式)
+    └── shared.db    # 所有节点共享的数据库
+```
+
 ## 测试工具
 
 ### 自动化 API 测试

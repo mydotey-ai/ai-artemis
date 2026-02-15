@@ -32,7 +32,25 @@ Artemis 使用 **SeaORM** 作为数据库 ORM,支持运行时数据库切换:
 # 缺点: 重启后数据丢失
 ```
 
-### 方式2: SQLite 单节点
+### 方式2: SQLite 集群 (共享模式)
+
+使用 `cluster.sh` 启动多节点集群,所有节点共享同一个 SQLite 数据库:
+
+```bash
+# 启动3节点集群 (SQLite 共享模式)
+DB_TYPE=sqlite ./cluster.sh start
+
+# 数据持久化在 .cluster/data/shared.db
+# 所有节点自动共享同一个数据库文件
+
+# 首次启动需要创建 schema
+sqlite3 .cluster/data/shared.db < artemis-management/migrations/001_initial_schema.sql
+
+# 优点: 数据持久化,集群模式
+# 缺点: SQLite 并发写入性能有限,适合开发测试
+```
+
+### 方式3: SQLite 单节点
 
 使用现有的 `artemis-sqlite.toml` 配置:
 
