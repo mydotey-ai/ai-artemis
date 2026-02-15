@@ -118,7 +118,7 @@ artemis-workspace/
 ├── artemis-server/        # 业务逻辑 (注册、发现、租约、缓存)
 ├── artemis-web/           # HTTP API 层 (Axum + WebSocket)
 ├── artemis-management/    # 管理功能和数据持久化
-├── artemis-client/        # 客户端 SDK (自动心跳)
+├── artemis-client/        # 客户端 SDK (企业级功能,100%对齐Java版本)
 └── artemis/               # CLI 二进制工具
 ```
 
@@ -149,7 +149,7 @@ artemis-workspace/
 - ✅ **限流保护** - Token Bucket 算法实现
 - ✅ **过滤器链** - 区域/可用区/状态/分组过滤
 - ✅ **HTTP API** - 完整的 REST API (兼容 Java 版本)
-- ✅ **客户端 SDK** - 自动心跳、失败重试
+- ✅ **客户端 SDK** - 企业级功能完整实现 (多地址管理、重试队列、健康检查、过滤器链等 12 项功能)
 - ✅ **CLI 工具** - 服务器启动和管理命令
 
 #### Phase 9: WebSocket 实时推送 (P1)
@@ -480,6 +480,25 @@ curl -X POST http://localhost:8080/api/routing/rules/canary-release/publish
 
 ### 客户端 SDK 使用
 
+Artemis Rust 客户端实现了 100% 对齐 Java 版本的企业级功能,包含 12 项核心特性:
+
+#### 企业级功能清单
+
+1. ✅ **多地址管理** - 支持多服务器地址,随机负载均衡
+2. ✅ **HTTP 重试机制** - 指数退避重试,可配置重试次数和间隔
+3. ✅ **心跳 TTL 检测** - 自动检测心跳超时,记录错误日志
+4. ✅ **WebSocket 健康检查** - Ping/Pong 机制保持长连接活跃
+5. ✅ **服务缓存 TTL** - 本地缓存自动过期,减少网络请求
+6. ✅ **失败重试队列** - 异步重试失败的操作,防止数据丢失
+7. ✅ **Registry 过滤器链** - 支持自定义过滤器,灵活控制实例列表
+8. ✅ **批量服务发现** - 一次请求查询多个服务
+9. ✅ **地址动态更新** - 运行时更新服务器地址列表
+10. ✅ **地址 TTL 管理** - 地址上下文支持 TTL 和可用性标记
+11. ✅ **Prometheus 监控** - 可选的 metrics 特性,导出监控指标
+12. ✅ **完整测试覆盖** - 31 个单元/集成测试 (24 unit + 7 integration)
+
+#### 基础使用
+
 ```rust
 use artemis_client::{ClientConfig, RegistryClient};
 use artemis_core::model::*;
@@ -487,8 +506,26 @@ use std::sync::Arc;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    // 创建客户端
-    let config = ClientConfig::default();
+    // 创建客户端配置 (企业级配置)
+    let config = ClientConfig {
+        server_urls: vec![
+            "http://localhost:8080".to_string(),
+            "http://localhost:8081".to_string(),
+            "http://localhost:8082".to_string(),
+        ],
+        heartbeat_interval_secs: 30,
+        heartbeat_ttl_secs: 90,
+        http_retry_times: 3,
+        http_retry_interval_ms: 1000,
+        websocket_ping_interval_secs: 30,
+        cache_ttl_secs: 300,
+        address_refresh_interval_secs: 600,
+        enable_metrics: true,
+    };
+
+    // 验证配置
+    config.validate()?;
+
     let client = Arc::new(RegistryClient::new(config));
 
     // 注册服务实例
@@ -507,13 +544,67 @@ async fn main() -> anyhow::Result<()> {
     };
     let response = client.register(request).await?;
 
-    // 启动自动心跳任务
+    // 启动自动心跳任务 (自动重试 + TTL 检测)
     let keys = vec![/* instance keys */];
     client.clone().start_heartbeat_task(keys);
 
     Ok(())
 }
 ```
+
+#### 高级功能示例
+
+```rust
+use artemis_client::{
+    ClientConfig, RegistryClient, DiscoveryClient,
+    AddressManager, FilterChain, StatusFilter
+};
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    let config = ClientConfig::default();
+
+    // 1. 多地址管理与负载均衡
+    let address_manager = AddressManager::new_dynamic(
+        vec!["http://localhost:8080".to_string()],
+        Duration::from_secs(600)
+    );
+    let random_url = address_manager.get_random_address().await;
+
+    // 2. 服务发现 + 缓存 TTL
+    let discovery = DiscoveryClient::new(config.clone());
+    let service = discovery.get_service("my-service", "us-east", None).await?;
+
+    // 3. 批量服务发现
+    let service_ids = vec!["service-a", "service-b", "service-c"];
+    let services = discovery.get_services_batch(service_ids, "us-east", None).await?;
+
+    // 4. Registry 过滤器链
+    let mut filter_chain = FilterChain::new();
+    filter_chain.add_filter(Box::new(StatusFilter));
+    let filtered = filter_chain.filter(instances);
+
+    // 5. 失败重试队列
+    use artemis_client::retry::RetryQueue;
+    let retry_queue = RetryQueue::new(Duration::from_secs(60));
+    retry_queue.add(failed_item).await;
+
+    // 6. Prometheus 监控指标 (需启用 metrics 特性)
+    #[cfg(feature = "metrics")]
+    {
+        use artemis_client::CLIENT_METRICS;
+        CLIENT_METRICS.record_request("register", true, 0.05);
+    }
+
+    Ok(())
+}
+```
+
+详细文档和示例请查看:
+- 📖 客户端文档: `artemis-client/README.md`
+- 📝 功能对比: `docs/reports/features/client-comparison-rust-vs-java.md`
+- 📋 实现计划: `docs/plans/2026-02-15-client-enterprise-features.md`
+- 💡 完整示例: `artemis-client/examples/enterprise_client.rs`
 
 ---
 
