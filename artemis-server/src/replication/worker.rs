@@ -526,7 +526,6 @@ mod tests {
         }
     }
 
-    #[allow(dead_code)]
     fn create_test_instance() -> Instance {
         Instance {
             region_id: "test".to_string(),
@@ -545,6 +544,18 @@ mod tests {
         }
     }
 
+    fn create_test_instance_key() -> InstanceKey {
+        InstanceKey {
+            region_id: "test".to_string(),
+            zone_id: "zone".to_string(),
+            service_id: "service".to_string(),
+            group_id: String::new(),
+            instance_id: "inst-1".to_string(),
+        }
+    }
+
+    // ===== Worker 创建测试 =====
+
     #[test]
     fn test_worker_creation() {
         let (_, event_rx) = tokio::sync::mpsc::unbounded_channel();
@@ -555,5 +566,259 @@ mod tests {
         assert_eq!(worker.register_buffer.len(), 0);
         assert_eq!(worker.heartbeat_buffer.len(), 0);
         assert_eq!(worker.unregister_buffer.len(), 0);
+    }
+
+    #[test]
+    fn test_worker_with_custom_config() {
+        let (_, event_rx) = tokio::sync::mpsc::unbounded_channel();
+        let cluster_manager = Arc::new(ClusterManager::default());
+        let config = ReplicationConfig {
+            enabled: true,
+            timeout_secs: 10,
+            batch_size: 50,
+            batch_interval_ms: 200,
+            max_retries: 5,
+        };
+
+        let worker = ReplicationWorker::new(event_rx, cluster_manager, config.clone());
+        assert_eq!(worker.config.timeout_secs, 10);
+        assert_eq!(worker.config.batch_size, 50);
+        assert_eq!(worker.config.max_retries, 5);
+    }
+
+    #[test]
+    fn test_worker_initial_state() {
+        let (_, event_rx) = tokio::sync::mpsc::unbounded_channel();
+        let cluster_manager = Arc::new(ClusterManager::default());
+        let config = create_test_config();
+
+        let worker = ReplicationWorker::new(event_rx, cluster_manager, config);
+        assert!(worker.register_buffer.is_empty(), "注册缓冲区应为空");
+        assert!(worker.heartbeat_buffer.is_empty(), "心跳缓冲区应为空");
+        assert!(worker.unregister_buffer.is_empty(), "注销缓冲区应为空");
+        assert!(worker.retry_queue.is_empty(), "重试队列应为空");
+    }
+
+    // ===== RetryItem 测试 =====
+
+    #[test]
+    fn test_retry_item_creation() {
+        let instance = create_test_instance();
+        let event = ReplicationEvent::Register(instance);
+        let next_retry_time = Instant::now() + Duration::from_secs(2);
+
+        let item = RetryItem {
+            node_id: "node-1".to_string(),
+            event: event.clone(),
+            retry_count: 0,
+            next_retry_time,
+        };
+
+        assert_eq!(item.node_id, "node-1");
+        assert_eq!(item.retry_count, 0);
+    }
+
+    #[test]
+    fn test_retry_item_clone() {
+        let instance = create_test_instance();
+        let event = ReplicationEvent::Register(instance);
+        let next_retry_time = Instant::now() + Duration::from_secs(2);
+
+        let item = RetryItem {
+            node_id: "node-1".to_string(),
+            event,
+            retry_count: 1,
+            next_retry_time,
+        };
+
+        let cloned = item.clone();
+        assert_eq!(cloned.node_id, item.node_id);
+        assert_eq!(cloned.retry_count, item.retry_count);
+    }
+
+    // ===== 批处理缓冲区测试 =====
+
+    #[test]
+    fn test_register_buffer_management() {
+        let (_, event_rx) = tokio::sync::mpsc::unbounded_channel();
+        let cluster_manager = Arc::new(ClusterManager::default());
+        let config = create_test_config();
+
+        let mut worker = ReplicationWorker::new(event_rx, cluster_manager, config);
+
+        // 添加实例到缓冲区
+        worker.register_buffer.push(create_test_instance());
+        assert_eq!(worker.register_buffer.len(), 1);
+
+        // 清空缓冲区
+        let _ = std::mem::take(&mut worker.register_buffer);
+        assert_eq!(worker.register_buffer.len(), 0);
+    }
+
+    #[test]
+    fn test_heartbeat_buffer_management() {
+        let (_, event_rx) = tokio::sync::mpsc::unbounded_channel();
+        let cluster_manager = Arc::new(ClusterManager::default());
+        let config = create_test_config();
+
+        let mut worker = ReplicationWorker::new(event_rx, cluster_manager, config);
+
+        // 添加心跳到缓冲区
+        worker.heartbeat_buffer.push(create_test_instance_key());
+        assert_eq!(worker.heartbeat_buffer.len(), 1);
+
+        // 清空缓冲区
+        let _ = std::mem::take(&mut worker.heartbeat_buffer);
+        assert_eq!(worker.heartbeat_buffer.len(), 0);
+    }
+
+    #[test]
+    fn test_unregister_buffer_management() {
+        let (_, event_rx) = tokio::sync::mpsc::unbounded_channel();
+        let cluster_manager = Arc::new(ClusterManager::default());
+        let config = create_test_config();
+
+        let mut worker = ReplicationWorker::new(event_rx, cluster_manager, config);
+
+        // 添加注销到缓冲区
+        worker.unregister_buffer.push(create_test_instance_key());
+        assert_eq!(worker.unregister_buffer.len(), 1);
+
+        // 清空缓冲区
+        let _ = std::mem::take(&mut worker.unregister_buffer);
+        assert_eq!(worker.unregister_buffer.len(), 0);
+    }
+
+    // ===== 重试队列测试 =====
+
+    #[test]
+    fn test_add_to_retry_queue() {
+        let (_, event_rx) = tokio::sync::mpsc::unbounded_channel();
+        let cluster_manager = Arc::new(ClusterManager::default());
+        let config = create_test_config();
+
+        let mut worker = ReplicationWorker::new(event_rx, cluster_manager, config);
+
+        let instance = create_test_instance();
+        let event = ReplicationEvent::Register(instance);
+
+        worker.add_to_retry_queue("node-1".to_string(), event, 0);
+
+        assert_eq!(worker.retry_queue.len(), 1);
+    }
+
+    #[test]
+    fn test_retry_queue_max_retries() {
+        let (_, event_rx) = tokio::sync::mpsc::unbounded_channel();
+        let cluster_manager = Arc::new(ClusterManager::default());
+        let config = create_test_config();
+
+        let mut worker = ReplicationWorker::new(event_rx, cluster_manager, config);
+
+        let instance = create_test_instance();
+        let event = ReplicationEvent::Register(instance);
+
+        // 尝试添加超过最大重试次数的项 (max_retries = 3)
+        worker.add_to_retry_queue("node-1".to_string(), event.clone(), 3);
+
+        assert_eq!(worker.retry_queue.len(), 0, "超过最大重试次数应丢弃");
+    }
+
+    #[test]
+    fn test_retry_queue_backoff_calculation() {
+        let (_, event_rx) = tokio::sync::mpsc::unbounded_channel();
+        let cluster_manager = Arc::new(ClusterManager::default());
+        let config = create_test_config();
+
+        let mut worker = ReplicationWorker::new(event_rx, cluster_manager, config);
+
+        let instance = create_test_instance();
+        let event = ReplicationEvent::Register(instance);
+
+        let before = Instant::now();
+        worker.add_to_retry_queue("node-1".to_string(), event.clone(), 0);
+
+        let item = worker.retry_queue.front().unwrap();
+        let backoff = item.next_retry_time.duration_since(before);
+
+        // 第 0 次重试: 2^0 = 1 秒
+        assert!(backoff >= Duration::from_secs(1));
+        assert!(backoff < Duration::from_secs(2));
+    }
+
+    #[test]
+    fn test_retry_queue_exponential_backoff() {
+        let (_, event_rx) = tokio::sync::mpsc::unbounded_channel();
+        let cluster_manager = Arc::new(ClusterManager::default());
+        let config = create_test_config();
+
+        let mut worker = ReplicationWorker::new(event_rx, cluster_manager, config);
+
+        let instance = create_test_instance();
+
+        // 测试指数退避: 2^0=1s, 2^1=2s, 2^2=4s
+        for retry_count in 0..3 {
+            let event = ReplicationEvent::Register(instance.clone());
+            let before = Instant::now();
+            worker.add_to_retry_queue(
+                format!("node-{}", retry_count),
+                event,
+                retry_count,
+            );
+
+            let item = worker.retry_queue.back().unwrap();
+            let backoff = item.next_retry_time.duration_since(before);
+            let expected = 2u64.pow(retry_count);
+
+            assert!(
+                backoff >= Duration::from_secs(expected),
+                "retry_count={}, expected>={}s",
+                retry_count,
+                expected
+            );
+        }
+    }
+
+    #[test]
+    fn test_retry_queue_fifo_order() {
+        let (_, event_rx) = tokio::sync::mpsc::unbounded_channel();
+        let cluster_manager = Arc::new(ClusterManager::default());
+        let config = create_test_config();
+
+        let mut worker = ReplicationWorker::new(event_rx, cluster_manager, config);
+
+        let instance = create_test_instance();
+
+        // 添加 3 个项到重试队列
+        for i in 1..=3 {
+            let event = ReplicationEvent::Register(instance.clone());
+            worker.add_to_retry_queue(format!("node-{}", i), event, 0);
+        }
+
+        assert_eq!(worker.retry_queue.len(), 3);
+
+        // 验证 FIFO 顺序
+        assert_eq!(worker.retry_queue.front().unwrap().node_id, "node-1");
+        assert_eq!(worker.retry_queue.back().unwrap().node_id, "node-3");
+    }
+
+    // ===== 配置测试 =====
+
+    #[test]
+    fn test_config_batch_size() {
+        let config = create_test_config();
+        assert_eq!(config.batch_size, 100, "批次大小应为 100");
+    }
+
+    #[test]
+    fn test_config_max_retries() {
+        let config = create_test_config();
+        assert_eq!(config.max_retries, 3, "最大重试次数应为 3");
+    }
+
+    #[test]
+    fn test_config_timeout() {
+        let config = create_test_config();
+        assert_eq!(config.timeout_secs, 5, "超时应为 5 秒");
     }
 }
