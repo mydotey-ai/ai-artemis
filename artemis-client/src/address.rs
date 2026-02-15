@@ -273,12 +273,11 @@ mod tests {
         // Now node2 should be returned again
         let mut found_node2 = false;
         for _ in 0..30 {
-            if let Some(addr) = manager.get_random_address().await {
-                if addr == "http://node2:8080" {
+            if let Some(addr) = manager.get_random_address().await
+                && addr == "http://node2:8080" {
                     found_node2 = true;
                     break;
                 }
-            }
         }
         assert!(found_node2, "node2 should be available again");
     }

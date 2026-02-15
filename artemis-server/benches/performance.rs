@@ -7,7 +7,8 @@ use artemis_core::model::{
 };
 use artemis_core::traits::RegistryService;
 use artemis_server::{
-    InstanceChangeManager, RegistryServiceImpl, lease::LeaseManager, registry::RegistryRepository,
+    cache::VersionedCacheManager, change::InstanceChangeManager, RegistryServiceImpl,
+    lease::LeaseManager, registry::RegistryRepository,
 };
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use std::hint::black_box;
@@ -43,8 +44,15 @@ fn bench_register(c: &mut Criterion) {
                 rt.block_on(async {
                     let repo = RegistryRepository::new();
                     let lease_mgr = Arc::new(LeaseManager::new(Duration::from_secs(30)));
+                    let cache = Arc::new(VersionedCacheManager::new());
                     let change_mgr = Arc::new(InstanceChangeManager::new());
-                    let service = RegistryServiceImpl::new(repo, lease_mgr, change_mgr);
+                    let service = RegistryServiceImpl::new(
+                        repo,
+                        lease_mgr,
+                        cache,
+                        change_mgr,
+                        None, // No replication in benchmark
+                    );
 
                     let instances: Vec<Instance> = (0..size).map(create_test_instance).collect();
                     let request = RegisterRequest { instances };
@@ -69,9 +77,15 @@ fn bench_heartbeat(c: &mut Criterion) {
                 rt.block_on(async {
                     let repo = RegistryRepository::new();
                     let lease_mgr = Arc::new(LeaseManager::new(Duration::from_secs(30)));
+                    let cache = Arc::new(VersionedCacheManager::new());
                     let change_mgr = Arc::new(InstanceChangeManager::new());
-                    let service =
-                        RegistryServiceImpl::new(repo.clone(), lease_mgr.clone(), change_mgr);
+                    let service = RegistryServiceImpl::new(
+                        repo.clone(),
+                        lease_mgr.clone(),
+                        cache,
+                        change_mgr,
+                        None, // No replication in benchmark
+                    );
 
                     // 先注册实例
                     let instances: Vec<Instance> = (0..size).map(create_test_instance).collect();

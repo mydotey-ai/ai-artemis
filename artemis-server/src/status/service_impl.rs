@@ -141,11 +141,10 @@ impl StatusService {
 
         for (key, lease) in all_leases.iter() {
             // 如果有 service_ids 过滤条件,检查是否匹配
-            if let Some(ref service_ids) = request.service_ids {
-                if !service_ids.contains(&key.service_id) {
+            if let Some(ref service_ids) = request.service_ids
+                && !service_ids.contains(&key.service_id) {
                     continue;
                 }
-            }
 
             // 使用 Instant 计算时间差(秒)
             let now = std::time::Instant::now();
@@ -181,7 +180,7 @@ impl StatusService {
 
             leases_status
                 .entry(key.service_id.clone())
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push(lease_status);
         }
 

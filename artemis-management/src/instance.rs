@@ -247,13 +247,12 @@ impl InstanceManager {
                 let region = parts[1].to_string();
 
                 // 按 region_id 过滤
-                if let Some(rid) = region_id {
-                    if region != rid {
+                if let Some(rid) = region_id
+                    && region != rid {
                         return None;
                     }
-                }
 
-                Some((server_id, region, entry.value().clone()))
+                Some((server_id, region, *entry.value()))
             })
             .collect()
     }

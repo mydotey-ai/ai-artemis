@@ -256,7 +256,7 @@ async fn test_heartbeat_unregistered_instance() {
     let response = registry::heartbeat(State(state), Json(request)).await;
 
     // 应该有失败记录
-    assert!(response.0.failed_instance_keys.is_some() && response.0.failed_instance_keys.as_ref().unwrap().len() > 0);
+    assert!(response.0.failed_instance_keys.is_some() && !response.0.failed_instance_keys.as_ref().unwrap().is_empty());
 }
 
 #[tokio::test]
