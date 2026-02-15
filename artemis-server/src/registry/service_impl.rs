@@ -10,6 +10,12 @@ use artemis_core::model::{
     ReplicateHeartbeatRequest, ReplicateHeartbeatResponse,
     ReplicateUnregisterRequest, ReplicateUnregisterResponse,
     GetAllServicesResponse,
+    // Phase 23: 批量复制 API
+    BatchRegisterRequest, BatchRegisterResponse,
+    BatchHeartbeatRequest, BatchHeartbeatResponse,
+    BatchUnregisterRequest, BatchUnregisterResponse,
+    ServicesDeltaRequest, ServicesDeltaResponse,
+    SyncFullDataRequest, SyncFullDataResponse,
 };
 use artemis_core::traits::RegistryService;
 use async_trait::async_trait;
@@ -39,6 +45,132 @@ impl RegistryServiceImpl {
             cache,
             change_manager,
             replication_manager,
+        }
+    }
+
+    // ===== Phase 23: 批量复制 API (独立方法,不属于 trait) =====
+
+    /// 批量注册 - 用于节点间批量数据同步
+    pub async fn batch_register(&self, request: BatchRegisterRequest) -> BatchRegisterResponse {
+        info!("Batch registering {} instances from replication", request.instances.len());
+
+        let mut failed = Vec::new();
+        let mut affected_services = std::collections::HashSet::new();
+
+        for instance in request.instances {
+            let service_id = instance.service_id.clone();
+            let key = instance.key();
+
+            self.repository.register(instance.clone());
+            self.lease_manager.create_lease(key.clone());
+            affected_services.insert(service_id);
+        }
+
+        // 批量更新缓存
+        for service_id in affected_services {
+            self.rebuild_and_cache_service(&service_id);
+        }
+
+        BatchRegisterResponse {
+            response_status: if failed.is_empty() {
+                ResponseStatus::success()
+            } else {
+                ResponseStatus::error(ErrorCode::BadRequest, "Some registrations failed")
+            },
+            failed_instances: if failed.is_empty() { None } else { Some(failed) },
+        }
+    }
+
+    /// 批量心跳 - 优化网络请求
+    pub async fn batch_heartbeat(&self, request: BatchHeartbeatRequest) -> BatchHeartbeatResponse {
+        info!("Batch heartbeat for {} instances from replication", request.instance_keys.len());
+
+        let mut failed = Vec::new();
+
+        for key in request.instance_keys {
+            if !self.lease_manager.renew(&key) {
+                warn!("Batch heartbeat failed for non-existent instance: {:?}", key);
+                failed.push(key);
+            }
+        }
+
+        BatchHeartbeatResponse {
+            response_status: if failed.is_empty() {
+                ResponseStatus::success()
+            } else {
+                ResponseStatus::error(ErrorCode::BadRequest, "Some heartbeats failed")
+            },
+            failed_instance_keys: if failed.is_empty() { None } else { Some(failed) },
+        }
+    }
+
+    /// 批量注销
+    pub async fn batch_unregister(&self, request: BatchUnregisterRequest) -> BatchUnregisterResponse {
+        info!("Batch unregistering {} instances from replication", request.instance_keys.len());
+
+        let mut affected_services = std::collections::HashSet::new();
+        let mut failed = Vec::new();
+
+        for key in request.instance_keys {
+            let service_id = key.service_id.clone();
+
+            if let Some(instance) = self.repository.remove(&key) {
+                self.lease_manager.remove_lease(&key);
+                affected_services.insert(service_id);
+                self.change_manager.publish_unregister(&key, &instance);
+            } else {
+                warn!("Batch unregister failed for non-existent instance: {:?}", key);
+                failed.push(key);
+            }
+        }
+
+        // 批量更新缓存
+        for service_id in affected_services {
+            self.rebuild_and_cache_service(&service_id);
+        }
+
+        BatchUnregisterResponse {
+            response_status: if failed.is_empty() {
+                ResponseStatus::success()
+            } else {
+                ResponseStatus::error(ErrorCode::BadRequest, "Some unregistrations failed")
+            },
+            failed_instance_keys: if failed.is_empty() { None } else { Some(failed) },
+        }
+    }
+
+    /// 增量同步 - 获取指定时间戳之后的变更
+    pub async fn get_services_delta(&self, _request: ServicesDeltaRequest) -> ServicesDeltaResponse {
+        // 注意:当前实现返回所有服务 (与 Java 版本保持一致)
+        // 未来可扩展为基于 version_id 的真正增量同步
+        let services = self.repository.get_all_services();
+        let current_timestamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_millis() as i64;
+
+        ServicesDeltaResponse {
+            response_status: ResponseStatus::success(),
+            services,
+            current_timestamp,
+        }
+    }
+
+    /// 全量同步 - 新节点加入时的完整数据同步
+    pub async fn sync_full_data(&self, request: SyncFullDataRequest) -> SyncFullDataResponse {
+        info!("Full data sync requested for region_id={}, zone_id={:?}",
+              request.region_id, request.zone_id);
+
+        let services = self.repository.get_all_services();
+        let sync_timestamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_millis() as i64;
+
+        SyncFullDataResponse {
+            response_status: ResponseStatus::success(),
+            services,
+            sync_timestamp,
         }
     }
 

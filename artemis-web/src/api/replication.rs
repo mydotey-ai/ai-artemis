@@ -80,3 +80,68 @@ pub async fn get_all_services_by_query(
     let response = state.registry_service.get_all_services().await;
     Json(response)
 }
+
+// ===== Phase 23: 批量复制 API =====
+
+/// 批量注册端点
+pub async fn batch_register(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(request): Json<BatchRegisterRequest>,
+) -> Result<Json<BatchRegisterResponse>, StatusCode> {
+    if !headers.contains_key("x-artemis-replication") {
+        tracing::warn!("Batch register request without X-Artemis-Replication header");
+        return Err(StatusCode::BAD_REQUEST);
+    }
+
+    let response = state.registry_service.batch_register(request).await;
+    Ok(Json(response))
+}
+
+/// 批量心跳端点
+pub async fn batch_heartbeat(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(request): Json<BatchHeartbeatRequest>,
+) -> Result<Json<BatchHeartbeatResponse>, StatusCode> {
+    if !headers.contains_key("x-artemis-replication") {
+        tracing::warn!("Batch heartbeat request without X-Artemis-Replication header");
+        return Err(StatusCode::BAD_REQUEST);
+    }
+
+    let response = state.registry_service.batch_heartbeat(request).await;
+    Ok(Json(response))
+}
+
+/// 批量注销端点
+pub async fn batch_unregister(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(request): Json<BatchUnregisterRequest>,
+) -> Result<Json<BatchUnregisterResponse>, StatusCode> {
+    if !headers.contains_key("x-artemis-replication") {
+        tracing::warn!("Batch unregister request without X-Artemis-Replication header");
+        return Err(StatusCode::BAD_REQUEST);
+    }
+
+    let response = state.registry_service.batch_unregister(request).await;
+    Ok(Json(response))
+}
+
+/// 增量同步端点 - 获取指定时间戳之后的服务变更
+pub async fn get_services_delta(
+    State(state): State<AppState>,
+    Json(request): Json<ServicesDeltaRequest>,
+) -> Json<ServicesDeltaResponse> {
+    let response = state.registry_service.get_services_delta(request).await;
+    Json(response)
+}
+
+/// 全量同步端点 - 新节点加入时的完整数据同步
+pub async fn sync_full_data(
+    State(state): State<AppState>,
+    Json(request): Json<SyncFullDataRequest>,
+) -> Json<SyncFullDataResponse> {
+    let response = state.registry_service.sync_full_data(request).await;
+    Json(response)
+}

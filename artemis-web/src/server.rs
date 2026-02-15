@@ -26,6 +26,12 @@ pub async fn run_server(state: AppState, addr: SocketAddr) -> anyhow::Result<()>
         .route("/api/replication/registry/heartbeat.json", post(crate::api::replication::replicate_heartbeat))
         .route("/api/replication/registry/unregister.json", post(crate::api::replication::replicate_unregister))
         .route("/api/replication/registry/services.json", post(crate::api::replication::get_all_services).get(crate::api::replication::get_all_services_by_query))
+        // Phase 23: 批量复制 API
+        .route("/api/replication/registry/batch-register.json", post(crate::api::replication::batch_register))
+        .route("/api/replication/registry/batch-heartbeat.json", post(crate::api::replication::batch_heartbeat))
+        .route("/api/replication/registry/batch-unregister.json", post(crate::api::replication::batch_unregister))
+        .route("/api/replication/registry/services-delta.json", post(crate::api::replication::get_services_delta))
+        .route("/api/replication/registry/sync-full.json", post(crate::api::replication::sync_full_data))
         // Management endpoints - Instance operations
         .route("/api/management/instance/operate-instance.json", post(crate::api::management::operate_instance))
         .route("/api/management/instance/get-instance-operations.json", post(crate::api::management::get_instance_operations))
