@@ -4,6 +4,7 @@ pub mod discovery;
 pub mod error;
 pub mod http;
 pub mod registry;
+pub mod retry;
 pub mod websocket;
 
 pub use address::{AddressContext, AddressManager};
