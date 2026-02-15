@@ -42,6 +42,14 @@ DEFAULT_NODE_COUNT=3
 DEFAULT_BASE_PORT=8080
 DEFAULT_BASE_PEER_PORT=9090
 
+# 数据库配置 (通过环境变量控制)
+# DB_TYPE: none (默认), sqlite, mysql
+# DB_URL: 自定义数据库连接URL (可选)
+# DB_MAX_CONN: 最大连接数 (默认10)
+DB_TYPE=${DB_TYPE:-none}
+DB_URL=${DB_URL:-}
+DB_MAX_CONN=${DB_MAX_CONN:-10}
+
 # 颜色输出
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -71,7 +79,14 @@ init_cluster_dirs() {
     mkdir -p "${LOGS_DIR}"
     mkdir -p "${PIDS_DIR}"
     mkdir -p "${CONFIG_DIR}"
-    log_info "初始化集群目录: ${CLUSTER_DIR}"
+
+    # 如果使用SQLite,创建数据目录
+    if [ "${DB_TYPE}" = "sqlite" ]; then
+        mkdir -p "${CLUSTER_DIR}/data"
+        log_info "初始化集群目录: ${CLUSTER_DIR} (SQLite数据目录已创建)"
+    else
+        log_info "初始化集群目录: ${CLUSTER_DIR}"
+    fi
 }
 
 # 生成节点配置
@@ -155,7 +170,53 @@ level = "info"
 format = "pretty"
 EOF
 
+    # 添加数据库配置 (如果启用)
+    if [ "${DB_TYPE}" != "none" ]; then
+        generate_db_config "${node_id}"
+    fi
+
     log_debug "生成节点 ${node_id} 配置: ${CONFIG_DIR}/node${node_id}.toml"
+}
+
+# 生成数据库配置
+generate_db_config() {
+    local node_id=$1
+    local db_url="${DB_URL}"
+
+    # 如果未指定URL,使用默认值
+    if [ -z "${db_url}" ]; then
+        case "${DB_TYPE}" in
+            sqlite)
+                # 每个节点使用独立的SQLite数据库文件
+                db_url="sqlite://${CLUSTER_DIR}/data/node${node_id}.db"
+                ;;
+            mysql)
+                # MySQL默认配置(所有节点共享同一个数据库)
+                # 注意: 需要提前创建数据库
+                db_url="mysql://artemis:artemis_password@localhost:3306/artemis"
+                log_warn "使用默认MySQL配置,请确保数据库已创建并修改密码"
+                ;;
+            *)
+                log_error "不支持的数据库类型: ${DB_TYPE}"
+                return 1
+                ;;
+        esac
+    fi
+
+    cat >> "${CONFIG_DIR}/node${node_id}.toml" <<EOF
+
+[database]
+# 数据库类型: sqlite, mysql
+db_type = "${DB_TYPE}"
+
+# 数据库连接 URL
+url = "${db_url}"
+
+# 最大连接数
+max_connections = ${DB_MAX_CONN}
+EOF
+
+    log_debug "已添加 ${DB_TYPE} 数据库配置到节点 ${node_id}"
 }
 
 # 生成所有节点的对等节点列表
@@ -291,7 +352,14 @@ start_cluster() {
     local base_port=${2:-${DEFAULT_BASE_PORT}}
     local base_peer_port=${3:-${DEFAULT_BASE_PEER_PORT}}
 
-    log_info "启动 ${node_count} 节点 Artemis 集群..."
+    # 显示数据库配置信息
+    if [ "${DB_TYPE}" != "none" ]; then
+        log_info "启动 ${node_count} 节点 Artemis 集群 (数据库: ${DB_TYPE})..."
+        log_warn "注意: 数据库功能需要特定的编译配置"
+        log_warn "如果遇到 'No drivers installed' 错误,请使用独立配置文件启动"
+    else
+        log_info "启动 ${node_count} 节点 Artemis 集群 (纯内存模式)..."
+    fi
 
     init_cluster_dirs
 
@@ -479,10 +547,29 @@ Artemis 集群管理脚本
     - 集群节点通过 HTTP API 端口相互通信
     - 所有配置文件、日志和 PID 文件存储在 .cluster 目录
 
+数据库配置 (通过环境变量 - 实验性功能):
+    DB_TYPE         数据库类型: none (默认), sqlite, mysql
+    DB_URL          自定义数据库连接URL (可选,有默认值)
+    DB_MAX_CONN     最大连接数 (默认: 10)
+
+    数据库使用示例:
+    # 生成包含 SQLite 配置的集群
+    DB_TYPE=sqlite $0 start
+
+    # 生成包含 MySQL 配置的集群
+    DB_TYPE=mysql DB_URL="mysql://user:pass@host:3306/artemis" $0 start
+
+    ⚠️  重要说明:
+    - cluster.sh 主要用于开发环境,默认推荐纯内存模式(无数据库)
+    - 数据库配置功能可生成配置文件,但可能需要特殊编译才能运行
+    - 生产环境请使用 config/production-cluster-node*.toml 配置文件
+    - 详细文档: docs/database-configuration-guide.md
+
 集群文件位置:
     配置: ${CONFIG_DIR}
     日志: ${LOGS_DIR}
     PID: ${PIDS_DIR}
+    数据: ${CLUSTER_DIR}/data (仅SQLite)
 EOF
 }
 

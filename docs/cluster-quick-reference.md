@@ -5,7 +5,7 @@
 ### 启动集群
 
 ```bash
-# 默认: 3节点, 端口 8080-8082
+# 默认: 3节点, 端口 8080-8082, 纯内存模式
 ./cluster.sh start
 
 # 5节点集群
@@ -14,6 +14,21 @@
 # 自定义端口 (9000-9002)
 ./cluster.sh start 3 9000
 ```
+
+### 启动集群(使用数据库 - 实验性)
+
+```bash
+# 使用 SQLite (每个节点独立数据库文件)
+DB_TYPE=sqlite ./cluster.sh start
+
+# 使用 MySQL (所有节点共享数据库)
+DB_TYPE=mysql DB_URL="mysql://user:pass@host:3306/artemis" ./cluster.sh start
+
+# SQLite + 自定义连接数
+DB_TYPE=sqlite DB_MAX_CONN=20 ./cluster.sh start
+```
+
+**注意**: 数据库功能生成配置文件,但可能需要特殊编译配置。推荐生产环境使用 `config/production-cluster-node*.toml`。
 
 ### 查看状态
 
