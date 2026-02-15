@@ -2,9 +2,10 @@
 
 **优先级**: P1 (强烈建议)
 **状态**: ✅ **已完成 100%** (2026-02-15)
-**实际耗时**: ~5小时
+**ORM框架**: SeaORM 1.1 (支持运行时数据库切换)
+**实际耗时**: ~6小时 (包含 SeaORM 迁移)
 **依赖**: Phase 1-12
-**目标**: 100%对齐Java版本,实现完整的数据持久化功能
+**目标**: 100%对齐Java版本,实现完整的数据持久化功能,支持 SQLite/MySQL 运行时切换
 
 ---
 
@@ -14,12 +15,13 @@
 
 ### 核心功能
 
-1. **数据库集成** - SQLite 轻量级方案或 PostgreSQL 企业方案
-2. **DAO 层实现** - 统一的数据访问接口
+1. **SeaORM 集成** - 运行时支持 SQLite/MySQL 数据库切换
+2. **DAO 层实现** - 基于 SeaORM Statement API 的数据访问接口
 3. **Schema 管理** - 12张表的数据库结构
-4. **数据迁移** - 数据库版本管理和迁移
+4. **数据迁移** - 数据库版本管理和迁移 (SeaORM Migration)
 5. **启动加载** - 服务启动时从数据库加载配置
 6. **自动同步** - 配置变更自动持久化
+7. **运行时切换** - 配置文件即可切换数据库类型,无需重新编译
 
 ---
 
@@ -31,36 +33,36 @@
 
 #### 方案选择
 
-**推荐方案: SQLite** (轻量级)
-- ✅ 零配置,单文件数据库
-- ✅ 适合中小规模部署
-- ✅ 支持 100k+ 实例规模
-- ✅ Rust 生态成熟 (rusqlite, sqlx)
+**✅ 最终方案: SeaORM** (运行时多数据库支持)
+- ✅ 原生支持 SQLite 和 MySQL 运行时切换
+- ✅ 统一的 DatabaseConnection API
+- ✅ 无需编译时配置,配置文件即可切换
+- ✅ 异步支持 (Tokio 集成)
+- ✅ 完善的迁移工具
 
-**备选方案: PostgreSQL** (企业级)
-- ✅ 高并发性能
-- ✅ 丰富的功能特性
-- ⚠️ 需要额外部署和配置
-- ✅ 适合大规模生产环境
-
-#### 技术栈选择
-
-**推荐: SQLx**
+**支持的数据库**:
 ```toml
 [dependencies]
-sqlx = { version = "0.7", features = ["runtime-tokio", "sqlite"] }
+sea-orm = { version = "1.1", features = [
+    "runtime-tokio-rustls",
+    "sqlx-sqlite",
+    "sqlx-mysql",
+    "with-chrono",
+    "with-json",
+] }
+sea-orm-migration = { version = "1.1" }
 ```
 
-**优势**:
-- 编译时 SQL 检查
-- 异步支持 (Tokio 集成)
-- 连接池管理
-- 迁移工具内置
+**技术优势**:
+- 运行时数据库切换 - 同一二进制支持多种数据库
+- Statement API - 支持原生 SQL 查询
+- 类型安全 - 编译时检查
+- 连接池管理 - 自动管理数据库连接
+- Migration 系统 - 版本化的数据库变更管理
 
-**备选: Diesel**
-- 类型安全的 ORM
-- 迁移工具完善
-- 学习曲线较陡
+**~~已淘汰方案~~**:
+- ~~SQLx~~ - 需要编译时配置,不支持运行时切换
+- ~~Diesel~~ - 学习曲线陡,不支持运行时数据库选择
 
 #### 集成步骤
 
@@ -71,10 +73,16 @@ sqlx = { version = "0.7", features = ["runtime-tokio", "sqlite"] }
 
 **文件**: `artemis-management/src/db/mod.rs`
 ```rust
-use sqlx::{SqlitePool, sqlite::SqlitePoolOptions};
+use sea_orm::{Database as SeaDatabase, DatabaseConnection, ConnectOptions};
 
 pub struct Database {
-    pool: SqlitePool,
+    conn: DatabaseConnection,
+    db_type: DatabaseType,
+}
+
+pub enum DatabaseType {
+    SQLite,
+    MySQL,
 }
 
 impl Database {

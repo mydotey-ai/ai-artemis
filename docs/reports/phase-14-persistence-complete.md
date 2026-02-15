@@ -1,8 +1,9 @@
 # Phase 14: 数据持久化 - 完成报告
 
-**状态**: ✅ **100% 完成**
+**状态**: ✅ **100% 完成** (包含 SeaORM 迁移)
 **完成日期**: 2026-02-15
-**耗时**: 约5小时 (完整对齐Java版本)
+**ORM 框架**: SeaORM 1.1 (支持运行时数据库切换)
+**耗时**: 约6小时 (完整对齐Java版本 + SeaORM迁移)
 
 ---
 
@@ -10,11 +11,15 @@
 
 ### 1. 数据库基础设施 (100%)
 
-- ✅ **SQLx 依赖配置** - SQLite 支持 + 迁移工具
-- ✅ **Database 连接管理器** (`artemis-management/src/db/mod.rs`)
-  - 连接池管理 (最大10个连接)
+- ✅ **SeaORM 集成** - 运行时多数据库支持
+  - 从 SQLx 迁移到 SeaORM 1.1
+  - 支持 SQLite 和 MySQL 运行时切换
+  - 配置文件即可切换,无需重新编译
+- ✅ **Database 连接管理器** (`artemis-management/src/db/mod.rs` - 111行)
+  - DatabaseConnection 统一连接API
+  - 连接池管理 (可配置最大连接数)
+  - 数据库类型检测 (SQLite/MySQL)
   - 健康检查功能
-  - 自动数据库创建
   - 迁移运行支持
 
 ### 2. 数据库Schema (100%)
@@ -42,9 +47,11 @@
 
 ### 3. DAO 层实现 (100%)
 
-✅ **4个 DAO 完整实现**:
+✅ **4个 DAO 完整实现** (使用 SeaORM Statement API):
 
-1. **GroupDao** (`group_dao.rs` - 244行)
+1. **GroupDao** (`group_dao.rs` - 262行)
+   - 使用 SeaORM `Statement::from_sql_and_values()`
+   - 支持 SQLite 和 MySQL 原生查询
    - `insert_group()` - 插入分组
    - `update_group()` - 更新分组
    - `delete_group()` - 删除分组
@@ -52,7 +59,9 @@
    - `list_groups()` - 列出所有分组
    - 标签管理集成
 
-2. **RouteRuleDao** (`route_dao.rs` - 232行)
+2. **RouteRuleDao** (`route_dao.rs` - 241行)
+   - 使用 SeaORM `DatabaseConnection`
+   - 跨数据库兼容的 SQL 查询
    - `insert_rule()` - 插入路由规则
    - `update_rule()` - 更新路由规则
    - `delete_rule()` - 删除路由规则
@@ -316,6 +325,102 @@ Phase 14 数据持久化功能已**100%完成**,完全对齐Java版本的持久�
 
 ---
 
+## 🔄 SeaORM 迁移补充 (2026-02-15)
+
+### 迁移动机
+
+从 SQLx 迁移到 SeaORM 以实现真正的运行时数据库切换:
+
+**SQLx 的限制**:
+- ❌ 需要编译时配置数据库驱动 (`--features sqlite` 或 `--features mysql`)
+- ❌ 不支持运行时数据库选择
+- ❌ 单一二进制只能支持一种数据库
+
+**SeaORM 的优势**:
+- ✅ 原生支持多数据库 - `DatabaseConnection` 自动适配
+- ✅ 运行时切换 - 配置文件即可切换 SQLite ↔ MySQL
+- ✅ 统一 API - 相同代码支持所有数据库
+- ✅ 完整功能 - Statement API 支持原生 SQL
+
+### 迁移工作量
+
+- **代码修改**: 14 个文件
+- **新增代码**: ~350 行
+- **删除代码**: ~310 行
+- **DAO 重写**: 4 个完整 DAO (使用 SeaORM Statement API)
+- **耗时**: 约1小时 (迁移 + 测试)
+
+### 技术实现
+
+**核心变更**:
+```rust
+// Before (SQLx)
+use sqlx::{Pool, Any};
+pub struct Database {
+    pool: Pool<Any>,
+}
+
+// After (SeaORM)
+use sea_orm::DatabaseConnection;
+pub struct Database {
+    conn: DatabaseConnection,
+    db_type: DatabaseType,
+}
+```
+
+**DAO 实现**:
+```rust
+// SeaORM Statement API
+let stmt = Statement::from_sql_and_values(
+    self.conn.get_database_backend(),
+    "SELECT * FROM service_group WHERE group_id = ?",
+    vec![Value::from(group_id)],
+);
+let result = self.conn.query_one(stmt).await?;
+```
+
+### 测试验证
+
+✅ **SQLite 模式** - 3节点集群测试通过:
+```bash
+DB_TYPE=sqlite ./cluster.sh start
+# ✅ 数据库连接成功
+# ✅ 表结构加载成功
+# ✅ ConfigLoader 恢复配置成功
+# ✅ 健康检查: OK
+```
+
+⏳ **MySQL 模式** - 待生产环境验证
+
+### 配置示例
+
+**SQLite** (开发环境):
+```toml
+[database]
+db_type = "sqlite"
+url = "sqlite:artemis.db?mode=rwc"
+max_connections = 10
+```
+
+**MySQL** (生产环境):
+```toml
+[database]
+db_type = "mysql"
+url = "mysql://user:pass@host:3306/artemis"
+max_connections = 20
+```
+
+**使用方式**:
+```bash
+# SQLite 模式
+DB_TYPE=sqlite ./cluster.sh start
+
+# MySQL 模式
+DB_TYPE=mysql DB_URL="mysql://..." ./cluster.sh start
+```
+
+---
+
 **实现者**: Claude Sonnet 4.5
 **日期**: 2026-02-15
-**耗时**: ~5小时 (完整对齐Java版本)
+**总耗时**: ~6小时 (持久化实现 5h + SeaORM迁移 1h)

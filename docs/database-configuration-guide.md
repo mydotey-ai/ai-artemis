@@ -2,9 +2,11 @@
 
 ## 概述
 
-Artemis 支持两种数据库后端:
+Artemis 使用 **SeaORM** 作为数据库 ORM,支持运行时数据库切换:
 - **SQLite** - 适用于开发/测试环境,单节点部署
 - **MySQL** - 适用于生产环境,集群部署
+
+**核心优势**: 无需重新编译,通过配置文件即可在 SQLite 和 MySQL 之间切换。
 
 ## 数据库选择建议
 
@@ -45,9 +47,15 @@ artemis server --config artemis-sqlite.toml
 ```toml
 [database]
 db_type = "sqlite"
-url = "sqlite://artemis.db"
+# SeaORM SQLite URL 格式:
+# - 相对路径: sqlite:path/to/db.sqlite?mode=rwc
+# - 绝对路径: sqlite:/absolute/path/to/db.sqlite?mode=rwc
+# - mode=rwc: read+write+create (推荐)
+url = "sqlite:artemis.db?mode=rwc"
 max_connections = 10
 ```
+
+**注意**: SeaORM 的 SQLite URL 格式与 SQLx 略有不同,使用 `sqlite:path` 而不是 `sqlite://path`。
 
 ## 生产环境配置
 
@@ -235,13 +243,20 @@ WHERE created_at < DATE_SUB(NOW(), INTERVAL 7 DAY);
 
 ### 常见问题
 
-#### 1. "No drivers installed" 错误
+#### 1. 数据库连接失败
 
-**原因**: sqlx 编译时未启用对应数据库驱动
+**原因**: 数据库 URL 格式错误或驱动未启用
 
-**解决**: 确保 `Cargo.toml` 中包含:
+**解决**:
+- **SQLite**: 确保使用 `sqlite:path?mode=rwc` 格式 (不是 `sqlite://path`)
+- **MySQL**: 确保使用 `mysql://user:pass@host:3306/database` 格式
+- **SeaORM**: 确保 `Cargo.toml` 中包含:
 ```toml
-sqlx = { version = "0.8", features = ["sqlite", "mysql"] }
+sea-orm = { version = "1.1", features = [
+    "runtime-tokio-rustls",
+    "sqlx-sqlite",
+    "sqlx-mysql",
+] }
 ```
 
 #### 2. MySQL 连接超时
