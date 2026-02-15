@@ -16,19 +16,19 @@ impl RegistryClient {
     }
 
     pub async fn register(&self, request: RegisterRequest) -> Result<RegisterResponse> {
-        let url = format!("{}/api/registry/register", self.config.server_url);
+        let url = format!("{}/api/registry/register", self.config.server_urls[0]);
         let response = self.client.post(&url).json(&request).send().await?;
         Ok(response.json().await?)
     }
 
     pub async fn heartbeat(&self, request: HeartbeatRequest) -> Result<HeartbeatResponse> {
-        let url = format!("{}/api/registry/heartbeat", self.config.server_url);
+        let url = format!("{}/api/registry/heartbeat", self.config.server_urls[0]);
         let response = self.client.post(&url).json(&request).send().await?;
         Ok(response.json().await?)
     }
 
     pub async fn unregister(&self, request: UnregisterRequest) -> Result<UnregisterResponse> {
-        let url = format!("{}/api/registry/unregister", self.config.server_url);
+        let url = format!("{}/api/registry/unregister", self.config.server_urls[0]);
         let response = self.client.post(&url).json(&request).send().await?;
         Ok(response.json().await?)
     }

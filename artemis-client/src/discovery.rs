@@ -16,14 +16,14 @@ impl DiscoveryClient {
     }
 
     pub async fn get_service(&self, request: GetServiceRequest) -> Result<Option<Service>> {
-        let url = format!("{}/api/discovery/service", self.config.server_url);
+        let url = format!("{}/api/discovery/service", self.config.server_urls[0]);
         let response = self.client.post(&url).json(&request).send().await?;
         let result: GetServiceResponse = response.json().await?;
         Ok(result.service)
     }
 
     pub async fn get_services(&self) -> Result<Vec<Service>> {
-        let url = format!("{}/api/discovery/services", self.config.server_url);
+        let url = format!("{}/api/discovery/services", self.config.server_urls[0]);
         let response = self.client.get(&url).send().await?;
         let result: GetServicesResponse = response.json().await?;
         *self.cache.write() = result.services.clone();

@@ -53,7 +53,7 @@ impl WebSocketClient {
     /// 连接WebSocket并订阅服务
     pub async fn connect_and_subscribe(self: Arc<Self>, service_id: String) -> Result<()> {
         let ws_url =
-            self.config.server_url.replace("http://", "ws://").replace("https://", "wss://");
+            self.config.server_urls[0].replace("http://", "ws://").replace("https://", "wss://");
         let url = format!("{}/ws", ws_url);
 
         info!("Connecting to WebSocket: {}", url);
