@@ -20,6 +20,7 @@ pub async fn run_server(state: AppState, addr: SocketAddr) -> anyhow::Result<()>
         .route("/api/discovery/service.json", post(crate::api::discovery::get_service))
         .route("/api/discovery/services", get(crate::api::discovery::get_services))
         .route("/api/discovery/services.json", get(crate::api::discovery::get_services))
+        .route("/api/discovery/lookup.json", post(crate::api::discovery::lookup_instance))
         // Replication endpoints
         .route("/api/replication/registry/register.json", post(crate::api::replication::replicate_register))
         .route("/api/replication/registry/heartbeat.json", post(crate::api::replication::replicate_heartbeat))
@@ -42,6 +43,9 @@ pub async fn run_server(state: AppState, addr: SocketAddr) -> anyhow::Result<()>
         .route("/api/routing/groups/{group_key}/tags", get(crate::api::routing::get_group_tags))
         .route("/api/routing/groups/{group_key}/tags/{tag_key}", axum::routing::delete(crate::api::routing::remove_group_tag))
         .route("/api/routing/groups/{group_key}/instances", get(crate::api::routing::get_group_instances))
+        .route("/api/routing/groups/{group_key}/instances", post(crate::api::routing::add_instance_to_group))
+        .route("/api/routing/groups/{group_key}/instances/{instance_id}", axum::routing::delete(crate::api::routing::remove_instance_from_group))
+        .route("/api/routing/services/{service_id}/instances", post(crate::api::routing::batch_add_service_instances))
         // Routing endpoints - Rule management
         .route("/api/routing/rules", post(crate::api::routing::create_rule))
         .route("/api/routing/rules", get(crate::api::routing::list_rules))

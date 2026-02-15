@@ -7,11 +7,12 @@
 //! - Operation history tracking
 
 use artemis_core::model::{GroupOperation, GroupTag, ServiceGroup};
+use artemis_core::model::group::{BindingType, GroupInstance};
 use dashmap::DashMap;
 use std::sync::Arc;
 use tracing::info;
 use crate::db::Database;
-use crate::dao::GroupDao;
+use crate::dao::{GroupDao, GroupInstanceDao};
 
 /// 服务分组管理器
 #[derive(Clone)]
@@ -351,6 +352,152 @@ impl GroupManager {
 
     pub fn group_exists(&self, group_key: &str) -> bool {
         self.groups.contains_key(group_key)
+    }
+
+    // === 分组实例绑定 (Phase 19 新增) ===
+
+    /// 添加实例到分组 (手动绑定)
+    pub async fn add_instance_to_group(
+        &self,
+        group_id: i64,
+        instance_id: &str,
+        region_id: &str,
+        zone_id: &str,
+        service_id: &str,
+        operator_id: &str,
+    ) -> Result<(), String> {
+        // 验证分组存在
+        if !self.group_id_map.contains_key(&group_id) {
+            return Err(format!("Group not found: {}", group_id));
+        }
+
+        // 创建绑定记录
+        let binding = GroupInstance {
+            id: None,
+            group_id,
+            instance_id: instance_id.to_string(),
+            region_id: region_id.to_string(),
+            zone_id: zone_id.to_string(),
+            service_id: service_id.to_string(),
+            binding_type: Some(BindingType::Manual),
+            operator_id: Some(operator_id.to_string()),
+            created_at: Some(chrono::Utc::now().timestamp()),
+        };
+
+        // 内存中记录
+        let key = (group_id, instance_id.to_string());
+        self.group_instances.insert(key, ());
+
+        // 持久化到数据库
+        if let Some(db) = &self.database {
+            let dao = GroupInstanceDao::new(db.conn().clone());
+            dao.insert(&binding)
+                .await
+                .map_err(|e| format!("Failed to persist binding: {}", e))?;
+        }
+
+        info!(
+            "Added instance {} to group {} (manual binding)",
+            instance_id, group_id
+        );
+
+        Ok(())
+    }
+
+    /// 从分组移除实例
+    pub async fn remove_instance_from_group(
+        &self,
+        group_id: i64,
+        instance_id: &str,
+        region_id: &str,
+        zone_id: &str,
+    ) -> Result<(), String> {
+        // 内存中删除
+        let key = (group_id, instance_id.to_string());
+        if self.group_instances.remove(&key).is_none() {
+            return Err(format!(
+                "Instance {} not in group {}",
+                instance_id, group_id
+            ));
+        }
+
+        // 从数据库删除
+        if let Some(db) = &self.database {
+            let dao = GroupInstanceDao::new(db.conn().clone());
+            dao.delete(group_id, instance_id, region_id, zone_id)
+                .await
+                .map_err(|e| format!("Failed to delete binding: {}", e))?;
+        }
+
+        info!(
+            "Removed instance {} from group {}",
+            instance_id, group_id
+        );
+
+        Ok(())
+    }
+
+    /// 获取分组实例 (手动绑定 + 自动匹配)
+    pub async fn get_group_instances(&self, group_id: i64) -> Result<Vec<GroupInstance>, String> {
+        if let Some(db) = &self.database {
+            let dao = GroupInstanceDao::new(db.conn().clone());
+            dao.get_by_group(group_id)
+                .await
+                .map_err(|e| format!("Failed to get group instances: {}", e))
+        } else {
+            // 没有数据库时,从内存返回简化版本
+            let instance_ids = self.get_instances(group_id);
+            let instances = instance_ids
+                .into_iter()
+                .map(|instance_id| GroupInstance {
+                    id: None,
+                    group_id,
+                    instance_id,
+                    region_id: String::new(),
+                    zone_id: String::new(),
+                    service_id: String::new(),
+                    binding_type: None,
+                    operator_id: None,
+                    created_at: None,
+                })
+                .collect();
+            Ok(instances)
+        }
+    }
+
+    /// 批量添加服务实例到分组
+    pub async fn batch_add_service_instances(
+        &self,
+        group_id: i64,
+        instances: Vec<GroupInstance>,
+    ) -> Result<usize, String> {
+        // 验证分组存在
+        if !self.group_id_map.contains_key(&group_id) {
+            return Err(format!("Group not found: {}", group_id));
+        }
+
+        // 内存中添加
+        for instance in &instances {
+            let key = (group_id, instance.instance_id.clone());
+            self.group_instances.insert(key, ());
+        }
+
+        // 持久化到数据库
+        if let Some(db) = &self.database {
+            let dao = GroupInstanceDao::new(db.conn().clone());
+            let count = dao
+                .batch_insert(&instances)
+                .await
+                .map_err(|e| format!("Failed to batch insert: {}", e))?;
+
+            info!(
+                "Batch added {} instances to group {}",
+                count, group_id
+            );
+            Ok(count)
+        } else {
+            Ok(instances.len())
+        }
     }
 }
 

@@ -83,9 +83,25 @@ pub struct GroupInstance {
     pub zone_id: String,
     /// Service ID
     pub service_id: String,
+    /// 绑定类型 (manual | auto)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub binding_type: Option<BindingType>,
+    /// 操作人 ID
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub operator_id: Option<String>,
     /// 创建时间 (Unix timestamp)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub created_at: Option<i64>,
+}
+
+/// 绑定类型
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum BindingType {
+    /// 手动绑定 (通过 API 添加)
+    Manual,
+    /// 自动绑定 (通过 metadata 匹配)
+    Auto,
 }
 
 /// 分组操作记录

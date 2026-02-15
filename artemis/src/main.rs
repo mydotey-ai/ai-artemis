@@ -213,6 +213,9 @@ async fn start_server(config_path: Option<String>, addr_override: Option<String>
 
     let session_manager = Arc::new(artemis_web::websocket::SessionManager::new());
 
+    // Load balancer for discovery lookup
+    let load_balancer = Arc::new(artemis_server::discovery::LoadBalancer::new());
+
     // 9. Create AppState
     let state = AppState {
         registry_service,
@@ -227,6 +230,7 @@ async fn start_server(config_path: Option<String>, addr_override: Option<String>
         zone_manager,
         canary_manager,
         audit_manager,
+        load_balancer,
     };
 
     // 10. Start server

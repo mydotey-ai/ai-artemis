@@ -7,6 +7,7 @@ use artemis_core::model::{
     GroupStatus, GroupType, RouteRule, RouteRuleGroup, RouteRuleStatus, RouteStrategy,
     ServiceGroup,
 };
+use artemis_core::model::group::GroupInstance;
 use axum::{
     extract::{Path, Query, State},
     http::StatusCode,
@@ -500,6 +501,187 @@ pub async fn update_rule_group(
             Json(ApiResponse::<RouteRuleGroup>::error(
                 format!("Group {} not found in rule {}", group_id, rule_id)
             )),
+        ),
+    }
+}
+
+// ===== 分组实例绑定 API (Phase 19 新增) =====
+
+/// 添加实例到分组请求
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AddInstanceToGroupRequest {
+    pub instance_id: String,
+    pub region_id: String,
+    pub zone_id: String,
+    pub service_id: String,
+    pub operator_id: String,
+}
+
+/// 批量添加服务实例请求
+#[derive(Debug, Serialize, Deserialize)]
+pub struct BatchAddServiceInstancesRequest {
+    pub instances: Vec<GroupInstance>,
+}
+
+/// POST /api/routing/groups/:group_key/instances - 添加实例到分组 (手动绑定)
+pub async fn add_instance_to_group(
+    State(state): State<AppState>,
+    Path(group_key): Path<String>,
+    Json(req): Json<AddInstanceToGroupRequest>,
+) -> impl IntoResponse {
+    // 获取分组
+    let group = match state.group_manager.get_group(&group_key) {
+        Some(g) => g,
+        None => {
+            return (
+                StatusCode::NOT_FOUND,
+                Json(ApiResponse::<()>::error(format!("Group {} not found", group_key))),
+            );
+        }
+    };
+
+    let group_id = match group.group_id {
+        Some(id) => id,
+        None => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ApiResponse::<()>::error("Group has no ID".to_string())),
+            );
+        }
+    };
+
+    // 添加实例到分组
+    match state
+        .group_manager
+        .add_instance_to_group(
+            group_id,
+            &req.instance_id,
+            &req.region_id,
+            &req.zone_id,
+            &req.service_id,
+            &req.operator_id,
+        )
+        .await
+    {
+        Ok(_) => (
+            StatusCode::CREATED,
+            Json(ApiResponse::success(())),
+        ),
+        Err(e) => (
+            StatusCode::BAD_REQUEST,
+            Json(ApiResponse::<()>::error(e)),
+        ),
+    }
+}
+
+/// DELETE /api/routing/groups/:group_key/instances/:instance_id - 从分组移除实例
+pub async fn remove_instance_from_group(
+    State(state): State<AppState>,
+    Path((group_key, instance_id)): Path<(String, String)>,
+    Query(query): Query<GetGroupInstancesQuery>,
+) -> impl IntoResponse {
+    // 获取分组
+    let group = match state.group_manager.get_group(&group_key) {
+        Some(g) => g,
+        None => {
+            return (
+                StatusCode::NOT_FOUND,
+                Json(ApiResponse::<()>::error(format!("Group {} not found", group_key))),
+            );
+        }
+    };
+
+    let group_id = match group.group_id {
+        Some(id) => id,
+        None => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ApiResponse::<()>::error("Group has no ID".to_string())),
+            );
+        }
+    };
+
+    // 从请求中获取 region_id 和 zone_id (必需参数)
+    let region_id = match query.region_id {
+        Some(ref r) => r,
+        None => {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(ApiResponse::<()>::error("region_id is required".to_string())),
+            );
+        }
+    };
+
+    let zone_id = match query.zone_id {
+        Some(ref z) => z,
+        None => {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(ApiResponse::<()>::error("zone_id is required".to_string())),
+            );
+        }
+    };
+
+    // 移除实例
+    match state
+        .group_manager
+        .remove_instance_from_group(group_id, &instance_id, region_id, zone_id)
+        .await
+    {
+        Ok(_) => (
+            StatusCode::OK,
+            Json(ApiResponse::success(())),
+        ),
+        Err(e) => (
+            StatusCode::NOT_FOUND,
+            Json(ApiResponse::<()>::error(e)),
+        ),
+    }
+}
+
+/// POST /api/routing/services/:service_id/instances - 批量添加服务实例到分组
+pub async fn batch_add_service_instances(
+    State(state): State<AppState>,
+    Path(service_id): Path<String>,
+    Json(req): Json<BatchAddServiceInstancesRequest>,
+) -> impl IntoResponse {
+    // 验证所有实例属于同一服务
+    for instance in &req.instances {
+        if instance.service_id != service_id {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(ApiResponse::<usize>::error(format!(
+                    "Instance service_id {} does not match path service_id {}",
+                    instance.service_id, service_id
+                ))),
+            );
+        }
+    }
+
+    // 获取第一个实例的 group_id (假设所有实例添加到同一分组)
+    let group_id = match req.instances.first() {
+        Some(inst) => inst.group_id,
+        None => {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(ApiResponse::<usize>::error("No instances provided".to_string())),
+            );
+        }
+    };
+
+    // 批量添加
+    match state
+        .group_manager
+        .batch_add_service_instances(group_id, req.instances)
+        .await
+    {
+        Ok(count) => (
+            StatusCode::CREATED,
+            Json(ApiResponse::success(count)),
+        ),
+        Err(e) => (
+            StatusCode::BAD_REQUEST,
+            Json(ApiResponse::<usize>::error(e)),
         ),
     }
 }

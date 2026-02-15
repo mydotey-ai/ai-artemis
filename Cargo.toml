@@ -101,3 +101,6 @@ toml = "0.9"
 
 # 性能测试
 criterion = { version = "0.8", features = ["async_tokio"] }
+
+# 随机数生成
+rand = "0.8"

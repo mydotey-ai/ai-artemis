@@ -152,17 +152,21 @@ CREATE TABLE IF NOT EXISTS service_group_instance (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     group_id TEXT NOT NULL,
     region_id TEXT NOT NULL,
+    zone_id TEXT NOT NULL,
     service_id TEXT NOT NULL,
     instance_id TEXT NOT NULL,
-    ip TEXT NOT NULL,
-    port INTEGER NOT NULL,
+    ip TEXT,
+    port INTEGER,
+    binding_type TEXT NOT NULL DEFAULT 'auto' CHECK(binding_type IN ('manual', 'auto')),
+    operator_id TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(group_id, instance_id),
+    UNIQUE(group_id, instance_id, region_id, zone_id),
     FOREIGN KEY(group_id) REFERENCES service_group(group_id) ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS idx_group_inst_group ON service_group_instance(group_id);
 CREATE INDEX IF NOT EXISTS idx_group_inst_service ON service_group_instance(service_id);
+CREATE INDEX IF NOT EXISTS idx_group_inst_binding ON service_group_instance(binding_type);
 
 -- 11. 配置版本表 (用于配置变更追踪)
 CREATE TABLE IF NOT EXISTS config_version (
