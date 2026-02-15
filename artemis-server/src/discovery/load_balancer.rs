@@ -80,13 +80,16 @@ mod tests {
             region_id: "us-east".to_string(),
             zone_id: "zone-1".to_string(),
             service_id: "test-service".to_string(),
+            group_id: None,
             instance_id: id.to_string(),
+            machine_name: None,
             ip: ip.to_string(),
             port,
+            protocol: None,
+            url: format!("http://{}:{}", ip, port),
+            health_check_url: None,
             status: InstanceStatus::Up,
             metadata: None,
-            health_check_url: None,
-            last_heartbeat_time: 0,
         }
     }
 

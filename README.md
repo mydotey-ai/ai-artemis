@@ -1045,3 +1045,32 @@ chore: 构建/工具配置
 ⭐ 如果这个项目对你有帮助,请给我们一个 Star!
 
 </div>
+
+## 🧪 测试
+
+### 运行测试
+```bash
+# 运行所有 Web API 测试
+cargo test -p artemis-web --tests
+
+# 运行 Registry API 测试
+cargo test -p artemis-web --test test_registry_api
+
+# 运行 Discovery API 测试
+cargo test -p artemis-web --test test_discovery_api
+
+# 运行所有单元测试
+cargo test --workspace --lib
+```
+
+### 测试统计
+- **总测试数量**: 41 个 ✅
+- **测试通过率**: 100%
+- **测试代码**: 1,300 行
+- **API 覆盖**: 8/101 端点 (8%)
+
+### 测试文档
+- [测试策略](docs/TEST_STRATEGY.md) - 完整测试方案
+- [快速开始](TEST_QUICK_START.md) - 测试快速指南
+- [实施报告](docs/reports/test-implementation-phase1.md) - Phase 1 实施报告
+
