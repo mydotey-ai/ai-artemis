@@ -246,25 +246,67 @@
 
 ---
 
+## ✅ Phase 23 完成详情
+
+### Phase 23: 批量复制 API ✅
+
+#### Task 23.1: 数据模型定义 ✅
+- **文件**: `artemis-core/src/model/replication.rs` (扩展, 新增 79行)
+- **变更**:
+  - BatchRegisterRequest/Response - 批量注册
+  - BatchHeartbeatRequest/Response - 批量心跳
+  - BatchUnregisterRequest/Response - 批量注销
+  - ServicesDeltaRequest/Response - 增量同步
+  - SyncFullDataRequest/Response - 全量同步
+
+#### Task 23.2: 业务逻辑实现 ✅
+- **文件**: `artemis-server/src/registry/service_impl.rs` (扩展, 新增 147行)
+- **实现**:
+  - `batch_register()` - 批量注册实例,优化网络请求
+  - `batch_heartbeat()` - 批量心跳续约
+  - `batch_unregister()` - 批量注销实例
+  - `get_services_delta()` - 获取指定时间戳之后的变更
+  - `sync_full_data()` - 新节点加入时的完整数据同步
+
+#### Task 23.3: API 端点实现 ✅
+- **文件**: `artemis-web/src/api/replication.rs` (扩展, 新增 67行)
+- **已实现的 5 个 API**:
+  - `POST /api/replication/registry/batch-register.json` - 批量注册
+  - `POST /api/replication/registry/batch-heartbeat.json` - 批量心跳
+  - `POST /api/replication/registry/batch-unregister.json` - 批量注销
+  - `POST /api/replication/registry/services-delta.json` - 增量同步
+  - `POST /api/replication/registry/sync-full.json` - 全量同步
+- **路由注册**: 所有 5 个 API 已在 server.rs 中注册
+
+#### Task 23.4: 集成测试 ✅
+- **文件**: `scripts/test-batch-replication.sh` (新建, 315行)
+- **测试场景** (8个测试步骤):
+  1. ✅ 批量注册 3 个实例
+  2. ✅ 批量心跳续约
+  3. ✅ 批量心跳 - 部分实例不存在
+  4. ✅ 增量同步 API
+  5. ✅ 全量同步 API
+  6. ✅ 批量注销
+  7. ✅ 验证 X-Artemis-Replication header 必需
+  8. ✅ 清理测试数据
+- **测试结果**: 全部通过 (5/5 APIs)
+
+#### 技术特点
+- ✅ 批量操作优化网络请求 - 单次请求处理多个实例
+- ✅ X-Artemis-Replication header - 防止复制循环
+- ✅ 失败实例单独记录 - 提供详细错误信息
+- ✅ 增量/全量同步 - 支持节点间高效数据同步
+- ✅ 与 Java 版本 100% 对齐
+
+---
+
 ## 🔄 进行中的工作
 
-暂无进行中的工作。Phase 19-22 已完成,准备开始 Phase 23。
+暂无进行中的工作。Phase 19-23 已完成,准备开始 Phase 24。
 
 ---
 
 ## 📋 待实施的 Phases
-  - Discovery GET endpoints (2个)
-  - Replication GET endpoints (2个)
-  - Management GET endpoints (2个)
-
-### Phase 23: 批量复制 API (6 个 API)
-- **预估工时**: 3 天
-- **新增 API**:
-  - Batch Register
-  - Batch Heartbeat
-  - Batch Unregister
-  - Services Delta
-  - Sync Full Data
 
 ### Phase 24: 审计日志细分 API (6 个 API)
 - **预估工时**: 2 天
@@ -286,9 +328,9 @@
 | Phase 20 | ✅ 已完成 | 1/1 | 100% (LoadBalancer + API + 测试全部完成) |
 | Phase 21 | ✅ 已完成 | 12/12 | 100% (StatusService + 12 APIs + 测试全部完成) |
 | Phase 22 | ✅ 已完成 | 3/3 | 100% (GET 查询参数支持 + 测试全部完成) |
-| Phase 23 | ⏳ 待开始 | 6 | 0% |
+| Phase 23 | ✅ 已完成 | 5/5 | 100% (批量复制 API + 测试全部完成) |
 | Phase 24 | ⏳ 待开始 | 6 | 0% |
-| **总计** | - | **34** | **56%** (19/34 APIs 完成) |
+| **总计** | - | **34** | **71%** (24/34 APIs 完成) |
 
 ---
 
@@ -334,5 +376,5 @@
 
 ---
 
-**最后更新**: 2026-02-15 (Phase 19-22 完成)
-**下一步**: 开始 Phase 23 实施 (批量复制 API - 6个API)
+**最后更新**: 2026-02-15 (Phase 19-23 完成)
+**下一步**: 开始 Phase 24 实施 (审计日志细分 API - 6个API)
