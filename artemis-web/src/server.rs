@@ -81,6 +81,13 @@ pub async fn run_server(state: AppState, addr: SocketAddr) -> anyhow::Result<()>
         .route("/api/management/audit/logs", get(crate::api::audit::query_logs))
         .route("/api/management/audit/instance-logs", get(crate::api::audit::query_instance_logs))
         .route("/api/management/audit/server-logs", get(crate::api::audit::query_server_logs))
+        // Phase 24: 审计日志细分 API
+        .route("/api/management/log/group-logs.json", post(crate::api::audit::query_group_logs))
+        .route("/api/management/log/route-rule-logs.json", post(crate::api::audit::query_route_rule_logs))
+        .route("/api/management/log/route-rule-group-logs.json", post(crate::api::audit::query_route_rule_group_logs))
+        .route("/api/management/log/zone-operation-logs.json", post(crate::api::audit::query_zone_operation_logs))
+        .route("/api/management/log/group-instance-logs.json", post(crate::api::audit::query_group_instance_logs))
+        .route("/api/management/log/service-instance-logs.json", post(crate::api::audit::query_service_instance_logs))
         // Status endpoints
         .route("/api/status/node.json", post(crate::api::status::get_cluster_node_status_post))
         .route("/api/status/node.json", get(crate::api::status::get_cluster_node_status_get))

@@ -90,3 +90,139 @@ pub async fn query_server_logs(
 
     (StatusCode::OK, Json(ApiResponse::success(logs)))
 }
+
+// ===== Phase 24: 审计日志细分 API =====
+
+#[derive(Debug, Deserialize)]
+pub struct QueryGroupLogsParams {
+    pub group_id: Option<String>,
+    pub operator_id: Option<String>,
+    pub limit: Option<usize>,
+}
+
+/// POST /api/management/log/group-logs.json - 查询分组操作日志
+pub async fn query_group_logs(
+    State(state): State<AppState>,
+    Query(params): Query<QueryGroupLogsParams>,
+) -> impl IntoResponse {
+    let logs = state.audit_manager.query_group_logs(
+        params.group_id.as_deref(),
+        params.operator_id.as_deref(),
+        params.limit,
+    );
+
+    (StatusCode::OK, Json(ApiResponse::success(logs)))
+}
+
+#[derive(Debug, Deserialize)]
+pub struct QueryRouteRuleLogsParams {
+    pub rule_id: Option<String>,
+    pub operator_id: Option<String>,
+    pub limit: Option<usize>,
+}
+
+/// POST /api/management/log/route-rule-logs.json - 查询路由规则操作日志
+pub async fn query_route_rule_logs(
+    State(state): State<AppState>,
+    Query(params): Query<QueryRouteRuleLogsParams>,
+) -> impl IntoResponse {
+    let logs = state.audit_manager.query_route_rule_logs(
+        params.rule_id.as_deref(),
+        params.operator_id.as_deref(),
+        params.limit,
+    );
+
+    (StatusCode::OK, Json(ApiResponse::success(logs)))
+}
+
+#[derive(Debug, Deserialize)]
+pub struct QueryRouteRuleGroupLogsParams {
+    pub rule_id: Option<String>,
+    pub group_id: Option<String>,
+    pub operator_id: Option<String>,
+    pub limit: Option<usize>,
+}
+
+/// POST /api/management/log/route-rule-group-logs.json - 查询路由规则分组操作日志
+pub async fn query_route_rule_group_logs(
+    State(state): State<AppState>,
+    Query(params): Query<QueryRouteRuleGroupLogsParams>,
+) -> impl IntoResponse {
+    let logs = state.audit_manager.query_route_rule_group_logs(
+        params.rule_id.as_deref(),
+        params.group_id.as_deref(),
+        params.operator_id.as_deref(),
+        params.limit,
+    );
+
+    (StatusCode::OK, Json(ApiResponse::success(logs)))
+}
+
+#[derive(Debug, Deserialize)]
+pub struct QueryZoneLogsParams {
+    pub zone_id: Option<String>,
+    pub region_id: Option<String>,
+    pub operator_id: Option<String>,
+    pub limit: Option<usize>,
+}
+
+/// POST /api/management/log/zone-operation-logs.json - 查询 Zone 操作日志
+pub async fn query_zone_operation_logs(
+    State(state): State<AppState>,
+    Query(params): Query<QueryZoneLogsParams>,
+) -> impl IntoResponse {
+    let logs = state.audit_manager.query_zone_logs(
+        params.zone_id.as_deref(),
+        params.region_id.as_deref(),
+        params.operator_id.as_deref(),
+        params.limit,
+    );
+
+    (StatusCode::OK, Json(ApiResponse::success(logs)))
+}
+
+#[derive(Debug, Deserialize)]
+pub struct QueryGroupInstanceLogsParams {
+    pub group_id: Option<String>,
+    pub instance_id: Option<String>,
+    pub operator_id: Option<String>,
+    pub limit: Option<usize>,
+}
+
+/// POST /api/management/log/group-instance-logs.json - 查询分组实例绑定日志
+pub async fn query_group_instance_logs(
+    State(state): State<AppState>,
+    Query(params): Query<QueryGroupInstanceLogsParams>,
+) -> impl IntoResponse {
+    let logs = state.audit_manager.query_group_instance_logs(
+        params.group_id.as_deref(),
+        params.instance_id.as_deref(),
+        params.operator_id.as_deref(),
+        params.limit,
+    );
+
+    (StatusCode::OK, Json(ApiResponse::success(logs)))
+}
+
+#[derive(Debug, Deserialize)]
+pub struct QueryServiceInstanceLogsParams {
+    pub service_id: Option<String>,
+    pub region_id: Option<String>,
+    pub operator_id: Option<String>,
+    pub limit: Option<usize>,
+}
+
+/// POST /api/management/log/service-instance-logs.json - 查询服务实例日志
+pub async fn query_service_instance_logs(
+    State(state): State<AppState>,
+    Query(params): Query<QueryServiceInstanceLogsParams>,
+) -> impl IntoResponse {
+    let logs = state.audit_manager.query_service_instance_logs(
+        params.service_id.as_deref(),
+        params.region_id.as_deref(),
+        params.operator_id.as_deref(),
+        params.limit,
+    );
+
+    (StatusCode::OK, Json(ApiResponse::success(logs)))
+}

@@ -231,6 +231,280 @@ impl AuditManager {
 
         self.logs.retain(|_, log| log.operation_time >= cutoff_time);
     }
+
+    // ===== Phase 24: 审计日志细分 API =====
+
+    /// 查询分组操作日志
+    pub fn query_group_logs(
+        &self,
+        group_id: Option<&str>,
+        operator_id: Option<&str>,
+        limit: Option<usize>,
+    ) -> Vec<AuditLog> {
+        let mut logs: Vec<AuditLog> = self
+            .logs
+            .iter()
+            .filter(|entry| {
+                let log = entry.value();
+
+                if log.operation_type != "group" {
+                    return false;
+                }
+
+                if let Some(gid) = group_id
+                    && !log.target_id.contains(gid) {
+                        return false;
+                    }
+
+                if let Some(op_id) = operator_id
+                    && log.operator_id != op_id {
+                        return false;
+                    }
+
+                true
+            })
+            .map(|entry| entry.value().clone())
+            .collect();
+
+        logs.sort_by(|a, b| b.operation_time.cmp(&a.operation_time));
+
+        if let Some(limit) = limit {
+            logs.truncate(limit);
+        }
+
+        logs
+    }
+
+    /// 查询路由规则操作日志
+    pub fn query_route_rule_logs(
+        &self,
+        rule_id: Option<&str>,
+        operator_id: Option<&str>,
+        limit: Option<usize>,
+    ) -> Vec<AuditLog> {
+        let mut logs: Vec<AuditLog> = self
+            .logs
+            .iter()
+            .filter(|entry| {
+                let log = entry.value();
+
+                if log.operation_type != "route_rule" {
+                    return false;
+                }
+
+                if let Some(rid) = rule_id
+                    && !log.target_id.contains(rid) {
+                        return false;
+                    }
+
+                if let Some(op_id) = operator_id
+                    && log.operator_id != op_id {
+                        return false;
+                    }
+
+                true
+            })
+            .map(|entry| entry.value().clone())
+            .collect();
+
+        logs.sort_by(|a, b| b.operation_time.cmp(&a.operation_time));
+
+        if let Some(limit) = limit {
+            logs.truncate(limit);
+        }
+
+        logs
+    }
+
+    /// 查询路由规则分组操作日志
+    pub fn query_route_rule_group_logs(
+        &self,
+        rule_id: Option<&str>,
+        group_id: Option<&str>,
+        operator_id: Option<&str>,
+        limit: Option<usize>,
+    ) -> Vec<AuditLog> {
+        let mut logs: Vec<AuditLog> = self
+            .logs
+            .iter()
+            .filter(|entry| {
+                let log = entry.value();
+
+                if log.operation_type != "route_rule_group" {
+                    return false;
+                }
+
+                if let Some(rid) = rule_id
+                    && !log.target_id.contains(&format!("rule:{}", rid)) {
+                        return false;
+                    }
+
+                if let Some(gid) = group_id
+                    && !log.target_id.contains(&format!("group:{}", gid)) {
+                        return false;
+                    }
+
+                if let Some(op_id) = operator_id
+                    && log.operator_id != op_id {
+                        return false;
+                    }
+
+                true
+            })
+            .map(|entry| entry.value().clone())
+            .collect();
+
+        logs.sort_by(|a, b| b.operation_time.cmp(&a.operation_time));
+
+        if let Some(limit) = limit {
+            logs.truncate(limit);
+        }
+
+        logs
+    }
+
+    /// 查询 Zone 操作日志
+    pub fn query_zone_logs(
+        &self,
+        zone_id: Option<&str>,
+        region_id: Option<&str>,
+        operator_id: Option<&str>,
+        limit: Option<usize>,
+    ) -> Vec<AuditLog> {
+        let mut logs: Vec<AuditLog> = self
+            .logs
+            .iter()
+            .filter(|entry| {
+                let log = entry.value();
+
+                if log.operation_type != "zone" {
+                    return false;
+                }
+
+                if let Some(zid) = zone_id
+                    && !log.target_id.contains(&format!("zone:{}", zid)) {
+                        return false;
+                    }
+
+                if let Some(rid) = region_id
+                    && !log.target_id.contains(&format!("region:{}", rid)) {
+                        return false;
+                    }
+
+                if let Some(op_id) = operator_id
+                    && log.operator_id != op_id {
+                        return false;
+                    }
+
+                true
+            })
+            .map(|entry| entry.value().clone())
+            .collect();
+
+        logs.sort_by(|a, b| b.operation_time.cmp(&a.operation_time));
+
+        if let Some(limit) = limit {
+            logs.truncate(limit);
+        }
+
+        logs
+    }
+
+    /// 查询分组实例绑定日志
+    pub fn query_group_instance_logs(
+        &self,
+        group_id: Option<&str>,
+        instance_id: Option<&str>,
+        operator_id: Option<&str>,
+        limit: Option<usize>,
+    ) -> Vec<AuditLog> {
+        let mut logs: Vec<AuditLog> = self
+            .logs
+            .iter()
+            .filter(|entry| {
+                let log = entry.value();
+
+                if log.operation_type != "group_instance" {
+                    return false;
+                }
+
+                if let Some(gid) = group_id
+                    && !log.target_id.contains(&format!("group:{}", gid)) {
+                        return false;
+                    }
+
+                if let Some(iid) = instance_id
+                    && !log.target_id.contains(&format!("instance:{}", iid)) {
+                        return false;
+                    }
+
+                if let Some(op_id) = operator_id
+                    && log.operator_id != op_id {
+                        return false;
+                    }
+
+                true
+            })
+            .map(|entry| entry.value().clone())
+            .collect();
+
+        logs.sort_by(|a, b| b.operation_time.cmp(&a.operation_time));
+
+        if let Some(limit) = limit {
+            logs.truncate(limit);
+        }
+
+        logs
+    }
+
+    /// 查询服务实例日志 (服务维度的实例变更)
+    pub fn query_service_instance_logs(
+        &self,
+        service_id: Option<&str>,
+        region_id: Option<&str>,
+        operator_id: Option<&str>,
+        limit: Option<usize>,
+    ) -> Vec<AuditLog> {
+        let mut logs: Vec<AuditLog> = self
+            .logs
+            .iter()
+            .filter(|entry| {
+                let log = entry.value();
+
+                // service_instance 类型或者 instance 类型都可以
+                if log.operation_type != "service_instance" && log.operation_type != "instance" {
+                    return false;
+                }
+
+                if let Some(sid) = service_id
+                    && !log.target_id.contains(&format!("service:{}", sid))
+                    && !log.target_id.starts_with(&format!("{}:", sid)) {
+                        return false;
+                    }
+
+                if let Some(rid) = region_id
+                    && !log.target_id.contains(&format!("region:{}", rid)) {
+                        return false;
+                    }
+
+                if let Some(op_id) = operator_id
+                    && log.operator_id != op_id {
+                        return false;
+                    }
+
+                true
+            })
+            .map(|entry| entry.value().clone())
+            .collect();
+
+        logs.sort_by(|a, b| b.operation_time.cmp(&a.operation_time));
+
+        if let Some(limit) = limit {
+            logs.truncate(limit);
+        }
+
+        logs
+    }
 }
 
 #[cfg(test)]
