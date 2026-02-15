@@ -59,10 +59,10 @@ impl DiscoveryClient {
         // Check cache first
         {
             let cache = self.cache.read();
-            if let Some(cached) = cache.get(&service_id) {
-                if !cached.is_expired() {
-                    return Ok(Some(cached.get().clone()));
-                }
+            if let Some(cached) = cache.get(&service_id)
+                && !cached.is_expired()
+            {
+                return Ok(Some(cached.get().clone()));
             }
         }
 

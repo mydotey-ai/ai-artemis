@@ -99,10 +99,10 @@ impl RegistryClient {
                         last_success = Instant::now();
                         info!("Heartbeat successful");
 
-                        if let Some(ref failed) = response.failed_instance_keys {
-                            if !failed.is_empty() {
-                                warn!("Some instances failed heartbeat: {} keys", failed.len());
-                            }
+                        if let Some(ref failed) = response.failed_instance_keys
+                            && !failed.is_empty()
+                        {
+                            warn!("Some instances failed heartbeat: {} keys", failed.len());
                         }
                     }
                     Err(e) => {

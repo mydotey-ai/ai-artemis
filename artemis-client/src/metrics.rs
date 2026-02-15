@@ -44,6 +44,13 @@ pub struct ClientMetrics {
 }
 
 #[cfg(feature = "metrics")]
+impl Default for ClientMetrics {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(feature = "metrics")]
 impl ClientMetrics {
     /// Create a new ClientMetrics instance and register all metrics
     pub fn new() -> Self {

@@ -57,6 +57,7 @@ impl FilterChain {
     }
 
     /// Add a filter to the chain
+    #[allow(clippy::should_implement_trait)]
     pub fn add(mut self, filter: Box<dyn RegistryFilter>) -> Self {
         self.filters.push(filter);
         self
