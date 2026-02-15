@@ -1,8 +1,10 @@
 use crate::state::AppState;
 use artemis_core::{model::*, traits::DiscoveryService};
 use artemis_server::discovery::LoadBalanceStrategy;
-use axum::{http::StatusCode, response::IntoResponse, Json, extract::State};
+use axum::{http::StatusCode, response::IntoResponse, Json, extract::{State, Query}};
 use serde::{Deserialize, Serialize};
+
+// ===== GET Service API (POST 版本) =====
 
 pub async fn get_service(
     State(state): State<AppState>,
@@ -11,9 +13,60 @@ pub async fn get_service(
     Json(state.discovery_service.get_service(request).await)
 }
 
-pub async fn get_services(State(state): State<AppState>) -> Json<GetServicesResponse> {
-    let request =
-        GetServicesRequest { region_id: "default".to_string(), zone_id: "default".to_string() };
+// ===== GET Service API (GET 版本 - Phase 22 新增) =====
+
+#[derive(Debug, Deserialize)]
+pub struct GetServiceQuery {
+    #[serde(rename = "serviceId")]
+    pub service_id: String,
+    #[serde(rename = "regionId")]
+    pub region_id: Option<String>,
+    #[serde(rename = "zoneId")]
+    pub zone_id: Option<String>,
+}
+
+pub async fn get_service_by_query(
+    State(state): State<AppState>,
+    Query(query): Query<GetServiceQuery>,
+) -> Json<GetServiceResponse> {
+    let request = GetServiceRequest {
+        discovery_config: DiscoveryConfig {
+            service_id: query.service_id,
+            region_id: query.region_id.unwrap_or_else(|| "default".to_string()),
+            zone_id: query.zone_id.unwrap_or_else(|| "default".to_string()),
+            discovery_data: None,
+        },
+    };
+    Json(state.discovery_service.get_service(request).await)
+}
+
+// ===== GET Services API (POST 版本) =====
+
+pub async fn get_services(
+    State(state): State<AppState>,
+    Json(request): Json<GetServicesRequest>,
+) -> Json<GetServicesResponse> {
+    Json(state.discovery_service.get_services(request).await)
+}
+
+// ===== GET Services API (GET 版本 - Phase 22 新增) =====
+
+#[derive(Debug, Deserialize)]
+pub struct GetServicesQuery {
+    #[serde(rename = "regionId")]
+    pub region_id: Option<String>,
+    #[serde(rename = "zoneId")]
+    pub zone_id: Option<String>,
+}
+
+pub async fn get_services_by_query(
+    State(state): State<AppState>,
+    Query(query): Query<GetServicesQuery>,
+) -> Json<GetServicesResponse> {
+    let request = GetServicesRequest {
+        region_id: query.region_id.unwrap_or_else(|| "default".to_string()),
+        zone_id: query.zone_id.unwrap_or_else(|| "default".to_string()),
+    };
     Json(state.discovery_service.get_services(request).await)
 }
 

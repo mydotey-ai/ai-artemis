@@ -191,17 +191,68 @@
 
 ---
 
+## ✅ Phase 22 完成详情
+
+### Phase 22: GET 查询参数支持 ✅
+
+#### Task 22.1: Discovery API GET 支持 ✅
+- **文件**: `artemis-web/src/api/discovery.rs` (扩展)
+- **变更**:
+  - 新增 `GetServiceQuery` 查询参数结构
+  - 实现 `get_service_by_query()` - GET 方式查询服务
+  - 新增 `GetServicesQuery` 查询参数结构
+  - 实现 `get_services_by_query()` - GET 方式查询所有服务
+- **支持的参数**:
+  - `serviceId` (必需)
+  - `regionId` (可选,默认 "default")
+  - `zoneId` (可选,默认 "default")
+
+#### Task 22.2: Replication API GET 支持 ✅
+- **文件**: `artemis-web/src/api/replication.rs` (扩展)
+- **变更**:
+  - 新增 `GetAllServicesQuery` 查询参数结构
+  - 实现 `get_all_services_by_query()` - GET 方式查询所有服务
+- **支持的参数**:
+  - `regionId` (必需,但实际返回所有服务)
+  - `zoneId` (可选)
+
+#### Task 22.3: 路由注册 ✅
+- **文件**: `artemis-web/src/server.rs` (修改)
+- **变更**:
+  - `/api/discovery/service.json` - 支持 POST + GET
+  - `/api/discovery/services.json` - 支持 POST + GET
+  - `/api/replication/registry/services.json` - 支持 POST + GET
+- **实现方式**: 使用 Axum 的 `post().get()` 链式注册
+
+#### Task 22.4: 集成测试 ✅
+- **文件**: `scripts/test-get-query-params.sh` (新建, 187行)
+- **测试场景** (9个测试步骤):
+  1. ✅ 注册测试实例
+  2. ✅ GET service.json 带完整参数
+  3. ✅ GET service.json 仅必需参数
+  4. ✅ POST vs GET 对比验证一致性
+  5. ✅ GET services.json 带参数
+  6. ✅ GET services.json 无参数
+  7. ✅ GET replication services.json
+  8. ✅ 验证查询不存在的服务
+  9. ✅ 清理测试数据
+- **测试覆盖**: 3/3 APIs (Discovery x2 + Replication x1)
+
+#### 技术要点
+- ✅ 完全兼容 Java 版本的 GET 参数命名 (camelCase)
+- ✅ POST 和 GET 返回结果完全一致
+- ✅ 可选参数使用默认值 ("default")
+- ✅ 支持 query parameters 和 JSON body 两种方式
+
+---
+
 ## 🔄 进行中的工作
 
-暂无进行中的工作。Phase 19-21 已完成,准备开始 Phase 22。
+暂无进行中的工作。Phase 19-22 已完成,准备开始 Phase 23。
 
 ---
 
 ## 📋 待实施的 Phases
-
-### Phase 22: GET 查询参数支持 (6 个 API)
-- **预估工时**: 2 天
-- **改造现有 API**:
   - Discovery GET endpoints (2个)
   - Replication GET endpoints (2个)
   - Management GET endpoints (2个)
@@ -234,10 +285,10 @@
 | Phase 19 | ✅ 已完成 | 3/3 | 100% (DAO + Manager + API + 测试全部完成) |
 | Phase 20 | ✅ 已完成 | 1/1 | 100% (LoadBalancer + API + 测试全部完成) |
 | Phase 21 | ✅ 已完成 | 12/12 | 100% (StatusService + 12 APIs + 测试全部完成) |
-| Phase 22 | ⏳ 待开始 | 6 | 0% |
+| Phase 22 | ✅ 已完成 | 3/3 | 100% (GET 查询参数支持 + 测试全部完成) |
 | Phase 23 | ⏳ 待开始 | 6 | 0% |
 | Phase 24 | ⏳ 待开始 | 6 | 0% |
-| **总计** | - | **34** | **47%** (16/34 APIs 完成) |
+| **总计** | - | **34** | **56%** (19/34 APIs 完成) |
 
 ---
 
@@ -283,5 +334,5 @@
 
 ---
 
-**最后更新**: 2026-02-15 (Phase 19-21 完成)
-**下一步**: 开始 Phase 22 实施 (GET 查询参数支持 - 6个API)
+**最后更新**: 2026-02-15 (Phase 19-22 完成)
+**下一步**: 开始 Phase 23 实施 (批量复制 API - 6个API)
