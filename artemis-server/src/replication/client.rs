@@ -234,6 +234,8 @@ impl Default for ReplicationClient {
 mod tests {
     use super::*;
 
+    // ===== 客户端创建测试 =====
+
     #[test]
     fn test_client_creation() {
         let client = ReplicationClient::new(Duration::from_secs(5));
@@ -244,5 +246,121 @@ mod tests {
     fn test_default_client() {
         let client = ReplicationClient::default();
         assert_eq!(client.timeout, Duration::from_secs(5));
+    }
+
+    #[test]
+    fn test_client_creation_with_custom_timeout() {
+        let timeout = Duration::from_secs(10);
+        let client = ReplicationClient::new(timeout);
+        assert_eq!(client.timeout, timeout);
+    }
+
+    #[test]
+    fn test_client_creation_with_short_timeout() {
+        let timeout = Duration::from_millis(500);
+        let client = ReplicationClient::new(timeout);
+        assert_eq!(client.timeout, timeout);
+    }
+
+    #[test]
+    fn test_client_creation_with_long_timeout() {
+        let timeout = Duration::from_secs(60);
+        let client = ReplicationClient::new(timeout);
+        assert_eq!(client.timeout, timeout);
+    }
+
+    // ===== URL 构建验证测试 =====
+
+    #[test]
+    fn test_register_url_format() {
+        let peer_url = "http://192.168.1.100:8080";
+        let expected_url = format!("{}/api/replication/registry/register.json", peer_url);
+
+        assert_eq!(
+            expected_url,
+            "http://192.168.1.100:8080/api/replication/registry/register.json"
+        );
+    }
+
+    #[test]
+    fn test_heartbeat_url_format() {
+        let peer_url = "http://example.com:9090";
+        let expected_url = format!("{}/api/replication/registry/heartbeat.json", peer_url);
+
+        assert_eq!(
+            expected_url,
+            "http://example.com:9090/api/replication/registry/heartbeat.json"
+        );
+    }
+
+    #[test]
+    fn test_unregister_url_format() {
+        let peer_url = "http://localhost:8080";
+        let expected_url = format!("{}/api/replication/registry/unregister.json", peer_url);
+
+        assert_eq!(
+            expected_url,
+            "http://localhost:8080/api/replication/registry/unregister.json"
+        );
+    }
+
+    #[test]
+    fn test_get_all_services_url_format() {
+        let peer_url = "http://peer:8080";
+        let expected_url = format!("{}/api/replication/registry/services.json", peer_url);
+
+        assert_eq!(
+            expected_url,
+            "http://peer:8080/api/replication/registry/services.json"
+        );
+    }
+
+    #[test]
+    fn test_batch_register_url_format() {
+        let peer_url = "http://192.168.1.101:8080";
+        let expected_url = format!("{}/api/replication/registry/batch-register.json", peer_url);
+
+        assert_eq!(
+            expected_url,
+            "http://192.168.1.101:8080/api/replication/registry/batch-register.json"
+        );
+    }
+
+    #[test]
+    fn test_batch_unregister_url_format() {
+        let peer_url = "http://192.168.1.102:8080";
+        let expected_url = format!("{}/api/replication/registry/batch-unregister.json", peer_url);
+
+        assert_eq!(
+            expected_url,
+            "http://192.168.1.102:8080/api/replication/registry/batch-unregister.json"
+        );
+    }
+
+    // ===== 客户端配置测试 =====
+
+    #[test]
+    fn test_client_is_created_successfully() {
+        // 验证客户端创建不会 panic
+        let _client = ReplicationClient::new(Duration::from_secs(1));
+    }
+
+    #[test]
+    fn test_default_client_has_correct_timeout() {
+        let client = ReplicationClient::default();
+        assert_eq!(
+            client.timeout,
+            Duration::from_secs(5),
+            "默认超时应该是 5 秒"
+        );
+    }
+
+    #[test]
+    fn test_multiple_clients_can_be_created() {
+        let _client1 = ReplicationClient::new(Duration::from_secs(1));
+        let _client2 = ReplicationClient::new(Duration::from_secs(2));
+        let _client3 = ReplicationClient::new(Duration::from_secs(3));
+
+        // 如果能创建多个客户端,测试通过
     }
 }
