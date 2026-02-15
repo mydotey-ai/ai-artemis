@@ -14,8 +14,9 @@
 #   - 优雅停止和清理
 #
 # 使用示例:
-#   ./cluster.sh start           # 启动3节点集群
+#   ./cluster.sh start           # 启动3节点集群(默认端口8080+)
 #   ./cluster.sh start 5         # 启动5节点集群
+#   ./cluster.sh start 3 9000    # 启动3节点集群,从端口9000开始
 #   ./cluster.sh status          # 查看集群状态
 #   ./cluster.sh logs 1          # 查看节点1日志
 #   ./cluster.sh stop            # 停止集群
@@ -101,7 +102,7 @@ zone = "zone1"
 # 启用集群模式
 enabled = true
 
-# 对等节点列表
+# 对等节点列表 (其他节点的 HTTP API 地址)
 peers = [
 ${peer_nodes}]
 
@@ -115,6 +116,12 @@ timeout_secs = 5
 
 # 批量大小
 batch_size = 100
+
+# 批处理窗口时间(毫秒)
+batch_interval_ms = 100
+
+# 最大重试次数
+max_retries = 3
 
 [lease]
 # 租约TTL(秒)
@@ -152,15 +159,16 @@ EOF
 }
 
 # 生成所有节点的对等节点列表
+# peers 列表应该使用其他节点的 HTTP API 地址,用于集群通信
 generate_peer_list() {
     local node_count=$1
-    local base_peer_port=$2
+    local base_port=$2
     local current_node=$3
 
     local peers=""
     for i in $(seq 1 ${node_count}); do
         if [ $i -ne ${current_node} ]; then
-            peers="${peers}    \"127.0.0.1:$((base_peer_port + i - 1))\",\n"
+            peers="${peers}    \"127.0.0.1:$((base_port + i - 1))\",\n"
         fi
     done
 
@@ -416,15 +424,16 @@ Artemis 集群管理脚本
 用法: $0 <命令> [选项]
 
 命令:
-    start [节点数] [基础端口] [对等节点基础端口]
+    start [节点数] [基础端口]
         启动集群
-        默认: 3 节点, 基础端口 8080, 对等节点基础端口 9090
-        示例: $0 start 5 8080 9090
+        默认: 3 节点, 基础端口 8080
+        节点将使用连续端口: 基础端口, 基础端口+1, ...
+        示例: $0 start 5 9000  # 启动5节点,端口9000-9004
 
     stop
         停止集群
 
-    restart [节点数] [基础端口] [对等节点基础端口]
+    restart [节点数] [基础端口]
         重启集群
 
     status [基础端口]
@@ -443,14 +452,17 @@ Artemis 集群管理脚本
         显示此帮助信息
 
 示例:
-    # 启动 3 节点集群 (默认)
+    # 启动 3 节点集群 (默认,端口 8080-8082)
     $0 start
 
-    # 启动 5 节点集群,自定义端口
-    $0 start 5 8000 9000
+    # 启动 5 节点集群,自定义端口 (9000-9004)
+    $0 start 5 9000
 
     # 查看集群状态
     $0 status
+
+    # 查看所有节点日志
+    $0 logs
 
     # 查看节点 1 的日志
     $0 logs 1
@@ -460,6 +472,12 @@ Artemis 集群管理脚本
 
     # 清理所有文件
     $0 clean
+
+集群配置说明:
+    - 每个节点使用独立的 HTTP API 端口 (基础端口 + 节点编号 - 1)
+    - 每个节点使用独立的对等通信端口 (默认 9090 + 节点编号 - 1)
+    - 集群节点通过 HTTP API 端口相互通信
+    - 所有配置文件、日志和 PID 文件存储在 .cluster 目录
 
 集群文件位置:
     配置: ${CONFIG_DIR}
