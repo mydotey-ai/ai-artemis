@@ -44,15 +44,15 @@ reqwest = { version = "0.13", features = ["json"] }
 # WebSocket
 tokio-tungstenite = "0.28.0"
 
-# 数据库
-sqlx = { version = "0.8", features = [
-    "runtime-tokio",
-    "sqlite",
-    "mysql",
-    "migrate",
-    "chrono",
-    "json",
+# 数据库 - SeaORM (原生支持运行时多数据库切换)
+sea-orm = { version = "1.1", features = [
+    "runtime-tokio-rustls",
+    "sqlx-sqlite",
+    "sqlx-mysql",
+    "with-chrono",
+    "with-json",
 ] }
+sea-orm-migration = { version = "1.1" }
 
 # 时间处理
 chrono = { version = "0.4", features = ["serde"] }

@@ -51,7 +51,7 @@ impl ConfigLoader {
 
     /// 加载服务分组
     async fn load_service_groups(&self) -> anyhow::Result<()> {
-        let dao = GroupDao::new(self.database.pool().clone());
+        let dao = GroupDao::new(self.database.conn().clone());
         let groups = dao.list_groups().await?;
 
         tracing::info!("Loading {} service groups", groups.len());
@@ -68,7 +68,7 @@ impl ConfigLoader {
 
     /// 加载路由规则
     async fn load_route_rules(&self) -> anyhow::Result<()> {
-        let dao = RouteRuleDao::new(self.database.pool().clone());
+        let dao = RouteRuleDao::new(self.database.conn().clone());
         let rules = dao.list_rules().await?;
 
         tracing::info!("Loading {} route rules", rules.len());
@@ -103,7 +103,7 @@ impl ConfigLoader {
 
     /// 加载Zone操作
     async fn load_zone_operations(&self) -> anyhow::Result<()> {
-        let dao = ZoneOperationDao::new(self.database.pool().clone());
+        let dao = ZoneOperationDao::new(self.database.conn().clone());
         let operations = dao.list_operations().await?;
 
         tracing::info!("Loading {} zone operations", operations.len());
@@ -131,7 +131,7 @@ impl ConfigLoader {
 
     /// 加载金丝雀配置
     async fn load_canary_configs(&self) -> anyhow::Result<()> {
-        let dao = CanaryConfigDao::new(self.database.pool().clone());
+        let dao = CanaryConfigDao::new(self.database.conn().clone());
         let configs = dao.list_configs().await?;
 
         tracing::info!("Loading {} canary configs", configs.len());

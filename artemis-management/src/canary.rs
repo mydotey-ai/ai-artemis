@@ -46,7 +46,7 @@ impl CanaryManager {
 
         // 持久化到数据库
         if let Some(db) = &self.database {
-            let dao = CanaryConfigDao::new(db.pool().clone());
+            let dao = CanaryConfigDao::new(db.conn().clone());
             let config_clone = config.clone();
             tokio::spawn(async move {
                 if let Err(e) = dao.upsert_config(&config_clone).await {
@@ -74,7 +74,7 @@ impl CanaryManager {
 
             // 持久化到数据库
             if let Some(db) = &self.database {
-                let dao = CanaryConfigDao::new(db.pool().clone());
+                let dao = CanaryConfigDao::new(db.conn().clone());
                 let service_id_owned = service_id.to_string();
                 tokio::spawn(async move {
                     if let Err(e) = dao.set_enabled(&service_id_owned, enabled).await {
@@ -108,7 +108,7 @@ impl CanaryManager {
 
         // 从数据库删除
         if let Some(db) = &self.database {
-            let dao = CanaryConfigDao::new(db.pool().clone());
+            let dao = CanaryConfigDao::new(db.conn().clone());
             let service_id_owned = service_id.to_string();
             tokio::spawn(async move {
                 if let Err(e) = dao.delete_config(&service_id_owned).await {

@@ -1,66 +1,72 @@
 use artemis_core::model::CanaryConfig;
-use sqlx::{Pool, Any, Row};
+use sea_orm::{DatabaseConnection, Statement, ConnectionTrait};
+use sea_orm::sea_query::Value;
 
 pub struct CanaryConfigDao {
-    pool: Pool<Any>,
+    conn: DatabaseConnection,
 }
 
 impl CanaryConfigDao {
-    pub fn new(pool: Pool<Any>) -> Self {
-        Self { pool }
+    pub fn new(conn: DatabaseConnection) -> Self {
+        Self { conn }
     }
 
     /// 插入或更新金丝雀配置
     pub async fn upsert_config(&self, config: &CanaryConfig) -> anyhow::Result<()> {
         let ip_whitelist_json = serde_json::to_string(&config.ip_whitelist)?;
 
-        sqlx::query(
+        let stmt = Statement::from_sql_and_values(
+            self.conn.get_database_backend(),
             r#"
             INSERT INTO canary_config (service_id, ip_whitelist, enabled)
             VALUES (?, ?, ?)
             ON CONFLICT(service_id) DO UPDATE SET ip_whitelist = excluded.ip_whitelist, enabled = excluded.enabled, updated_at = CURRENT_TIMESTAMP
-            "#
-        )
-        .bind(&config.service_id)
-        .bind(&ip_whitelist_json)
-        .bind(config.enabled)
-        .execute(&self.pool)
-        .await?;
+            "#,
+            vec![
+                Value::from(&config.service_id),
+                Value::from(ip_whitelist_json),
+                Value::from(config.enabled),
+            ],
+        );
 
+        self.conn.execute(stmt).await?;
         Ok(())
     }
 
     /// 删除金丝雀配置
     pub async fn delete_config(&self, service_id: &str) -> anyhow::Result<()> {
-        sqlx::query("DELETE FROM canary_config WHERE service_id = ?")
-            .bind(service_id)
-            .execute(&self.pool)
-            .await?;
+        let stmt = Statement::from_sql_and_values(
+            self.conn.get_database_backend(),
+            "DELETE FROM canary_config WHERE service_id = ?",
+            vec![Value::from(service_id)],
+        );
+        self.conn.execute(stmt).await?;
         Ok(())
     }
 
     /// 获取金丝雀配置
     pub async fn get_config(&self, service_id: &str) -> anyhow::Result<Option<CanaryConfig>> {
-        let row = sqlx::query(
+        let stmt = Statement::from_sql_and_values(
+            self.conn.get_database_backend(),
             r#"
             SELECT service_id, ip_whitelist, enabled
             FROM canary_config
             WHERE service_id = ?
-            "#
-        )
-        .bind(service_id)
-        .fetch_optional(&self.pool)
-        .await?;
+            "#,
+            vec![Value::from(service_id)],
+        );
 
-        match row {
+        let result = self.conn.query_one(stmt).await?;
+
+        match result {
             Some(row) => {
-                let ip_whitelist_json: String = row.get("ip_whitelist");
+                let ip_whitelist_json: String = row.try_get("", "ip_whitelist")?;
                 let ip_whitelist: Vec<String> = serde_json::from_str(&ip_whitelist_json)?;
 
                 Ok(Some(CanaryConfig {
-                    service_id: row.get("service_id"),
+                    service_id: row.try_get("", "service_id")?,
                     ip_whitelist,
-                    enabled: row.get("enabled"),
+                    enabled: row.try_get("", "enabled")?,
                 }))
             }
             None => Ok(None),
@@ -69,24 +75,26 @@ impl CanaryConfigDao {
 
     /// 列出所有金丝雀配置
     pub async fn list_configs(&self) -> anyhow::Result<Vec<CanaryConfig>> {
-        let rows = sqlx::query(
+        let stmt = Statement::from_sql_and_values(
+            self.conn.get_database_backend(),
             r#"
             SELECT service_id, ip_whitelist, enabled
             FROM canary_config
-            "#
-        )
-        .fetch_all(&self.pool)
-        .await?;
+            "#,
+            vec![],
+        );
+
+        let rows = self.conn.query_all(stmt).await?;
 
         let mut configs = Vec::new();
         for row in rows {
-            let ip_whitelist_json: String = row.get("ip_whitelist");
+            let ip_whitelist_json: String = row.try_get("", "ip_whitelist")?;
             let ip_whitelist: Vec<String> = serde_json::from_str(&ip_whitelist_json)?;
 
             configs.push(CanaryConfig {
-                service_id: row.get("service_id"),
+                service_id: row.try_get("", "service_id")?,
                 ip_whitelist,
-                enabled: row.get("enabled"),
+                enabled: row.try_get("", "enabled")?,
             });
         }
 
@@ -95,17 +103,17 @@ impl CanaryConfigDao {
 
     /// 设置启用状态
     pub async fn set_enabled(&self, service_id: &str, enabled: bool) -> anyhow::Result<()> {
-        sqlx::query(
+        let stmt = Statement::from_sql_and_values(
+            self.conn.get_database_backend(),
             r#"
             UPDATE canary_config
             SET enabled = ?, updated_at = CURRENT_TIMESTAMP
             WHERE service_id = ?
-            "#
-        )
-        .bind(enabled)
-        .bind(service_id)
-        .execute(&self.pool)
-        .await?;
+            "#,
+            vec![Value::from(enabled), Value::from(service_id)],
+        );
+
+        self.conn.execute(stmt).await?;
         Ok(())
     }
 }

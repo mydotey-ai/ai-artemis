@@ -62,7 +62,7 @@ impl ZoneManager {
 
         // 持久化到数据库
         if let Some(db) = &self.database {
-            let dao = ZoneOperationDao::new(db.pool().clone());
+            let dao = ZoneOperationDao::new(db.conn().clone());
             let record_clone = record.clone();
             tokio::spawn(async move {
                 if let Err(e) = dao.insert_operation(&record_clone).await {
@@ -93,7 +93,7 @@ impl ZoneManager {
 
         // 从数据库删除
         if let Some(db) = &self.database {
-            let dao = ZoneOperationDao::new(db.pool().clone());
+            let dao = ZoneOperationDao::new(db.conn().clone());
             let zone_id_owned = zone_id.to_string();
             let region_id_owned = region_id.to_string();
             tokio::spawn(async move {

@@ -109,7 +109,7 @@ impl GroupManager {
 
         // 持久化到数据库
         if let Some(db) = &self.database {
-            let dao = GroupDao::new(db.pool().clone());
+            let dao = GroupDao::new(db.conn().clone());
             let group_clone = group.clone();
             tokio::spawn(async move {
                 if let Err(e) = dao.insert_group(&group_clone).await {
@@ -150,7 +150,7 @@ impl GroupManager {
 
         // 持久化到数据库
         if let Some(db) = &self.database {
-            let dao = GroupDao::new(db.pool().clone());
+            let dao = GroupDao::new(db.conn().clone());
             let group_clone = updated_group.clone();
             tokio::spawn(async move {
                 if let Err(e) = dao.update_group(&group_clone).await {
@@ -208,7 +208,7 @@ impl GroupManager {
 
         // 从数据库删除
         if let Some(db) = &self.database {
-            let dao = GroupDao::new(db.pool().clone());
+            let dao = GroupDao::new(db.conn().clone());
             let group_key_owned = group_key.to_string();
             tokio::spawn(async move {
                 if let Err(e) = dao.delete_group(&group_key_owned).await {

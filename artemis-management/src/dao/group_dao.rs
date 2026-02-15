@@ -1,13 +1,14 @@
 use artemis_core::model::{ServiceGroup, GroupTag, GroupType, GroupStatus};
-use sqlx::{Pool, Any, Row};
+use sea_orm::{DatabaseConnection, Statement, ConnectionTrait};
+use sea_orm::sea_query::Value;
 
 pub struct GroupDao {
-    pool: Pool<Any>,
+    conn: DatabaseConnection,
 }
 
 impl GroupDao {
-    pub fn new(pool: Pool<Any>) -> Self {
-        Self { pool }
+    pub fn new(conn: DatabaseConnection) -> Self {
+        Self { conn }
     }
 
     /// 插入服务分组
@@ -19,22 +20,25 @@ impl GroupDao {
 
         let metadata_json = serde_json::to_string(&group.metadata.as_ref().unwrap_or(&std::collections::HashMap::new()))?;
 
-        sqlx::query(
+        let stmt = Statement::from_sql_and_values(
+            self.conn.get_database_backend(),
             r#"
             INSERT INTO service_group (group_id, group_name, group_type, service_id, region_id, zone_id, description, metadata)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            "#
-        )
-        .bind(&group.name)
-        .bind(&group.name)
-        .bind(group_type_str)
-        .bind(&group.service_id)
-        .bind(&group.region_id)
-        .bind(&group.zone_id)
-        .bind(&group.description)
-        .bind(metadata_json)
-        .execute(&self.pool)
-        .await?;
+            "#,
+            vec![
+                Value::from(&group.name),
+                Value::from(&group.name),
+                Value::from(group_type_str),
+                Value::from(&group.service_id),
+                Value::from(&group.region_id),
+                Value::from(&group.zone_id),
+                Value::from(group.description.as_deref().unwrap_or("")),
+                Value::from(metadata_json),
+            ],
+        );
+
+        self.conn.execute(stmt).await?;
 
         // 插入标签
         if let Some(tags) = &group.tags {
@@ -55,29 +59,34 @@ impl GroupDao {
 
         let metadata_json = serde_json::to_string(&group.metadata.as_ref().unwrap_or(&std::collections::HashMap::new()))?;
 
-        sqlx::query(
+        let stmt = Statement::from_sql_and_values(
+            self.conn.get_database_backend(),
             r#"
             UPDATE service_group
             SET group_name = ?, group_type = ?, service_id = ?, region_id = ?, zone_id = ?, description = ?, metadata = ?, updated_at = CURRENT_TIMESTAMP
             WHERE group_id = ?
-            "#
-        )
-        .bind(&group.name)
-        .bind(group_type_str)
-        .bind(&group.service_id)
-        .bind(&group.region_id)
-        .bind(&group.zone_id)
-        .bind(&group.description)
-        .bind(metadata_json)
-        .bind(&group.name)
-        .execute(&self.pool)
-        .await?;
+            "#,
+            vec![
+                Value::from(&group.name),
+                Value::from(group_type_str),
+                Value::from(&group.service_id),
+                Value::from(&group.region_id),
+                Value::from(&group.zone_id),
+                Value::from(group.description.as_deref().unwrap_or("")),
+                Value::from(metadata_json),
+                Value::from(&group.name),
+            ],
+        );
+
+        self.conn.execute(stmt).await?;
 
         // 删除旧标签并插入新标签
-        sqlx::query("DELETE FROM service_group_tag WHERE group_id = ?")
-            .bind(&group.name)
-            .execute(&self.pool)
-            .await?;
+        let delete_stmt = Statement::from_sql_and_values(
+            self.conn.get_database_backend(),
+            "DELETE FROM service_group_tag WHERE group_id = ?",
+            vec![Value::from(&group.name)],
+        );
+        self.conn.execute(delete_stmt).await?;
 
         if let Some(tags) = &group.tags {
             for tag in tags {
@@ -90,41 +99,44 @@ impl GroupDao {
 
     /// 删除服务分组
     pub async fn delete_group(&self, group_id: &str) -> anyhow::Result<()> {
-        sqlx::query("DELETE FROM service_group WHERE group_id = ?")
-            .bind(group_id)
-            .execute(&self.pool)
-            .await?;
+        let stmt = Statement::from_sql_and_values(
+            self.conn.get_database_backend(),
+            "DELETE FROM service_group WHERE group_id = ?",
+            vec![Value::from(group_id)],
+        );
+        self.conn.execute(stmt).await?;
         Ok(())
     }
 
     /// 获取服务分组
     pub async fn get_group(&self, group_id: &str) -> anyhow::Result<Option<ServiceGroup>> {
-        let row = sqlx::query(
+        let stmt = Statement::from_sql_and_values(
+            self.conn.get_database_backend(),
             r#"
             SELECT group_id, group_name, group_type, service_id, region_id, zone_id, description, metadata, created_at
             FROM service_group
             WHERE group_id = ?
-            "#
-        )
-        .bind(group_id)
-        .fetch_optional(&self.pool)
-        .await?;
+            "#,
+            vec![Value::from(group_id)],
+        );
 
-        match row {
+        let result = self.conn.query_one(stmt).await?;
+
+        match result {
             Some(row) => {
-                let group_type_str: String = row.get("group_type");
+                let group_type_str: String = row.try_get("", "group_type")?;
                 let group_type = match group_type_str.as_str() {
                     "physical" => GroupType::Physical,
                     "logical" => GroupType::Logical,
                     _ => GroupType::Physical,
                 };
 
-                let metadata_json: String = row.get("metadata");
+                let metadata_json: String = row.try_get("", "metadata")?;
                 let metadata = serde_json::from_str(&metadata_json).ok();
 
                 let tags = self.get_tags(group_id).await?;
 
-                let created_at_str: Option<String> = row.get("created_at");
+                let created_at_str: Option<String> = row.try_get("", "created_at").ok();
                 let created_at = created_at_str.and_then(|s| {
                     chrono::NaiveDateTime::parse_from_str(&s, "%Y-%m-%d %H:%M:%S")
                         .ok()
@@ -133,13 +145,13 @@ impl GroupDao {
 
                 Ok(Some(ServiceGroup {
                     group_id: None,
-                    service_id: row.get("service_id"),
-                    region_id: row.get("region_id"),
-                    zone_id: row.get("zone_id"),
-                    name: row.get("group_name"),
+                    service_id: row.try_get("", "service_id")?,
+                    region_id: row.try_get("", "region_id")?,
+                    zone_id: row.try_get("", "zone_id")?,
+                    name: row.try_get("", "group_name")?,
                     group_type,
                     status: GroupStatus::Active,
-                    description: row.get("description"),
+                    description: row.try_get("", "description")?,
                     tags: if tags.is_empty() { None } else { Some(tags) },
                     metadata,
                     created_at,
@@ -152,31 +164,33 @@ impl GroupDao {
 
     /// 列出所有服务分组
     pub async fn list_groups(&self) -> anyhow::Result<Vec<ServiceGroup>> {
-        let rows = sqlx::query(
+        let stmt = Statement::from_sql_and_values(
+            self.conn.get_database_backend(),
             r#"
             SELECT group_id, group_name, group_type, service_id, region_id, zone_id, description, metadata, created_at
             FROM service_group
-            "#
-        )
-        .fetch_all(&self.pool)
-        .await?;
+            "#,
+            vec![],
+        );
+
+        let rows = self.conn.query_all(stmt).await?;
 
         let mut groups = Vec::new();
         for row in rows {
-            let group_id: String = row.get("group_id");
-            let group_type_str: String = row.get("group_type");
+            let group_id: String = row.try_get("", "group_id")?;
+            let group_type_str: String = row.try_get("", "group_type")?;
             let group_type = match group_type_str.as_str() {
                 "physical" => GroupType::Physical,
                 "logical" => GroupType::Logical,
                 _ => GroupType::Physical,
             };
 
-            let metadata_json: String = row.get("metadata");
+            let metadata_json: String = row.try_get("", "metadata")?;
             let metadata = serde_json::from_str(&metadata_json).ok();
 
             let tags = self.get_tags(&group_id).await?;
 
-            let created_at_str: Option<String> = row.get("created_at");
+            let created_at_str: Option<String> = row.try_get("", "created_at").ok();
             let created_at = created_at_str.and_then(|s| {
                 chrono::NaiveDateTime::parse_from_str(&s, "%Y-%m-%d %H:%M:%S")
                     .ok()
@@ -185,13 +199,13 @@ impl GroupDao {
 
             groups.push(ServiceGroup {
                 group_id: None,
-                service_id: row.get("service_id"),
-                region_id: row.get("region_id"),
-                zone_id: row.get("zone_id"),
-                name: row.get("group_name"),
+                service_id: row.try_get("", "service_id")?,
+                region_id: row.try_get("", "region_id")?,
+                zone_id: row.try_get("", "zone_id")?,
+                name: row.try_get("", "group_name")?,
                 group_type,
                 status: GroupStatus::Active,
-                description: row.get("description"),
+                description: row.try_get("", "description")?,
                 tags: if tags.is_empty() { None } else { Some(tags) },
                 metadata,
                 created_at,
@@ -204,39 +218,42 @@ impl GroupDao {
 
     /// 插入标签
     async fn insert_tag(&self, group_id: &str, tag: &GroupTag) -> anyhow::Result<()> {
-        sqlx::query(
+        let stmt = Statement::from_sql_and_values(
+            self.conn.get_database_backend(),
             r#"
             INSERT INTO service_group_tag (group_id, tag_key, tag_value)
             VALUES (?, ?, ?)
             ON CONFLICT(group_id, tag_key) DO UPDATE SET tag_value = excluded.tag_value
-            "#
-        )
-        .bind(group_id)
-        .bind(&tag.key)
-        .bind(&tag.value)
-        .execute(&self.pool)
-        .await?;
+            "#,
+            vec![
+                Value::from(group_id),
+                Value::from(&tag.key),
+                Value::from(&tag.value),
+            ],
+        );
+        self.conn.execute(stmt).await?;
         Ok(())
     }
 
     /// 获取分组的所有标签
     async fn get_tags(&self, group_id: &str) -> anyhow::Result<Vec<GroupTag>> {
-        let rows = sqlx::query(
+        let stmt = Statement::from_sql_and_values(
+            self.conn.get_database_backend(),
             r#"
             SELECT tag_key, tag_value
             FROM service_group_tag
             WHERE group_id = ?
-            "#
-        )
-        .bind(group_id)
-        .fetch_all(&self.pool)
-        .await?;
+            "#,
+            vec![Value::from(group_id)],
+        );
+
+        let rows = self.conn.query_all(stmt).await?;
 
         Ok(rows
             .into_iter()
             .map(|row| GroupTag {
-                key: row.get("tag_key"),
-                value: row.get("tag_value"),
+                key: row.try_get("", "tag_key").unwrap_or_default(),
+                value: row.try_get("", "tag_value").unwrap_or_default(),
             })
             .collect())
     }

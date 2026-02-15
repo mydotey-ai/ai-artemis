@@ -188,7 +188,8 @@ generate_db_config() {
         case "${DB_TYPE}" in
             sqlite)
                 # 每个节点使用独立的SQLite数据库文件
-                db_url="sqlite://${CLUSTER_DIR}/data/node${node_id}.db"
+                # SeaORM SQLite URL格式: sqlite://path (相对路径) 或 sqlite:///absolute/path (绝对路径,三个斜杠)
+                db_url="sqlite:${CLUSTER_DIR}/data/node${node_id}.db?mode=rwc"
                 ;;
             mysql)
                 # MySQL默认配置(所有节点共享同一个数据库)

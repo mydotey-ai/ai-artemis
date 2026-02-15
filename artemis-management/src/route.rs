@@ -66,7 +66,7 @@ impl RouteManager {
 
         // 持久化到数据库
         if let Some(db) = &self.database {
-            let dao = RouteRuleDao::new(db.pool().clone());
+            let dao = RouteRuleDao::new(db.conn().clone());
             let rule_clone = rule.clone();
             tokio::spawn(async move {
                 if let Err(e) = dao.insert_rule(&rule_clone).await {
@@ -97,7 +97,7 @@ impl RouteManager {
 
         // 持久化到数据库
         if let Some(db) = &self.database {
-            let dao = RouteRuleDao::new(db.pool().clone());
+            let dao = RouteRuleDao::new(db.conn().clone());
             let rule_clone = rule.clone();
             tokio::spawn(async move {
                 if let Err(e) = dao.update_rule(&rule_clone).await {
@@ -130,7 +130,7 @@ impl RouteManager {
 
         // 从数据库删除
         if let Some(db) = &self.database {
-            let dao = RouteRuleDao::new(db.pool().clone());
+            let dao = RouteRuleDao::new(db.conn().clone());
             let rule_id_owned = rule_id.to_string();
             tokio::spawn(async move {
                 if let Err(e) = dao.delete_rule(&rule_id_owned).await {
