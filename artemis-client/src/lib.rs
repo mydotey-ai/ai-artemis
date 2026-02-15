@@ -2,6 +2,7 @@ pub mod address;
 pub mod config;
 pub mod discovery;
 pub mod error;
+pub mod http;
 pub mod registry;
 pub mod websocket;
 
