@@ -18,6 +18,12 @@ tracing = { workspace = true }
 futures = { workspace = true }
 thiserror = { workspace = true }
 rand = "0.8"
+prometheus = { workspace = true, optional = true }
+lazy_static = { workspace = true, optional = true }
+
+[features]
+default = []
+metrics = ["prometheus", "lazy_static"]
 
 [dev-dependencies]
 anyhow = { workspace = true }

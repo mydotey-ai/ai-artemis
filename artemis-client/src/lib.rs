@@ -4,6 +4,7 @@ pub mod discovery;
 pub mod error;
 pub mod filter;
 pub mod http;
+pub mod metrics;
 pub mod registry;
 pub mod retry;
 pub mod websocket;
@@ -13,4 +14,8 @@ pub use config::ClientConfig;
 pub use discovery::DiscoveryClient;
 pub use error::{ClientError, Result};
 pub use filter::{FilterChain, RegistryFilter, StatusFilter};
+pub use metrics::ClientMetrics;
 pub use registry::RegistryClient;
+
+#[cfg(feature = "metrics")]
+pub use metrics::{CLIENT_METRICS, REGISTRY};
