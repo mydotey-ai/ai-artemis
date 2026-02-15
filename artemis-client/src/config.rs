@@ -1,5 +1,7 @@
 use std::time::Duration;
 
+use crate::error::ClientError;
+
 /// Client configuration for Artemis service discovery
 #[derive(Debug, Clone)]
 pub struct ClientConfig {
@@ -49,23 +51,38 @@ impl Default for ClientConfig {
 
 impl ClientConfig {
     /// Validate the configuration
-    pub fn validate(&self) -> Result<(), String> {
+    pub fn validate(&self) -> Result<(), ClientError> {
         // Validate server URLs
         if self.server_urls.is_empty() {
-            return Err("At least one server URL must be provided".to_string());
+            return Err(ClientError::Internal("At least one server URL must be provided".into()));
         }
 
         // Validate heartbeat TTL (must be at least 3x heartbeat interval)
         if self.heartbeat_ttl_secs < self.heartbeat_interval_secs * 3 {
-            return Err(format!(
+            return Err(ClientError::Internal(format!(
                 "TTL must be at least 3x heartbeat interval (got TTL={}, interval={})",
                 self.heartbeat_ttl_secs, self.heartbeat_interval_secs
-            ));
+            )));
         }
 
         // Validate retry configuration
         if self.http_retry_times == 0 {
-            return Err("HTTP retry times must be greater than 0".to_string());
+            return Err(ClientError::Internal("HTTP retry times must be greater than 0".into()));
+        }
+
+        // Validate http_retry_times upper bound (1-10)
+        if self.http_retry_times > 10 {
+            return Err(ClientError::Internal("http_retry_times must be 1-10".into()));
+        }
+
+        // Validate websocket_ping_interval_secs range (5-300)
+        if self.websocket_ping_interval_secs < 5 || self.websocket_ping_interval_secs > 300 {
+            return Err(ClientError::Internal("websocket_ping_interval_secs must be 5-300".into()));
+        }
+
+        // Validate cache_ttl_secs minimum value (>= 60)
+        if self.cache_ttl_secs < 60 {
+            return Err(ClientError::Internal("cache_ttl_secs must be at least 60".into()));
         }
 
         Ok(())
@@ -139,6 +156,7 @@ mod tests {
 
     #[test]
     fn test_validation() {
+        // Test heartbeat TTL validation
         let config = ClientConfig {
             heartbeat_ttl_secs: 20,
             ..Default::default()
@@ -146,5 +164,41 @@ mod tests {
         let result = config.validate();
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("TTL must be at least 3x heartbeat interval"));
+
+        // HTTP retry times upper bound validation
+        let config = ClientConfig {
+            http_retry_times: 15,  // > 10
+            ..Default::default()
+        };
+        let result = config.validate();
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("http_retry_times must be 1-10"));
+
+        // WebSocket ping interval lower bound validation
+        let config = ClientConfig {
+            websocket_ping_interval_secs: 3,  // < 5
+            ..Default::default()
+        };
+        let result = config.validate();
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("websocket_ping_interval_secs must be 5-300"));
+
+        // WebSocket ping interval upper bound validation
+        let config = ClientConfig {
+            websocket_ping_interval_secs: 400,  // > 300
+            ..Default::default()
+        };
+        let result = config.validate();
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("websocket_ping_interval_secs must be 5-300"));
+
+        // Cache TTL minimum value validation
+        let config = ClientConfig {
+            cache_ttl_secs: 30,  // < 60
+            ..Default::default()
+        };
+        let result = config.validate();
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("cache_ttl_secs must be at least 60"));
     }
 }
