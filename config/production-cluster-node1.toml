@@ -1,0 +1,96 @@
+# Artemis 生产环境集群配置 - 节点 1
+#
+# 使用说明:
+# 1. 根据实际环境修改 listen_addr 和 peers
+# 2. 配置 MySQL 数据库连接(所有节点共享同一个数据库)
+# 3. 使用: artemis server --config config/production-cluster-node1.toml
+
+[server]
+# 节点ID (每个节点必须唯一)
+node_id = "prod-node-1"
+
+# HTTP API 监听地址
+listen_addr = "0.0.0.0:8080"
+
+# 集群对等节点通信端口 (预留)
+peer_port = 9090
+
+# 区域和可用区
+region = "us-east"
+zone = "zone-a"
+
+[cluster]
+# 启用集群模式
+enabled = true
+
+# 对等节点列表 (其他节点的 HTTP API 地址)
+# 注意: 这里填写其他节点的地址,不包括当前节点
+peers = [
+    "http://prod-node-2:8080",
+    "http://prod-node-3:8080",
+]
+
+[replication]
+# 启用复制
+enabled = true
+
+# 复制超时时间(秒)
+timeout_secs = 5
+
+# 批量大小
+batch_size = 100
+
+# 批处理窗口时间(毫秒)
+batch_interval_ms = 100
+
+# 最大重试次数
+max_retries = 3
+
+[lease]
+# 租约TTL(秒)
+ttl_secs = 30
+
+# 租约清理间隔(秒)
+cleanup_interval_secs = 60
+
+[cache]
+# 启用版本化缓存
+enabled = true
+
+# 缓存过期时间(秒)
+expiry_secs = 300
+
+[ratelimit]
+# 启用限流
+enabled = true
+
+# 每秒请求数限制
+requests_per_second = 10000
+
+# 突发流量限制
+burst_size = 5000
+
+[logging]
+# 日志级别: trace, debug, info, warn, error
+level = "info"
+
+# 日志格式: json (生产环境推荐), pretty
+format = "json"
+
+[database]
+# 数据库类型: mysql (生产环境推荐)
+db_type = "mysql"
+
+# MySQL 连接 URL
+# 格式: mysql://username:password@host:port/database
+#
+# 重要: 所有节点共享同一个 MySQL 数据库
+# 需要提前创建数据库和用户:
+#   CREATE DATABASE artemis CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+#   CREATE USER 'artemis'@'%' IDENTIFIED BY 'your_secure_password';
+#   GRANT ALL PRIVILEGES ON artemis.* TO 'artemis'@'%';
+#   FLUSH PRIVILEGES;
+url = "mysql://artemis:your_secure_password@mysql-host:3306/artemis"
+
+# 最大连接数 (建议根据节点数和负载调整)
+max_connections = 20

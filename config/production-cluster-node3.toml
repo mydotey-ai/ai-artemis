@@ -1,0 +1,44 @@
+# Artemis 生产环境集群配置 - 节点 3
+
+[server]
+node_id = "prod-node-3"
+listen_addr = "0.0.0.0:8080"
+peer_port = 9090
+region = "us-east"
+zone = "zone-c"
+
+[cluster]
+enabled = true
+peers = [
+    "http://prod-node-1:8080",
+    "http://prod-node-2:8080",
+]
+
+[replication]
+enabled = true
+timeout_secs = 5
+batch_size = 100
+batch_interval_ms = 100
+max_retries = 3
+
+[lease]
+ttl_secs = 30
+cleanup_interval_secs = 60
+
+[cache]
+enabled = true
+expiry_secs = 300
+
+[ratelimit]
+enabled = true
+requests_per_second = 10000
+burst_size = 5000
+
+[logging]
+level = "info"
+format = "json"
+
+[database]
+db_type = "mysql"
+url = "mysql://artemis:your_secure_password@mysql-host:3306/artemis"
+max_connections = 20
