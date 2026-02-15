@@ -2,17 +2,20 @@
 
 use crate::state::AppState;
 use artemis_core::model::{
+    GetAllInstanceOperationsRequest, GetAllInstanceOperationsResponse,
+    GetAllServerOperationsRequest, GetAllServerOperationsResponse,
     GetInstanceOperationsRequest, GetInstanceOperationsResponse, InstanceOperation,
     IsInstanceDownRequest, IsInstanceDownResponse, IsServerDownRequest, IsServerDownResponse,
     OperateInstanceRequest, OperateInstanceResponse, OperateServerRequest,
-    OperateServerResponse, ResponseStatus,
+    OperateServerResponse, ResponseStatus, ServerOperationInfo,
 };
 use axum::{
-    extract::State,
+    extract::{Query, State},
     http::StatusCode,
     response::{IntoResponse, Response},
     Json,
 };
+use serde::Deserialize;
 use tracing::{error, info};
 
 // ========== Instance Operations ==========
@@ -162,6 +165,132 @@ pub async fn is_server_down(
     let response = IsServerDownResponse {
         status: ResponseStatus::success(),
         is_down,
+    };
+
+    (StatusCode::OK, Json(response)).into_response()
+}
+
+// ========== Phase 25: 批量操作查询 API ==========
+
+/// POST /api/management/all-instance-operations.json
+/// 查询所有实例操作 (POST 版本)
+pub async fn get_all_instance_operations_post(
+    State(state): State<AppState>,
+    Json(req): Json<GetAllInstanceOperationsRequest>,
+) -> Response {
+    info!(
+        "Get all instance operations (POST), region_id: {:?}",
+        req.region_id
+    );
+
+    let records = state
+        .instance_manager
+        .get_all_instance_operations(req.region_id.as_deref());
+
+    let response = GetAllInstanceOperationsResponse {
+        status: ResponseStatus::success(),
+        instance_operation_records: records,
+    };
+
+    (StatusCode::OK, Json(response)).into_response()
+}
+
+/// GET /api/management/all-instance-operations.json?regionId=X
+/// 查询所有实例操作 (GET 版本,支持 query parameter)
+#[derive(Debug, Deserialize)]
+pub struct AllInstanceOperationsQuery {
+    #[serde(rename = "regionId")]
+    pub region_id: Option<String>,
+}
+
+pub async fn get_all_instance_operations_get(
+    State(state): State<AppState>,
+    Query(query): Query<AllInstanceOperationsQuery>,
+) -> Response {
+    info!(
+        "Get all instance operations (GET), region_id: {:?}",
+        query.region_id
+    );
+
+    let records = state
+        .instance_manager
+        .get_all_instance_operations(query.region_id.as_deref());
+
+    let response = GetAllInstanceOperationsResponse {
+        status: ResponseStatus::success(),
+        instance_operation_records: records,
+    };
+
+    (StatusCode::OK, Json(response)).into_response()
+}
+
+/// POST /api/management/all-server-operations.json
+/// 查询所有服务器操作 (POST 版本)
+pub async fn get_all_server_operations_post(
+    State(state): State<AppState>,
+    Json(req): Json<GetAllServerOperationsRequest>,
+) -> Response {
+    info!(
+        "Get all server operations (POST), region_id: {:?}",
+        req.region_id
+    );
+
+    let records = state
+        .instance_manager
+        .get_all_server_operations(req.region_id.as_deref());
+
+    // 转换为 ServerOperationInfo
+    let server_records: Vec<ServerOperationInfo> = records
+        .into_iter()
+        .map(|(server_id, region_id, operation)| ServerOperationInfo {
+            server_id,
+            region_id,
+            operation,
+        })
+        .collect();
+
+    let response = GetAllServerOperationsResponse {
+        status: ResponseStatus::success(),
+        server_operation_records: server_records,
+    };
+
+    (StatusCode::OK, Json(response)).into_response()
+}
+
+/// GET /api/management/all-server-operations.json?regionId=X
+/// 查询所有服务器操作 (GET 版本,支持 query parameter)
+#[derive(Debug, Deserialize)]
+pub struct AllServerOperationsQuery {
+    #[serde(rename = "regionId")]
+    pub region_id: Option<String>,
+}
+
+pub async fn get_all_server_operations_get(
+    State(state): State<AppState>,
+    Query(query): Query<AllServerOperationsQuery>,
+) -> Response {
+    info!(
+        "Get all server operations (GET), region_id: {:?}",
+        query.region_id
+    );
+
+    let records = state
+        .instance_manager
+        .get_all_server_operations(query.region_id.as_deref());
+
+    // 转换为 ServerOperationInfo
+    let server_records: Vec<ServerOperationInfo> = records
+        .into_iter()
+        .map(|(server_id, region_id, operation)| ServerOperationInfo {
+            server_id,
+            region_id,
+            operation,
+        })
+        .collect();
+
+    let response = GetAllServerOperationsResponse {
+        status: ResponseStatus::success(),
+        server_operation_records: server_records,
     };
 
     (StatusCode::OK, Json(response)).into_response()

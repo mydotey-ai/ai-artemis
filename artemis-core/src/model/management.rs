@@ -95,7 +95,7 @@ pub struct IsInstanceDownResponse {
 }
 
 /// 服务器操作类型
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum ServerOperation {
     /// 拉入整台服务器
@@ -165,6 +165,50 @@ pub struct IsServerDownResponse {
     pub status: ResponseStatus,
     /// 是否被拉出
     pub is_down: bool,
+}
+
+// ===== Phase 25: 批量操作查询 API =====
+
+/// 查询所有实例操作请求
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GetAllInstanceOperationsRequest {
+    /// 可选的 Region ID 过滤
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub region_id: Option<String>,
+}
+
+/// 查询所有实例操作响应
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GetAllInstanceOperationsResponse {
+    /// 响应状态
+    pub status: ResponseStatus,
+    /// 所有实例操作记录
+    pub instance_operation_records: Vec<InstanceOperationRecord>,
+}
+
+/// 服务器操作记录 (用于批量查询返回)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ServerOperationInfo {
+    pub server_id: String,
+    pub region_id: String,
+    pub operation: ServerOperation,
+}
+
+/// 查询所有服务器操作请求
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GetAllServerOperationsRequest {
+    /// 可选的 Region ID 过滤
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub region_id: Option<String>,
+}
+
+/// 查询所有服务器操作响应
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GetAllServerOperationsResponse {
+    /// 响应状态
+    pub status: ResponseStatus,
+    /// 所有服务器操作记录
+    pub server_operation_records: Vec<ServerOperationInfo>,
 }
 
 // ResponseStatus 使用 super::request::ResponseStatus

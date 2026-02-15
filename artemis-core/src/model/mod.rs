@@ -18,10 +18,13 @@ pub use group::{
 pub use instance::{Instance, InstanceKey, InstanceStatus};
 pub use lease::Lease;
 pub use management::{
+    GetAllInstanceOperationsRequest, GetAllInstanceOperationsResponse,
+    GetAllServerOperationsRequest, GetAllServerOperationsResponse,
     GetInstanceOperationsRequest, GetInstanceOperationsResponse, InstanceOperation,
     InstanceOperationRecord, IsInstanceDownRequest, IsInstanceDownResponse,
     IsServerDownRequest, IsServerDownResponse, OperateInstanceRequest, OperateInstanceResponse,
-    OperateServerRequest, OperateServerResponse, ServerOperation, ServerOperationRecord,
+    OperateServerRequest, OperateServerResponse, ServerOperation, ServerOperationInfo,
+    ServerOperationRecord,
 };
 pub use replication::*;
 pub use request::*;

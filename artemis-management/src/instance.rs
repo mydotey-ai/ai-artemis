@@ -208,6 +208,56 @@ impl InstanceManager {
             .count()
     }
 
+    // ========== Phase 25: 批量查询 API ==========
+
+    /// 获取所有实例的操作记录 (可选按 region_id 过滤)
+    pub fn get_all_instance_operations(
+        &self,
+        region_id: Option<&str>,
+    ) -> Vec<InstanceOperationRecord> {
+        self.instance_operations
+            .iter()
+            .filter(|entry| {
+                if let Some(rid) = region_id {
+                    entry.value().instance_key.region_id == rid
+                } else {
+                    true
+                }
+            })
+            .map(|entry| entry.value().clone())
+            .collect()
+    }
+
+    /// 获取所有服务器的操作记录 (可选按 region_id 过滤)
+    /// 返回: Vec<(server_id, region_id, operation)>
+    pub fn get_all_server_operations(
+        &self,
+        region_id: Option<&str>,
+    ) -> Vec<(String, String, ServerOperation)> {
+        self.server_operations
+            .iter()
+            .filter_map(|entry| {
+                let key = entry.key();
+                let parts: Vec<&str> = key.split(':').collect();
+                if parts.len() != 2 {
+                    return None;
+                }
+
+                let server_id = parts[0].to_string();
+                let region = parts[1].to_string();
+
+                // 按 region_id 过滤
+                if let Some(rid) = region_id {
+                    if region != rid {
+                        return None;
+                    }
+                }
+
+                Some((server_id, region, entry.value().clone()))
+            })
+            .collect()
+    }
+
     /// 清理所有操作记录 (用于测试)
     #[cfg(test)]
     pub fn clear_all(&self) {

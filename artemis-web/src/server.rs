@@ -39,6 +39,11 @@ pub async fn run_server(state: AppState, addr: SocketAddr) -> anyhow::Result<()>
         // Management endpoints - Server operations
         .route("/api/management/server/operate-server.json", post(crate::api::management::operate_server))
         .route("/api/management/server/is-server-down.json", post(crate::api::management::is_server_down))
+        // Management endpoints - Batch query operations (Phase 25)
+        .route("/api/management/all-instance-operations.json", post(crate::api::management::get_all_instance_operations_post))
+        .route("/api/management/all-instance-operations.json", get(crate::api::management::get_all_instance_operations_get))
+        .route("/api/management/all-server-operations.json", post(crate::api::management::get_all_server_operations_post))
+        .route("/api/management/all-server-operations.json", get(crate::api::management::get_all_server_operations_get))
         // Routing endpoints - Group management
         .route("/api/routing/groups", post(crate::api::routing::create_group))
         .route("/api/routing/groups", get(crate::api::routing::list_groups))
