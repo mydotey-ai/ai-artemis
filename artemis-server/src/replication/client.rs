@@ -3,6 +3,8 @@ use artemis_core::model::{
     ReplicateRegisterRequest, ReplicateRegisterResponse,
     ReplicateHeartbeatRequest, ReplicateHeartbeatResponse,
     ReplicateUnregisterRequest, ReplicateUnregisterResponse,
+    BatchRegisterRequest, BatchRegisterResponse,
+    BatchUnregisterRequest, BatchUnregisterResponse,
     GetAllServicesResponse,
 };
 use std::time::Duration;
@@ -140,6 +142,71 @@ impl ReplicationClient {
         let response = self
             .client
             .get(&url)
+            .send()
+            .await
+            .map_err(ReplicationError::from_reqwest)?;
+
+        if response.status().is_success() {
+            response.json().await.map_err(|e| {
+                ReplicationError::new(
+                    ReplicationErrorKind::PermanentFailure,
+                    format!("Failed to parse response: {}", e),
+                )
+            })
+        } else {
+            Err(ReplicationError::from_status(response.status()))
+        }
+    }
+
+    /// 批量注册请求 (Phase 23)
+    pub async fn batch_register(
+        &self,
+        peer_url: &str,
+        request: BatchRegisterRequest,
+    ) -> Result<BatchRegisterResponse, ReplicationError> {
+        let url = format!("{}/api/replication/registry/batch-register.json", peer_url);
+
+        debug!("Batch replicating {} instances to {}", request.instances.len(), peer_url);
+
+        let response = self
+            .client
+            .post(&url)
+            .header("X-Artemis-Replication", "true") // 防止复制循环
+            .json(&request)
+            .send()
+            .await
+            .map_err(ReplicationError::from_reqwest)?;
+
+        if response.status().is_success() {
+            response
+                .json()
+                .await
+                .map_err(|e| {
+                    ReplicationError::new(
+                        ReplicationErrorKind::PermanentFailure,
+                        format!("Failed to parse response: {}", e),
+                    )
+                })
+        } else {
+            Err(ReplicationError::from_status(response.status()))
+        }
+    }
+
+    /// 批量注销请求 (Phase 23)
+    pub async fn batch_unregister(
+        &self,
+        peer_url: &str,
+        request: BatchUnregisterRequest,
+    ) -> Result<BatchUnregisterResponse, ReplicationError> {
+        let url = format!("{}/api/replication/registry/batch-unregister.json", peer_url);
+
+        debug!("Batch unregistering {} instances to {}", request.instance_keys.len(), peer_url);
+
+        let response = self
+            .client
+            .post(&url)
+            .header("X-Artemis-Replication", "true") // 防止复制循环
+            .json(&request)
             .send()
             .await
             .map_err(ReplicationError::from_reqwest)?;
