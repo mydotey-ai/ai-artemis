@@ -7,6 +7,7 @@ use tokio::sync::mpsc;
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 use tracing::{debug, error, info, warn};
 
+/// Client-to-server WebSocket message types
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "type")]
 enum ClientMessage {
@@ -20,14 +21,21 @@ enum ClientMessage {
     Ping,
 }
 
+/// Server-to-client WebSocket message types
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "type")]
 enum ServerMessage {
     #[serde(rename = "subscribed")]
     Subscribed { service_id: String },
 
+    #[serde(rename = "unsubscribed")]
+    Unsubscribed { service_id: String },
+
     #[serde(rename = "service_change")]
-    ServiceChange { service_id: String, changes: Vec<InstanceChange> },
+    ServiceChange {
+        service_id: String,
+        changes: Vec<InstanceChange>,
+    },
 
     #[serde(rename = "pong")]
     Pong,
@@ -36,6 +44,8 @@ enum ServerMessage {
     Error { message: String },
 }
 
+/// Type alias for change listener callback
+#[allow(dead_code)]
 pub type ChangeListener = Box<dyn Fn(Vec<InstanceChange>) + Send + Sync>;
 
 pub struct WebSocketClient {
@@ -50,16 +60,25 @@ impl WebSocketClient {
         (Self { config, change_tx }, change_rx)
     }
 
+    /// Create a subscribe message for a given service.
+    ///
+    /// Returns a JSON string that can be sent through the WebSocket connection.
+    pub fn create_subscribe_message(service_id: &str) -> String {
+        let msg = ClientMessage::Subscribe {
+            service_id: service_id.to_string(),
+        };
+        serde_json::to_string(&msg).unwrap()
+    }
+
     /// Create an unsubscribe message for a given service.
     ///
-    /// This can be used to manually send an unsubscribe message
-    /// through the WebSocket connection.
-    pub fn create_unsubscribe_message(service_id: String) -> String {
-        serde_json::json!({
-            "type": "unsubscribe",
-            "service_id": service_id
-        })
-        .to_string()
+    /// Returns a JSON string that can be sent through the WebSocket connection
+    /// to cancel an active subscription.
+    pub fn create_unsubscribe_message(service_id: &str) -> String {
+        let msg = ClientMessage::Unsubscribe {
+            service_id: service_id.to_string(),
+        };
+        serde_json::to_string(&msg).unwrap()
     }
 
     /// Connect to WebSocket and subscribe to service changes.
@@ -68,8 +87,9 @@ impl WebSocketClient {
     /// Ping messages are sent at the interval configured in `websocket_ping_interval_secs`.
     /// The connection loop breaks on ping failure, server close, or stream errors.
     pub async fn connect_and_subscribe(self: Arc<Self>, service_id: String) -> Result<()> {
-        let ws_url =
-            self.config.server_urls[0].replace("http://", "ws://").replace("https://", "wss://");
+        let ws_url = self.config.server_urls[0]
+            .replace("http://", "ws://")
+            .replace("https://", "wss://");
         let url = format!("{}/ws", ws_url);
 
         info!("Connecting to WebSocket: {}", url);
@@ -78,15 +98,13 @@ impl WebSocketClient {
         let (mut write, mut read) = ws_stream.split();
 
         // Send subscribe message
-        let subscribe_msg = ClientMessage::Subscribe { service_id: service_id.clone() };
-        let json = serde_json::to_string(&subscribe_msg)?;
+        let json = Self::create_subscribe_message(&service_id);
         write.send(Message::Text(json.into())).await?;
 
         info!("Subscribed to service: {}", service_id);
 
         // Ping interval timer
-        let mut ping_interval =
-            tokio::time::interval(self.config.websocket_ping_interval());
+        let mut ping_interval = tokio::time::interval(self.config.websocket_ping_interval());
 
         loop {
             tokio::select! {
@@ -111,6 +129,9 @@ impl WebSocketClient {
                                     }
                                     ServerMessage::Subscribed { service_id } => {
                                         info!("Confirmed subscription to: {}", service_id);
+                                    }
+                                    ServerMessage::Unsubscribed { service_id } => {
+                                        info!("Confirmed unsubscription from: {}", service_id);
                                     }
                                     ServerMessage::Error { message } => {
                                         error!("Server error: {}", message);
@@ -150,5 +171,26 @@ impl WebSocketClient {
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_create_subscribe_message() {
+        let msg = WebSocketClient::create_subscribe_message("my-service");
+        let parsed: serde_json::Value = serde_json::from_str(&msg).unwrap();
+        assert_eq!(parsed["type"], "subscribe");
+        assert_eq!(parsed["service_id"], "my-service");
+    }
+
+    #[test]
+    fn test_create_unsubscribe_message() {
+        let msg = WebSocketClient::create_unsubscribe_message("my-service");
+        let parsed: serde_json::Value = serde_json::from_str(&msg).unwrap();
+        assert_eq!(parsed["type"], "unsubscribe");
+        assert_eq!(parsed["service_id"], "my-service");
     }
 }
