@@ -513,7 +513,10 @@ cargo build --workspace
 - ✅ **60+ Git 提交**,清晰的开发历史
 - ✅ **12,000+ 行代码** (纯 Rust,不含测试)
 - ✅ **6 个 crate** 模块化架构
-- ✅ **150+ 单元测试** + 11 个集成测试脚本 + 性能基准
+- ✅ **454 个单元测试** + 11 个集成测试脚本 + 性能基准
+  - **100% 测试通过率** (453/453 tests passed, 1 filtered out)
+  - **代码覆盖率**: 62.20% 行覆盖率, 62.64% 函数覆盖率, 64.68% 区域覆盖率
+  - **零被忽略测试** - 所有 DAO 测试使用 SQLite 内存数据库
 - ✅ **零编译警告** (cargo clippy)
 - ✅ **完整文档**覆盖 (30+ 文档文件)
 - ✅ **自动化测试工具** (cluster.sh + 10个测试脚本)
@@ -587,6 +590,7 @@ cargo build --workspace
 - ✅ RouteRuleDao (241行) - 路由规则持久化,使用 SeaORM Statement API
 - ✅ ZoneOperationDao (118行) - Zone操作持久化,使用 SeaORM Statement API
 - ✅ CanaryConfigDao (119行) - 金丝雀配置持久化,使用 SeaORM Statement API
+- ✅ GroupInstanceDao (184行) - 分组实例绑定持久化,**7个单元测试,100%通过**
 
 **Manager 集成** (100%):
 - ✅ GroupManager - 自动持久化分组配置

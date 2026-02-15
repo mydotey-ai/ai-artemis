@@ -102,6 +102,12 @@ mod tests {
     }
 
     #[test]
+    fn test_session_manager_default() {
+        let manager = SessionManager::default();
+        assert_eq!(manager.active_sessions(), 0);
+    }
+
+    #[test]
     fn test_subscribe() {
         let manager = SessionManager::new();
         let session_id = "test-session-1".to_string();
@@ -111,6 +117,26 @@ mod tests {
 
         // 验证订阅存在
         assert!(manager.subscriptions.contains_key(&service_id));
+    }
+
+    #[test]
+    fn test_subscribe_multiple_sessions() {
+        let manager = SessionManager::new();
+        let session_1 = "test-session-1".to_string();
+        let session_2 = "test-session-2".to_string();
+        let service_id = "test-service".to_string();
+
+        manager.subscribe(session_1.clone(), service_id.clone());
+        manager.subscribe(session_2.clone(), service_id.clone());
+
+        // 验证订阅包含两个会话
+        if let Some(subs) = manager.subscriptions.get(&service_id) {
+            assert_eq!(subs.len(), 2);
+            assert!(subs.contains(&session_1));
+            assert!(subs.contains(&session_2));
+        } else {
+            panic!("Service subscriptions not found");
+        }
     }
 
     #[test]
@@ -126,5 +152,85 @@ mod tests {
         if let Some(subs) = manager.subscriptions.get(&service_id) {
             assert!(subs.is_empty());
         }
+    }
+
+    #[test]
+    fn test_unsubscribe_nonexistent_service() {
+        let manager = SessionManager::new();
+        let session_id = "test-session-1".to_string();
+        let service_id = "nonexistent-service".to_string();
+
+        // 取消订阅不存在的服务,应该不会panic
+        manager.unsubscribe(&session_id, &service_id);
+    }
+
+    #[test]
+    fn test_unregister_session_cleans_subscriptions() {
+        let manager = SessionManager::new();
+        let session_id = "test-session-1".to_string();
+        let service_1 = "service-1".to_string();
+        let service_2 = "service-2".to_string();
+
+        // 订阅多个服务
+        manager.subscribe(session_id.clone(), service_1.clone());
+        manager.subscribe(session_id.clone(), service_2.clone());
+
+        // 注销会话
+        manager.unregister_session(&session_id);
+
+        // 验证订阅已清空
+        if let Some(subs) = manager.subscriptions.get(&service_1) {
+            assert!(!subs.contains(&session_id), "Session should be removed from service-1");
+        }
+        if let Some(subs) = manager.subscriptions.get(&service_2) {
+            assert!(!subs.contains(&session_id), "Session should be removed from service-2");
+        }
+    }
+
+    #[test]
+    fn test_multiple_sessions_same_service() {
+        let manager = SessionManager::new();
+        let session_1 = "session-1".to_string();
+        let session_2 = "session-2".to_string();
+        let session_3 = "session-3".to_string();
+        let service_id = "test-service".to_string();
+
+        // 3个会话订阅同一服务
+        manager.subscribe(session_1.clone(), service_id.clone());
+        manager.subscribe(session_2.clone(), service_id.clone());
+        manager.subscribe(session_3.clone(), service_id.clone());
+
+        // 验证订阅数量
+        if let Some(subs) = manager.subscriptions.get(&service_id) {
+            assert_eq!(subs.len(), 3);
+        } else {
+            panic!("Service subscriptions not found");
+        }
+
+        // 注销一个会话
+        manager.unregister_session(&session_2);
+
+        // 验证还有2个订阅
+        if let Some(subs) = manager.subscriptions.get(&service_id) {
+            assert_eq!(subs.len(), 2);
+            assert!(subs.contains(&session_1));
+            assert!(!subs.contains(&session_2));
+            assert!(subs.contains(&session_3));
+        }
+    }
+
+    #[test]
+    fn test_session_manager_clone() {
+        let manager = SessionManager::new();
+        let session_id = "test-session-1".to_string();
+        let service_id = "test-service".to_string();
+
+        manager.subscribe(session_id.clone(), service_id.clone());
+
+        // 克隆管理器
+        let manager_clone = manager.clone();
+
+        // 验证克隆的管理器可以访问相同的订阅
+        assert!(manager_clone.subscriptions.contains_key(&service_id));
     }
 }

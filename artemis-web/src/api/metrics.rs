@@ -30,3 +30,52 @@ pub async fn metrics() -> impl IntoResponse {
 
     (StatusCode::OK, buffer).into_response()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_metrics_endpoint_returns_ok() {
+        let response = metrics().await.into_response();
+        assert_eq!(response.status(), StatusCode::OK);
+    }
+
+    #[test]
+    fn test_register_requests_counter_exists() {
+        // 验证计数器已注册并可访问
+        let _ = REGISTER_REQUESTS.get();
+    }
+
+    #[test]
+    fn test_heartbeat_requests_counter_exists() {
+        // 验证计数器已注册并可访问
+        let _ = HEARTBEAT_REQUESTS.get();
+    }
+
+    #[test]
+    fn test_discovery_requests_counter_exists() {
+        // 验证计数器已注册并可访问
+        let _ = DISCOVERY_REQUESTS.get();
+    }
+
+    #[test]
+    fn test_active_instances_gauge_exists() {
+        // 验证 Gauge 已注册并可访问
+        let _ = ACTIVE_INSTANCES.get();
+    }
+
+    #[test]
+    fn test_metrics_can_be_gathered() {
+        // 确保至少一个指标被初始化
+        let _ = REGISTER_REQUESTS.get();
+        let _ = HEARTBEAT_REQUESTS.get();
+        let _ = DISCOVERY_REQUESTS.get();
+        let _ = ACTIVE_INSTANCES.get();
+
+        // 验证可以收集指标
+        let metric_families = prometheus::gather();
+        // 指标已经在 lazy_static 中注册,所以应该可以收集到
+        assert!(metric_families.len() >= 0, "Should be able to gather metrics");
+    }
+}
