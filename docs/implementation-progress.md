@@ -300,25 +300,62 @@
 
 ---
 
+## ✅ Phase 24 完成详情
+
+### Phase 24: 审计日志细分 API ✅
+
+#### Task 24.1: AuditManager 扩展 ✅
+- **文件**: `artemis-management/src/audit.rs` (扩展, 新增 293行)
+- **实现**:
+  - `query_group_logs()` - 查询分组操作日志
+  - `query_route_rule_logs()` - 查询路由规则操作日志
+  - `query_route_rule_group_logs()` - 查询路由规则分组操作日志
+  - `query_zone_logs()` - 查询 Zone 操作日志
+  - `query_group_instance_logs()` - 查询分组实例绑定日志
+  - `query_service_instance_logs()` - 查询服务实例日志
+
+#### Task 24.2: API 端点实现 ✅
+- **文件**: `artemis-web/src/api/audit.rs` (扩展, 新增 158行)
+- **已实现的 6 个 API**:
+  - `POST /api/management/log/group-logs.json` - 分组日志
+  - `POST /api/management/log/route-rule-logs.json` - 路由规则日志
+  - `POST /api/management/log/route-rule-group-logs.json` - 路由规则分组日志
+  - `POST /api/management/log/zone-operation-logs.json` - Zone 操作日志
+  - `POST /api/management/log/group-instance-logs.json` - 分组实例绑定日志
+  - `POST /api/management/log/service-instance-logs.json` - 服务实例日志
+- **路由注册**: 所有 6 个 API 已在 server.rs 中注册
+
+#### Task 24.3: 集成测试 ✅
+- **文件**: `scripts/test-audit-logs.sh` (新建, 181行)
+- **测试场景** (11个测试步骤):
+  1. ✅ 生成测试审计日志数据
+  2. ✅ 分组操作日志 API
+  3. ✅ 路由规则操作日志 API
+  4. ✅ 路由规则分组操作日志 API
+  5. ✅ Zone 操作日志 API
+  6. ✅ 分组实例绑定日志 API
+  7. ✅ 服务实例日志 API
+  8. ✅ 查询参数过滤 (operator_id)
+  9. ✅ limit 参数限制返回数量
+  10. ✅ 新旧 API 兼容性验证
+  11. ✅ 清理测试数据
+- **测试结果**: 全部通过 (6/6 APIs)
+
+#### 技术特点
+- ✅ 支持多维度过滤查询 - ID、操作人、时间范围
+- ✅ 支持 limit 参数 - 限制返回数量
+- ✅ 时间倒序排序 - 最新操作在前
+- ✅ 与现有审计 API 兼容 - 无缝衔接
+- ✅ 与 Java 版本 100% 对齐
+
+---
+
 ## 🔄 进行中的工作
 
-暂无进行中的工作。Phase 19-23 已完成,准备开始 Phase 24。
+暂无进行中的工作。Phase 19-23 已完成,剩余 4 个 API (实例/服务器操作日志相关)。
 
 ---
 
-## 📋 待实施的 Phases
-
-### Phase 24: 审计日志细分 API (6 个 API)
-- **预估工时**: 2 天
-- **新增 API**:
-  - Group Logs
-  - Route Rule Logs
-  - Route Rule Group Logs
-  - Zone Operation Logs (详细)
-  - Group Instance Logs
-  - Service Instance Logs
-
----
 
 ## 🎯 总体进度
 
@@ -329,8 +366,8 @@
 | Phase 21 | ✅ 已完成 | 12/12 | 100% (StatusService + 12 APIs + 测试全部完成) |
 | Phase 22 | ✅ 已完成 | 3/3 | 100% (GET 查询参数支持 + 测试全部完成) |
 | Phase 23 | ✅ 已完成 | 5/5 | 100% (批量复制 API + 测试全部完成) |
-| Phase 24 | ⏳ 待开始 | 6 | 0% |
-| **总计** | - | **34** | **71%** (24/34 APIs 完成) |
+| Phase 24 | ✅ 已完成 | 6/6 | 100% (审计日志细分 API + 测试全部完成) |
+| **总计** | - | **34** | **88%** (30/34 APIs 完成) |
 
 ---
 
@@ -376,5 +413,5 @@
 
 ---
 
-**最后更新**: 2026-02-15 (Phase 19-23 完成)
+**最后更新**: 2026-02-15 (Phase 19-24 完成)
 **下一步**: 开始 Phase 24 实施 (审计日志细分 API - 6个API)
