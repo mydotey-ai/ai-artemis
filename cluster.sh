@@ -46,11 +46,10 @@ DEFAULT_BASE_PEER_PORT=9090
 # DB_TYPE: none (默认), sqlite, mysql
 # DB_URL: 自定义数据库连接URL (可选)
 # DB_MAX_CONN: 最大连接数 (默认10)
-# SHARED_SQLITE: true/false - SQLite 是否共享同一个 DB 文件 (默认false)
+# 注意: SQLite 模式下所有节点共享同一个数据库文件
 DB_TYPE=${DB_TYPE:-none}
 DB_URL=${DB_URL:-}
 DB_MAX_CONN=${DB_MAX_CONN:-10}
-SHARED_SQLITE=${SHARED_SQLITE:-false}
 
 # 颜色输出
 RED='\033[0;31m'
@@ -189,14 +188,8 @@ generate_db_config() {
     if [ -z "${db_url}" ]; then
         case "${DB_TYPE}" in
             sqlite)
-                # SQLite 数据库路径选择
-                if [ "${SHARED_SQLITE}" = "true" ]; then
-                    # 共享模式: 所有节点使用同一个数据库文件
-                    db_url="sqlite:${CLUSTER_DIR}/data/shared.db?mode=rwc"
-                else
-                    # 独立模式: 每个节点使用独立的数据库文件
-                    db_url="sqlite:${CLUSTER_DIR}/data/node${node_id}.db?mode=rwc"
-                fi
+                # SQLite 共享模式: 所有节点使用同一个数据库文件
+                db_url="sqlite:${CLUSTER_DIR}/data/shared.db?mode=rwc"
                 ;;
             mysql)
                 # MySQL默认配置(所有节点共享同一个数据库)
@@ -362,12 +355,10 @@ start_cluster() {
 
     # 显示数据库配置信息
     if [ "${DB_TYPE}" != "none" ]; then
-        if [ "${DB_TYPE}" = "sqlite" ] && [ "${SHARED_SQLITE}" = "true" ]; then
-            log_info "启动 ${node_count} 节点 Artemis 集群 (SQLite 共享模式)..."
-            log_warn "注意: SQLite 共享模式下多节点并发写入性能有限"
+        log_info "启动 ${node_count} 节点 Artemis 集群 (数据库: ${DB_TYPE})..."
+        if [ "${DB_TYPE}" = "sqlite" ]; then
+            log_warn "注意: SQLite 模式下所有节点共享数据库,并发写入性能有限"
             log_warn "生产环境建议使用 MySQL 数据库"
-        else
-            log_info "启动 ${node_count} 节点 Artemis 集群 (数据库: ${DB_TYPE})..."
         fi
     else
         log_info "启动 ${node_count} 节点 Artemis 集群 (纯内存模式)..."
@@ -563,23 +554,17 @@ Artemis 集群管理脚本
     DB_TYPE         数据库类型: none (默认), sqlite, mysql
     DB_URL          自定义数据库连接URL (可选,有默认值)
     DB_MAX_CONN     最大连接数 (默认: 10)
-    SHARED_SQLITE   SQLite 共享模式: true/false (默认: false)
-                    true:  所有节点共享同一个 shared.db
-                    false: 每个节点使用独立的 nodeN.db
 
     数据库使用示例:
-    # SQLite 独立模式 (每个节点独立 DB,默认)
+    # SQLite 模式 (所有节点共享 shared.db)
     DB_TYPE=sqlite $0 start
-
-    # SQLite 共享模式 (所有节点共享同一个 DB)
-    DB_TYPE=sqlite SHARED_SQLITE=true $0 start
 
     # MySQL 集群模式
     DB_TYPE=mysql DB_URL="mysql://user:pass@host:3306/artemis" $0 start
 
     注意:
-    - SQLite 共享模式适用于开发测试,生产环境建议使用 MySQL
-    - SQLite 共享模式下并发写入性能有限,可能出现锁竞争
+    - SQLite 模式下所有节点共享同一个数据库文件
+    - SQLite 并发写入性能有限,生产环境建议使用 MySQL
 
     ⚠️  重要说明:
     - cluster.sh 主要用于开发环境,默认推荐纯内存模式(无数据库)
