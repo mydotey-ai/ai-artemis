@@ -131,6 +131,11 @@ docs/
 → [产品规格 - 第5章 API 规格](artemis-rust-rewrite-specification.md#5-api规格)
 → [../README.md - API 使用](../README.md#api-使用)
 
+#### 数据持久化和数据库
+→ [../CLAUDE.md - Phase 14 数据持久化](../CLAUDE.md#phase-14-数据持久化状态---已完成-2026-02-15)
+→ [架构设计 - 数据模型](plans/design.md)
+→ 数据库 Schema: `artemis-management/migrations/001_initial_schema.sql`
+
 ---
 
 ## 📈 项目统计
@@ -138,7 +143,8 @@ docs/
 ### 完成度
 
 - ✅ **所有核心功能**: 100% 完成
-- ✅ **所有 Phase (1-13)**: 100% 完成
+- ✅ **所有 Phase (1-18)**: 100% 完成 (Phase 14 数据持久化已完成 SeaORM 集成)
+- ✅ **数据库支持**: SeaORM,运行时支持 SQLite/MySQL 切换
 - ✅ **性能优化**: 达到并超过设计目标
 - ✅ **文档覆盖**: 完整的设计、实施、报告文档
 

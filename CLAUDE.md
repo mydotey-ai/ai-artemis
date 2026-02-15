@@ -70,12 +70,13 @@
 - ✅ **13 步集成测试** - test-group-routing.sh 验证完整流程
 
 #### Phase 14: 数据持久化 (P1 - 已完成)
-- ✅ **SQLite 数据库集成** - 完整的数据库连接和迁移管理
+- ✅ **SeaORM 集成** - 运行时支持 SQLite/MySQL 数据库切换
 - ✅ **12张表 Schema** - 完整的数据模型定义
-- ✅ **4个 DAO 实现** - GroupDao, RouteRuleDao, ZoneOperationDao, CanaryConfigDao
+- ✅ **4个 DAO 实现** - GroupDao, RouteRuleDao, ZoneOperationDao, CanaryConfigDao (使用 SeaORM)
 - ✅ **Manager 集成** - 所有管理器支持自动持久化
 - ✅ **启动加载** - ConfigLoader 自动恢复配置
 - ✅ **可选配置** - 通过配置文件灵活启用/禁用
+- ✅ **运行时数据库切换** - 无需重新编译,配置文件即可切换数据库类型
 
 #### Phase 15-17: 高级管理功能 (P0 - 已完成)
 - ✅ **审计日志** - AuditManager (261行) + 3个API端点
@@ -279,9 +280,10 @@ artemis-workspace/
 
 - **异步运行时**: Tokio
 - **Web 框架**: Axum
+- **数据库 ORM**: SeaORM (支持 SQLite/MySQL 运行时切换)
 - **并发数据结构**: DashMap (lock-free HashMap)
 - **限流**: Governor (Token Bucket)
-- **监控**: Prometheus metrics
+- **监控**: Prometheus metrics + OpenTelemetry
 - **测试**: Criterion (benchmarks) + integration tests
 - **工具链**: Rust 1.93
 
@@ -493,36 +495,52 @@ cargo build --workspace
 
 **项目已完成,可以投入生产环境使用!** 🚀
 
-## Phase 14 数据持久化状态 (2026-02-15)
+## Phase 14 数据持久化状态 - ✅ 已完成 (2026-02-15)
 
-### ✅ 已完成 (~60%)
+### 🎉 SeaORM 迁移完成
+
+**ORM 框架升级**:
+- ✅ 从 SQLx 迁移到 SeaORM
+- ✅ 支持运行时数据库切换 (SQLite ↔ MySQL)
+- ✅ 无需重新编译,配置文件即可切换数据库
 
 **数据库基础设施** (100%):
-- SQLx + SQLite 配置
-- Database 连接管理器 (`artemis-management/src/db/mod.rs`)
-- 12张表完整 Schema (`migrations/001_initial_schema.sql`)
+- ✅ SeaORM + DatabaseConnection
+- ✅ Database 连接管理器 (`artemis-management/src/db/mod.rs`)
+- ✅ 12张表完整 Schema (`artemis-management/migrations/001_initial_schema.sql`)
 
 **DAO 层实现** (100%):
-- GroupDao (244行) - 分组持久化
-- RouteRuleDao (137行) - 路由规则持久化  
-- ZoneOperationDao (113行) - Zone操作持久化
-- CanaryConfigDao (112行) - 金丝雀配置持久化
+- ✅ GroupDao (262行) - 分组持久化,使用 SeaORM Statement API
+- ✅ RouteRuleDao (241行) - 路由规则持久化,使用 SeaORM Statement API
+- ✅ ZoneOperationDao (118行) - Zone操作持久化,使用 SeaORM Statement API
+- ✅ CanaryConfigDao (119行) - 金丝雀配置持久化,使用 SeaORM Statement API
+
+**Manager 集成** (100%):
+- ✅ GroupManager - 自动持久化分组配置
+- ✅ RouteManager - 自动持久化路由规则
+- ✅ ZoneManager - 自动持久化 Zone 操作
+- ✅ CanaryManager - 自动持久化金丝雀配置
+
+**启动加载** (100%):
+- ✅ ConfigLoader - 从数据库自动恢复所有配置
+- ✅ 服务启动时完整加载持久化数据
+
+**测试验证**:
+- ✅ SQLite 模式 - 3节点集群测试通过
+- ⏳ MySQL 模式 - 待生产环境验证
 
 **代码统计**:
-- 新增 ~1,150 行代码
+- ~1,200 行代码 (ORM 迁移后)
 - 12 张数据库表
-- 4 个完整 DAO
+- 4 个完整 DAO (SeaORM)
 - 零编译警告
 
-### ⚠️ 待完成 (~40%)
+**使用方式**:
+```bash
+# SQLite 模式 (开发环境)
+DB_TYPE=sqlite ./cluster.sh start
 
-**Manager 集成** (预计 2-3小时):
-- 在 GroupManager/RouteManager/ZoneManager/CanaryManager 中集成持久化调用
-- 创建/更新/删除时自动持久化
-
-**启动加载** (预计 1-2小时):
-- 实现 ConfigLoader 从数据库加载配置
-- 服务启动时恢复持久化数据
-
-**详细状态**: `docs/reports/phase-14-persistence-status.md`
+# MySQL 模式 (生产环境)
+DB_TYPE=mysql DB_URL="mysql://user:pass@host:3306/artemis" ./cluster.sh start
+```
 

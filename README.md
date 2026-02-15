@@ -128,9 +128,10 @@ artemis-workspace/
 |------|---------|------|
 | **异步运行时** | Tokio 1.43 | 高性能异步任务调度 |
 | **Web 框架** | Axum 0.8 | 类型安全的 HTTP/WebSocket |
+| **数据库 ORM** | SeaORM 1.1 | 运行时支持 SQLite/MySQL 切换 |
 | **并发数据结构** | DashMap 6.1 | Lock-free HashMap |
 | **限流** | Governor 0.8 | Token Bucket 算法 |
-| **监控** | Prometheus 0.13 | 指标导出和监控 |
+| **监控** | Prometheus 0.13 + OpenTelemetry 0.28 | 指标导出和分布式追踪 |
 | **序列化** | Serde 1.0 | JSON 序列化/反序列化 |
 | **日志** | Tracing 0.1 | 结构化日志 |
 | **HTTP 客户端** | Reqwest 0.12 | 集群复制和客户端 |
@@ -173,9 +174,12 @@ artemis-workspace/
 - ✅ **标签管理** - 分组标签的增删改查
 - ✅ **HTTP API** - 21 个核心端点完整实现
 
-#### Phase 13: 生产就绪 (P1)
+#### Phase 13-14: 持久化和生产就绪 (P1)
+- ✅ **数据持久化** - SeaORM 集成,支持 SQLite/MySQL 运行时切换
+- ✅ **配置持久化** - 分组、路由规则、Zone操作、金丝雀配置自动持久化
+- ✅ **启动恢复** - ConfigLoader 自动从数据库加载配置
 - ✅ **性能优化** - DashMap 无锁并发、零拷贝设计
-- ✅ **监控集成** - Prometheus metrics 导出
+- ✅ **监控集成** - Prometheus metrics + OpenTelemetry 完整支持
 - ✅ **健康检查** - HTTP 健康检查端点
 - ✅ **优雅关闭** - 信号处理和资源清理
 - ✅ **Docker 支持** - 多阶段构建、镜像优化 (< 50MB)
@@ -520,8 +524,14 @@ async fn main() -> anyhow::Result<()> {
 使用 `cluster.sh` 脚本快速启动本地多节点集群:
 
 ```bash
-# 启动默认 3 节点集群 (端口 8080-8082)
+# 启动默认 3 节点集群 (纯内存模式,端口 8080-8082)
 ./cluster.sh start
+
+# 使用 SQLite 数据库模式 (配置持久化)
+DB_TYPE=sqlite ./cluster.sh start
+
+# 使用 MySQL 数据库模式
+DB_TYPE=mysql DB_URL="mysql://user:pass@localhost:3306/artemis" ./cluster.sh start
 
 # 启动 5 节点集群
 ./cluster.sh start 5
