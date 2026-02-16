@@ -658,9 +658,9 @@ cargo test --workspace  # 运行测试
 
 ## 联系方式
 
-- **项目主页**: [GitHub - mydotey/ai-artemis](https://github.com/mydotey/ai-artemis)
+- **项目主页**: [GitHub - mydotey-ai/ai-artemis](https://github.com/mydotey-ai/ai-artemis)
 - **原始项目**: [GitHub - mydotey/artemis](https://github.com/mydotey/artemis)
-- **问题反馈**: [GitHub Issues](https://github.com/mydotey/ai-artemis/issues)
+- **问题反馈**: [GitHub Issues](https://github.com/mydotey-ai/ai-artemis/issues)
 
 ---
 
