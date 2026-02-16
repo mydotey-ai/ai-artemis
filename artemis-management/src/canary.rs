@@ -181,4 +181,217 @@ mod tests {
         manager.set_enabled("my-service", true).unwrap();
         assert!(manager.is_ip_whitelisted("my-service", "192.168.1.100"));
     }
+
+    // ========== 新增补充测试 ==========
+
+    #[test]
+    fn test_canary_manager_default() {
+        let manager = CanaryManager::default();
+        assert_eq!(manager.list_configs().len(), 0);
+    }
+
+    #[test]
+    fn test_canary_manager_clone() {
+        let manager = CanaryManager::new();
+
+        let config = CanaryConfig {
+            service_id: "test".to_string(),
+            ip_whitelist: vec!["192.168.1.1".to_string()],
+            enabled: true,
+        };
+
+        manager.set_config(config).unwrap();
+
+        let cloned = manager.clone();
+        assert_eq!(cloned.list_configs().len(), 1);
+    }
+
+    #[test]
+    fn test_get_config_not_found() {
+        let manager = CanaryManager::new();
+        assert!(manager.get_config("nonexistent").is_none());
+    }
+
+    #[test]
+    fn test_set_enabled_not_found() {
+        let manager = CanaryManager::new();
+        assert!(manager.set_enabled("nonexistent", true).is_err());
+    }
+
+    #[test]
+    fn test_remove_config() {
+        let manager = CanaryManager::new();
+
+        let config = CanaryConfig {
+            service_id: "my-service".to_string(),
+            ip_whitelist: vec!["192.168.1.100".to_string()],
+            enabled: true,
+        };
+
+        manager.set_config(config).unwrap();
+        assert_eq!(manager.list_configs().len(), 1);
+
+        manager.remove_config("my-service").unwrap();
+        assert_eq!(manager.list_configs().len(), 0);
+    }
+
+    #[test]
+    fn test_remove_config_not_found() {
+        let manager = CanaryManager::new();
+        // remove_config 是幂等的,即使配置不存在也会返回 Ok
+        assert!(manager.remove_config("nonexistent").is_ok());
+    }
+
+    #[test]
+    fn test_list_configs_empty() {
+        let manager = CanaryManager::new();
+        assert_eq!(manager.list_configs().len(), 0);
+    }
+
+    #[test]
+    fn test_list_configs_multiple() {
+        let manager = CanaryManager::new();
+
+        for i in 1..=3 {
+            let config = CanaryConfig {
+                service_id: format!("service-{}", i),
+                ip_whitelist: vec![format!("192.168.1.{}", i)],
+                enabled: true,
+            };
+            manager.set_config(config).unwrap();
+        }
+
+        let configs = manager.list_configs();
+        assert_eq!(configs.len(), 3);
+    }
+
+    #[test]
+    fn test_update_config() {
+        let manager = CanaryManager::new();
+
+        let config = CanaryConfig {
+            service_id: "my-service".to_string(),
+            ip_whitelist: vec!["192.168.1.100".to_string()],
+            enabled: true,
+        };
+
+        manager.set_config(config).unwrap();
+
+        // 更新配置 (添加更多 IP)
+        let updated_config = CanaryConfig {
+            service_id: "my-service".to_string(),
+            ip_whitelist: vec!["192.168.1.100".to_string(), "192.168.1.101".to_string()],
+            enabled: true,
+        };
+
+        manager.set_config(updated_config).unwrap();
+
+        let retrieved = manager.get_config("my-service").unwrap();
+        assert_eq!(retrieved.ip_whitelist.len(), 2);
+    }
+
+    #[test]
+    fn test_is_ip_whitelisted_service_not_found() {
+        let manager = CanaryManager::new();
+        assert!(!manager.is_ip_whitelisted("nonexistent", "192.168.1.1"));
+    }
+
+    #[test]
+    fn test_is_ip_whitelisted_disabled() {
+        let manager = CanaryManager::new();
+
+        let config = CanaryConfig {
+            service_id: "my-service".to_string(),
+            ip_whitelist: vec!["192.168.1.100".to_string()],
+            enabled: false,
+        };
+
+        manager.set_config(config).unwrap();
+
+        // 禁用时不应该匹配任何 IP
+        assert!(!manager.is_ip_whitelisted("my-service", "192.168.1.100"));
+    }
+
+    #[test]
+    fn test_empty_ip_whitelist() {
+        let manager = CanaryManager::new();
+
+        let config = CanaryConfig {
+            service_id: "my-service".to_string(),
+            ip_whitelist: vec![],
+            enabled: true,
+        };
+
+        manager.set_config(config).unwrap();
+
+        assert!(!manager.is_ip_whitelisted("my-service", "192.168.1.100"));
+    }
+
+    #[test]
+    fn test_multiple_ips_in_whitelist() {
+        let manager = CanaryManager::new();
+
+        let config = CanaryConfig {
+            service_id: "my-service".to_string(),
+            ip_whitelist: vec![
+                "192.168.1.100".to_string(),
+                "192.168.1.101".to_string(),
+                "10.0.0.1".to_string(),
+            ],
+            enabled: true,
+        };
+
+        manager.set_config(config).unwrap();
+
+        assert!(manager.is_ip_whitelisted("my-service", "192.168.1.100"));
+        assert!(manager.is_ip_whitelisted("my-service", "192.168.1.101"));
+        assert!(manager.is_ip_whitelisted("my-service", "10.0.0.1"));
+        assert!(!manager.is_ip_whitelisted("my-service", "192.168.1.102"));
+    }
+
+    #[test]
+    fn test_enable_toggle() {
+        let manager = CanaryManager::new();
+
+        let config = CanaryConfig {
+            service_id: "my-service".to_string(),
+            ip_whitelist: vec!["192.168.1.100".to_string()],
+            enabled: false,
+        };
+
+        manager.set_config(config).unwrap();
+        assert!(!manager.is_ip_whitelisted("my-service", "192.168.1.100"));
+
+        // 启用
+        manager.set_enabled("my-service", true).unwrap();
+        assert!(manager.is_ip_whitelisted("my-service", "192.168.1.100"));
+
+        // 再次禁用
+        manager.set_enabled("my-service", false).unwrap();
+        assert!(!manager.is_ip_whitelisted("my-service", "192.168.1.100"));
+    }
+
+    #[test]
+    fn test_config_persistence_after_enable_toggle() {
+        let manager = CanaryManager::new();
+
+        let config = CanaryConfig {
+            service_id: "my-service".to_string(),
+            ip_whitelist: vec!["192.168.1.100".to_string(), "192.168.1.101".to_string()],
+            enabled: true,
+        };
+
+        manager.set_config(config).unwrap();
+
+        // 切换 enabled 状态不应该改变 IP 白名单
+        manager.set_enabled("my-service", false).unwrap();
+        let retrieved = manager.get_config("my-service").unwrap();
+        assert_eq!(retrieved.ip_whitelist.len(), 2);
+        assert!(!retrieved.enabled);
+
+        manager.set_enabled("my-service", true).unwrap();
+        let retrieved = manager.get_config("my-service").unwrap();
+        assert_eq!(retrieved.ip_whitelist.len(), 2);
+        assert!(retrieved.enabled);
+    }
 }

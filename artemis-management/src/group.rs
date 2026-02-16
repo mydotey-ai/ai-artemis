@@ -725,4 +725,299 @@ mod tests {
         assert_eq!(ops[0].operation_type, "CREATE");
         assert!(ops[0].operation_id.is_some());
     }
+
+    // ========== 新增补充测试 ==========
+
+    #[test]
+    fn test_group_manager_default() {
+        let manager = GroupManager::default();
+        assert_eq!(manager.group_count(), 0);
+    }
+
+    #[test]
+    fn test_group_manager_clone() {
+        let manager = GroupManager::new();
+        manager.create_group(create_test_group("group-1")).unwrap();
+
+        let cloned = manager.clone();
+        assert_eq!(cloned.group_count(), 1);
+    }
+
+    #[test]
+    fn test_get_group_by_id() {
+        let manager = GroupManager::new();
+        let group = create_test_group("group-1");
+        manager.create_group(group.clone()).unwrap();
+
+        let saved_group = manager.get_group(&group.group_key()).unwrap();
+        let group_id = saved_group.group_id.unwrap();
+
+        let retrieved = manager.get_group_by_id(group_id).unwrap();
+        assert_eq!(retrieved.name, "group-1");
+    }
+
+    #[test]
+    fn test_get_group_by_id_not_found() {
+        let manager = GroupManager::new();
+        assert!(manager.get_group_by_id(999).is_none());
+    }
+
+    #[test]
+    fn test_get_group_not_found() {
+        let manager = GroupManager::new();
+        assert!(manager.get_group("nonexistent-key").is_none());
+    }
+
+    #[test]
+    fn test_update_nonexistent_group() {
+        let manager = GroupManager::new();
+        let group = create_test_group("group-1");
+        assert!(manager.update_group(group).is_err());
+    }
+
+    #[test]
+    fn test_delete_nonexistent_group() {
+        let manager = GroupManager::new();
+        assert!(manager.delete_group("nonexistent-key").is_err());
+    }
+
+    #[test]
+    fn test_list_groups() {
+        let manager = GroupManager::new();
+        manager.create_group(create_test_group("group-1")).unwrap();
+        manager.create_group(create_test_group("group-2")).unwrap();
+
+        let groups = manager.list_groups();
+        assert_eq!(groups.len(), 2);
+    }
+
+    #[test]
+    fn test_list_groups_empty() {
+        let manager = GroupManager::new();
+        let groups = manager.list_groups();
+        assert_eq!(groups.len(), 0);
+    }
+
+    #[test]
+    fn test_list_groups_by_region() {
+        let manager = GroupManager::new();
+
+        let mut group1 = create_test_group("group-1");
+        group1.region_id = "us-east".to_string();
+
+        let mut group2 = create_test_group("group-2");
+        group2.region_id = "eu-west".to_string();
+
+        manager.create_group(group1).unwrap();
+        manager.create_group(group2).unwrap();
+
+        let groups = manager.list_groups_by_region("us-east");
+        assert_eq!(groups.len(), 1);
+        assert_eq!(groups[0].name, "group-1");
+    }
+
+    #[test]
+    fn test_group_exists() {
+        let manager = GroupManager::new();
+        let group = create_test_group("group-1");
+        let group_key = group.group_key();
+
+        assert!(!manager.group_exists(&group_key));
+
+        manager.create_group(group).unwrap();
+        assert!(manager.group_exists(&group_key));
+    }
+
+    #[test]
+    fn test_remove_tag() {
+        let manager = GroupManager::new();
+        manager.create_group(create_test_group("group-1")).unwrap();
+
+        let group = manager.get_group(&create_test_group("group-1").group_key()).unwrap();
+        let group_id = group.group_id.unwrap();
+
+        manager.add_tag(group_id, GroupTag {
+            key: "env".to_string(),
+            value: "prod".to_string(),
+        }).unwrap();
+
+        assert_eq!(manager.get_tags(group_id).len(), 1);
+
+        assert!(manager.remove_tag(group_id, "env").is_ok());
+        assert_eq!(manager.get_tags(group_id).len(), 0);
+    }
+
+    #[test]
+    fn test_remove_nonexistent_tag() {
+        let manager = GroupManager::new();
+        manager.create_group(create_test_group("group-1")).unwrap();
+
+        let group = manager.get_group(&create_test_group("group-1").group_key()).unwrap();
+        let group_id = group.group_id.unwrap();
+
+        assert!(manager.remove_tag(group_id, "nonexistent").is_err());
+    }
+
+    #[test]
+    fn test_add_duplicate_tag() {
+        let manager = GroupManager::new();
+        manager.create_group(create_test_group("group-1")).unwrap();
+
+        let group = manager.get_group(&create_test_group("group-1").group_key()).unwrap();
+        let group_id = group.group_id.unwrap();
+
+        let tag = GroupTag {
+            key: "env".to_string(),
+            value: "prod".to_string(),
+        };
+
+        // DashMap.insert 会覆盖已存在的值,不会返回错误
+        assert!(manager.add_tag(group_id, tag.clone()).is_ok());
+        assert!(manager.add_tag(group_id, tag).is_ok());
+
+        // 应该只有一个标签(被覆盖了)
+        assert_eq!(manager.get_tags(group_id).len(), 1);
+    }
+
+    #[test]
+    fn test_get_tags_empty() {
+        let manager = GroupManager::new();
+        let tags = manager.get_tags(999);
+        assert_eq!(tags.len(), 0);
+    }
+
+    #[test]
+    fn test_find_groups_by_tag_no_match() {
+        let manager = GroupManager::new();
+        let groups = manager.find_groups_by_tag("nonexistent", "value");
+        assert_eq!(groups.len(), 0);
+    }
+
+    #[test]
+    fn test_remove_instance() {
+        let manager = GroupManager::new();
+        manager.create_group(create_test_group("group-1")).unwrap();
+
+        let group = manager.get_group(&create_test_group("group-1").group_key()).unwrap();
+        let group_id = group.group_id.unwrap();
+
+        manager.add_instance(group_id, "inst-1").unwrap();
+        assert_eq!(manager.get_instances(group_id).len(), 1);
+
+        assert!(manager.remove_instance(group_id, "inst-1").is_ok());
+        assert_eq!(manager.get_instances(group_id).len(), 0);
+    }
+
+    #[test]
+    fn test_remove_nonexistent_instance() {
+        let manager = GroupManager::new();
+        manager.create_group(create_test_group("group-1")).unwrap();
+
+        let group = manager.get_group(&create_test_group("group-1").group_key()).unwrap();
+        let group_id = group.group_id.unwrap();
+
+        assert!(manager.remove_instance(group_id, "nonexistent").is_err());
+    }
+
+    #[test]
+    fn test_add_duplicate_instance() {
+        let manager = GroupManager::new();
+        manager.create_group(create_test_group("group-1")).unwrap();
+
+        let group = manager.get_group(&create_test_group("group-1").group_key()).unwrap();
+        let group_id = group.group_id.unwrap();
+
+        // DashMap.insert 会覆盖已存在的值,不会返回错误
+        assert!(manager.add_instance(group_id, "inst-1").is_ok());
+        assert!(manager.add_instance(group_id, "inst-1").is_ok());
+
+        // 应该只有一个实例(重复添加是幂等的)
+        assert_eq!(manager.get_instances(group_id).len(), 1);
+    }
+
+    #[test]
+    fn test_get_instances_empty() {
+        let manager = GroupManager::new();
+        let instances = manager.get_instances(999);
+        assert_eq!(instances.len(), 0);
+    }
+
+    #[test]
+    fn test_get_instance_groups_empty() {
+        let manager = GroupManager::new();
+        let groups = manager.get_instance_groups("nonexistent");
+        assert_eq!(groups.len(), 0);
+    }
+
+    #[test]
+    fn test_get_operations_empty() {
+        let manager = GroupManager::new();
+        let ops = manager.get_operations(999);
+        assert_eq!(ops.len(), 0);
+    }
+
+    #[test]
+    fn test_multiple_operations() {
+        let manager = GroupManager::new();
+
+        for i in 1..=3 {
+            manager.record_operation(GroupOperation {
+                operation_id: None,
+                group_id: 1,
+                operation_type: format!("OP_{}", i),
+                operator_id: "admin".to_string(),
+                description: None,
+                timestamp: 1234567890 + i,
+            });
+        }
+
+        let ops = manager.get_operations(1);
+        assert_eq!(ops.len(), 3);
+    }
+
+    #[test]
+    fn test_list_groups_by_service_no_match() {
+        let manager = GroupManager::new();
+        let groups = manager.list_groups_by_service("nonexistent");
+        assert_eq!(groups.len(), 0);
+    }
+
+    #[test]
+    fn test_list_groups_by_region_no_match() {
+        let manager = GroupManager::new();
+        let groups = manager.list_groups_by_region("nonexistent");
+        assert_eq!(groups.len(), 0);
+    }
+
+    #[test]
+    fn test_group_with_different_types() {
+        let manager = GroupManager::new();
+
+        let mut group1 = create_test_group("physical-group");
+        group1.group_type = GroupType::Physical;
+
+        let mut group2 = create_test_group("logical-group");
+        group2.group_type = GroupType::Logical;
+
+        manager.create_group(group1).unwrap();
+        manager.create_group(group2).unwrap();
+
+        assert_eq!(manager.group_count(), 2);
+    }
+
+    #[test]
+    fn test_group_with_different_statuses() {
+        let manager = GroupManager::new();
+
+        let mut group1 = create_test_group("active-group");
+        group1.status = GroupStatus::Active;
+
+        let mut group2 = create_test_group("inactive-group");
+        group2.status = GroupStatus::Inactive;
+
+        manager.create_group(group1).unwrap();
+        manager.create_group(group2).unwrap();
+
+        assert_eq!(manager.group_count(), 2);
+    }
 }

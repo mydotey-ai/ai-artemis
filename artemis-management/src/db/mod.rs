@@ -114,28 +114,167 @@ impl Database {
 mod tests {
     use super::*;
 
+    // ========== DatabaseType 测试 ==========
+
     #[test]
-    fn test_detect_db_type() {
+    fn test_database_type_debug() {
+        let db_type = DatabaseType::SQLite;
+        let debug_str = format!("{:?}", db_type);
+        assert!(debug_str.contains("SQLite"));
+    }
+
+    #[test]
+    fn test_database_type_clone() {
+        let db_type = DatabaseType::MySQL;
+        let cloned = db_type;
+        assert_eq!(cloned, DatabaseType::MySQL);
+    }
+
+    #[test]
+    fn test_database_type_equality() {
+        assert_eq!(DatabaseType::SQLite, DatabaseType::SQLite);
+        assert_eq!(DatabaseType::MySQL, DatabaseType::MySQL);
+        assert_ne!(DatabaseType::SQLite, DatabaseType::MySQL);
+    }
+
+    // ========== detect_db_type 测试 ==========
+
+    #[test]
+    fn test_detect_db_type_sqlite() {
         assert_eq!(
             Database::detect_db_type("sqlite://test.db").unwrap(),
             DatabaseType::SQLite
         );
         assert_eq!(
-            Database::detect_db_type("mysql://user:pass@localhost/db").unwrap(),
-            DatabaseType::MySQL
+            Database::detect_db_type("sqlite::memory:").unwrap(),
+            DatabaseType::SQLite
         );
-        assert!(Database::detect_db_type("postgres://localhost").is_err());
     }
 
     #[test]
-    fn test_sanitize_url() {
+    fn test_detect_db_type_mysql() {
+        assert_eq!(
+            Database::detect_db_type("mysql://user:pass@localhost/db").unwrap(),
+            DatabaseType::MySQL
+        );
+        assert_eq!(
+            Database::detect_db_type("mysql://localhost:3306/artemis").unwrap(),
+            DatabaseType::MySQL
+        );
+    }
+
+    #[test]
+    fn test_detect_db_type_unsupported() {
+        assert!(Database::detect_db_type("postgres://localhost").is_err());
+        assert!(Database::detect_db_type("mongodb://localhost").is_err());
+        assert!(Database::detect_db_type("invalid").is_err());
+        assert!(Database::detect_db_type("").is_err());
+    }
+
+    // ========== sanitize_url 测试 ==========
+
+    #[test]
+    fn test_sanitize_url_mysql_with_password() {
         assert_eq!(
             Database::sanitize_url("mysql://user:password@localhost/db"),
             "mysql://user:****@localhost/db"
         );
         assert_eq!(
+            Database::sanitize_url("mysql://admin:secret123@127.0.0.1:3306/artemis"),
+            "mysql://admin:****@127.0.0.1:3306/artemis"
+        );
+    }
+
+    #[test]
+    fn test_sanitize_url_sqlite_no_password() {
+        assert_eq!(
             Database::sanitize_url("sqlite://test.db"),
             "sqlite://test.db"
         );
+        assert_eq!(
+            Database::sanitize_url("sqlite::memory:"),
+            "sqlite::memory:"
+        );
+    }
+
+    #[test]
+    fn test_sanitize_url_no_at_symbol() {
+        assert_eq!(
+            Database::sanitize_url("mysql://localhost/db"),
+            "mysql://localhost/db"
+        );
+    }
+
+    #[test]
+    fn test_sanitize_url_empty_password() {
+        assert_eq!(
+            Database::sanitize_url("mysql://user:@localhost/db"),
+            "mysql://user:****@localhost/db"
+        );
+    }
+
+    // ========== 异步测试 (需要实际数据库) ==========
+
+    #[tokio::test]
+    async fn test_new_sqlite_memory() {
+        let db = Database::new("sqlite::memory:", 5).await.unwrap();
+        assert_eq!(db.db_type(), DatabaseType::SQLite);
+    }
+
+    #[tokio::test]
+    async fn test_health_check_sqlite() {
+        let db = Database::new("sqlite::memory:", 5).await.unwrap();
+        assert!(db.health_check().await.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_db_type() {
+        let db = Database::new("sqlite::memory:", 5).await.unwrap();
+        assert_eq!(db.db_type(), DatabaseType::SQLite);
+    }
+
+    #[tokio::test]
+    async fn test_conn() {
+        let db = Database::new("sqlite::memory:", 5).await.unwrap();
+        let _conn = db.conn();
+        // 只要不panic就说明获取连接成功
+    }
+
+    #[tokio::test]
+    async fn test_clone() {
+        let db = Database::new("sqlite::memory:", 5).await.unwrap();
+        let cloned = db.clone();
+        assert_eq!(cloned.db_type(), db.db_type());
+    }
+
+    #[tokio::test]
+    async fn test_run_migrations() {
+        let db = Database::new("sqlite::memory:", 5).await.unwrap();
+        // run_migrations 目前只是占位符,应该不会失败
+        let result = db.run_migrations().await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_close() {
+        let db = Database::new("sqlite::memory:", 5).await.unwrap();
+        let result = db.close().await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_new_invalid_url() {
+        let result = Database::new("invalid://url", 5).await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_multiple_connections() {
+        let db = Database::new("sqlite::memory:", 10).await.unwrap();
+        // 创建多个数据库实例
+        let db2 = Database::new("sqlite::memory:", 10).await.unwrap();
+
+        assert!(db.health_check().await.is_ok());
+        assert!(db2.health_check().await.is_ok());
     }
 }
