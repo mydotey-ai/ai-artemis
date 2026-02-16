@@ -195,4 +195,117 @@ mod tests {
         let services = manager.get_all_services();
         assert_eq!(services.len(), 2);
     }
+
+    // ========== 新增测试 (快速冲刺阶段 - Task 3) ==========
+
+    #[test]
+    fn test_clear_increments_version() {
+        let manager = VersionedCacheManager::new();
+        manager.update_service(create_test_service("service-1"));
+        manager.update_service(create_test_service("service-2"));
+
+        let version_before_clear = manager.get_version();
+        manager.clear();
+
+        assert_eq!(manager.get_all_services().len(), 0);
+        assert_eq!(manager.get_version(), version_before_clear + 1);
+    }
+
+    #[test]
+    fn test_service_id_case_insensitive() {
+        let manager = VersionedCacheManager::new();
+        manager.update_service(create_test_service("My-Service"));
+
+        // 验证小写查询
+        assert!(manager.get_service("my-service").is_some());
+        assert!(manager.get_service("MY-SERVICE").is_some());
+        assert!(manager.get_service("My-Service").is_some());
+
+        // 验证删除也是大小写不敏感
+        manager.remove_service("MY-SERVICE");
+        assert!(manager.get_service("my-service").is_none());
+    }
+
+    #[test]
+    fn test_remove_nonexistent_service() {
+        let manager = VersionedCacheManager::new();
+        let version_before = manager.get_version();
+
+        manager.remove_service("nonexistent-service");
+
+        // 删除不存在的服务仍然会递增版本
+        assert_eq!(manager.get_version(), version_before + 1);
+    }
+
+    #[test]
+    fn test_compute_delta_new_instances() {
+        use artemis_core::model::Instance;
+
+        let old_services = vec![create_test_service("service-1")];
+
+        let mut new_service = create_test_service("service-1");
+        new_service.instances = vec![Instance {
+            region_id: "test-region".to_string(),
+            zone_id: "test-zone".to_string(),
+            group_id: None,
+            service_id: "service-1".to_string(),
+            instance_id: "inst-1".to_string(),
+            machine_name: None,
+            ip: "127.0.0.1".to_string(),
+            port: 8080,
+            protocol: None,
+            url: "http://127.0.0.1:8080".to_string(),
+            status: artemis_core::model::InstanceStatus::Up,
+            metadata: None,
+            health_check_url: None,
+        }];
+
+        let delta = VersionedCacheManager::compute_delta(&old_services, &[new_service]);
+
+        assert_eq!(delta.len(), 1);
+        assert!(delta.contains_key("service-1"));
+        let changes = delta.get("service-1").unwrap();
+        assert_eq!(changes.len(), 1);
+        assert!(matches!(changes[0].change_type, ChangeType::New));
+    }
+
+    #[test]
+    fn test_compute_delta_deleted_instances() {
+        use artemis_core::model::Instance;
+
+        let mut old_service = create_test_service("service-1");
+        old_service.instances = vec![Instance {
+            region_id: "test-region".to_string(),
+            zone_id: "test-zone".to_string(),
+            group_id: None,
+            service_id: "service-1".to_string(),
+            instance_id: "inst-1".to_string(),
+            machine_name: None,
+            ip: "127.0.0.1".to_string(),
+            port: 8080,
+            protocol: None,
+            url: "http://127.0.0.1:8080".to_string(),
+            status: artemis_core::model::InstanceStatus::Up,
+            metadata: None,
+            health_check_url: None,
+        }];
+
+        let new_services = vec![create_test_service("service-1")];
+
+        let delta = VersionedCacheManager::compute_delta(&[old_service], &new_services);
+
+        assert_eq!(delta.len(), 1);
+        let changes = delta.get("service-1").unwrap();
+        assert_eq!(changes.len(), 1);
+        assert!(matches!(changes[0].change_type, ChangeType::Delete));
+    }
+
+    #[test]
+    fn test_compute_delta_no_changes() {
+        let services = vec![create_test_service("service-1")];
+        let delta = VersionedCacheManager::compute_delta(&services, &services);
+
+        // 没有变更,应该返回空 map
+        assert_eq!(delta.len(), 0);
+    }
 }

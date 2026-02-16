@@ -233,4 +233,197 @@ mod tests {
         // 验证克隆的管理器可以访问相同的订阅
         assert!(manager_clone.subscriptions.contains_key(&service_id));
     }
+
+    // ========== 新增测试 (快速冲刺阶段) ==========
+
+    #[tokio::test]
+    async fn test_broadcast_to_nonexistent_service_no_panic() {
+        let manager = SessionManager::new();
+
+        // 广播到不存在的服务,应该不会panic
+        let test_message = Message::Text("test message".into());
+        manager.broadcast_to_service("nonexistent-service", test_message).await;
+
+        // 验证没有错误发生
+        assert_eq!(manager.active_sessions(), 0);
+    }
+
+    #[tokio::test]
+    async fn test_broadcast_to_empty_service() {
+        let manager = SessionManager::new();
+        let service_id = "empty-service".to_string();
+
+        // 创建一个空的订阅 (没有任何会话订阅)
+        manager.subscriptions.insert(service_id.clone(), Vec::new());
+
+        // 广播消息,应该不会panic
+        let test_message = Message::Text("test message".into());
+        manager.broadcast_to_service(&service_id, test_message).await;
+
+        // 验证没有错误
+        assert_eq!(manager.active_sessions(), 0);
+    }
+
+    #[tokio::test]
+    async fn test_concurrent_subscribe_unsubscribe() {
+        use std::sync::Arc;
+        use tokio::task::JoinSet;
+
+        let manager = Arc::new(SessionManager::new());
+        let service_id = "test-service".to_string();
+
+        // 并发订阅和取消订阅
+        let mut join_set = JoinSet::new();
+
+        for i in 0..20 {
+            let manager_clone = manager.clone();
+            let service_clone = service_id.clone();
+            let session_id = format!("session-{}", i);
+
+            join_set.spawn(async move {
+                // 订阅
+                manager_clone.subscribe(session_id.clone(), service_clone.clone());
+
+                // 短暂延迟
+                tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+
+                // 取消订阅
+                manager_clone.unsubscribe(&session_id, &service_clone);
+            });
+        }
+
+        // 等待所有任务完成
+        while let Some(_) = join_set.join_next().await {}
+
+        // 验证所有订阅都已清理
+        if let Some(subs) = manager.subscriptions.get(&service_id) {
+            assert_eq!(subs.len(), 0, "All subscriptions should be cleaned up");
+        }
+    }
+
+    #[test]
+    fn test_subscribe_multiple_services_same_session() {
+        let manager = SessionManager::new();
+        let session_id = "test-session".to_string();
+
+        // 同一个会话订阅多个服务
+        let services = vec!["service-1", "service-2", "service-3"];
+        for service in &services {
+            manager.subscribe(session_id.clone(), service.to_string());
+        }
+
+        // 验证所有订阅都存在
+        for service in &services {
+            assert!(manager.subscriptions.contains_key(*service));
+            if let Some(subs) = manager.subscriptions.get(*service) {
+                assert!(subs.contains(&session_id));
+            }
+        }
+
+        // 注销会话,应该清理所有订阅
+        manager.unregister_session(&session_id);
+
+        // 验证所有服务的订阅都已清除该会话
+        for service in &services {
+            if let Some(subs) = manager.subscriptions.get(*service) {
+                assert!(!subs.contains(&session_id), "Session should be removed from {}", service);
+            }
+        }
+    }
+
+    #[test]
+    fn test_subscriptions_data_structure() {
+        let manager = SessionManager::new();
+
+        // 测试订阅数据结构的行为
+        let session_1 = "session-1".to_string();
+        let session_2 = "session-2".to_string();
+        let service_id = "service-1".to_string();
+
+        // 首次订阅,应该创建新的 Vec
+        manager.subscribe(session_1.clone(), service_id.clone());
+        assert_eq!(manager.subscriptions.len(), 1);
+
+        // 同一服务再次订阅,应该追加
+        manager.subscribe(session_2.clone(), service_id.clone());
+        if let Some(subs) = manager.subscriptions.get(&service_id) {
+            assert_eq!(subs.len(), 2);
+        }
+
+        // 取消一个订阅
+        manager.unsubscribe(&session_1, &service_id);
+        if let Some(subs) = manager.subscriptions.get(&service_id) {
+            assert_eq!(subs.len(), 1);
+            assert!(subs.contains(&session_2));
+            assert!(!subs.contains(&session_1));
+        }
+    }
+
+    #[test]
+    fn test_unregister_session_with_no_subscriptions() {
+        let manager = SessionManager::new();
+        let session_id = "orphan-session".to_string();
+
+        // 注销一个从未订阅任何服务的会话
+        manager.unregister_session(&session_id);
+
+        // 应该不会panic,且状态正常
+        assert_eq!(manager.active_sessions(), 0);
+    }
+
+    #[tokio::test]
+    async fn test_concurrent_subscribe_different_services() {
+        use std::sync::Arc;
+        use tokio::task::JoinSet;
+
+        let manager = Arc::new(SessionManager::new());
+        let mut join_set = JoinSet::new();
+
+        // 并发订阅不同的服务
+        for i in 0..10 {
+            let manager_clone = manager.clone();
+            let session_id = format!("session-{}", i);
+            let service_id = format!("service-{}", i % 3); // 3个服务
+
+            join_set.spawn(async move {
+                manager_clone.subscribe(session_id, service_id);
+            });
+        }
+
+        // 等待所有任务完成
+        while let Some(_) = join_set.join_next().await {}
+
+        // 验证订阅数量
+        assert_eq!(manager.subscriptions.len(), 3);
+
+        // 验证每个服务的订阅数量
+        for i in 0..3 {
+            let service_id = format!("service-{}", i);
+            if let Some(subs) = manager.subscriptions.get(&service_id) {
+                // 每个服务应该有 3-4 个订阅 (10个会话分配到3个服务)
+                assert!(subs.len() >= 3 && subs.len() <= 4, "Service {} should have 3-4 subscriptions, got {}", i, subs.len());
+            }
+        }
+    }
+
+    #[test]
+    fn test_unsubscribe_updates_subscriptions() {
+        let manager = SessionManager::new();
+        let session_id = "test-session".to_string();
+        let service_id = "test-service".to_string();
+
+        // 订阅
+        manager.subscribe(session_id.clone(), service_id.clone());
+
+        // 验证订阅存在
+        assert!(manager.subscriptions.contains_key(&service_id));
+
+        // 取消订阅
+        manager.unsubscribe(&session_id, &service_id);
+
+        // 验证订阅已清空 (但 key 还在)
+        if let Some(subs) = manager.subscriptions.get(&service_id) {
+            assert_eq!(subs.len(), 0);
+        }
+    }
 }

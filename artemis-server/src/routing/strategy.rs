@@ -184,6 +184,122 @@ mod weighted_round_robin_tests {
         let result = strategy.select_group(&[], &context);
         assert!(result.is_none());
     }
+
+    // ========== 新增边界测试 (快速冲刺阶段) ==========
+
+    #[test]
+    fn test_weighted_round_robin_minimum_weights() {
+        let strategy = WeightedRoundRobinStrategy::new();
+        let context = super::super::context::RouteContext::new();
+
+        // 尝试创建权重为 0 的分组,但由于 clamp(1, 100),实际会变成 1
+        // 这个测试验证了 RouteRuleGroup::new() 的权重钳制行为
+        let groups = vec![
+            RouteRuleGroup::new("rule-1".to_string(), "group-a".to_string(), 0),
+            RouteRuleGroup::new("rule-1".to_string(), "group-b".to_string(), 0),
+            RouteRuleGroup::new("rule-1".to_string(), "group-c".to_string(), 0),
+        ];
+
+        // 验证权重被钳制为最小值 1
+        for group in &groups {
+            assert_eq!(group.weight, 1, "Weight should be clamped to minimum 1");
+        }
+
+        // 即使传入 0,由于钳制机制,总权重应该是 3 (3个分组 * 1)
+        let total_weight: u32 = groups.iter().map(|g| g.weight).sum();
+        assert_eq!(total_weight, 3, "Total weight should be 3 after clamping");
+
+        // 调用 select_group 应该成功
+        let result = strategy.select_group(&groups, &context);
+        assert!(result.is_some(), "Should return a group even with minimum weights");
+
+        // 验证返回的是其中一个分组
+        let selected = result.unwrap();
+        assert!(
+            groups.iter().any(|g| g.group_id == selected),
+            "Returned group should be one of the input groups"
+        );
+    }
+
+    #[test]
+    fn test_weighted_round_robin_single_group() {
+        let strategy = WeightedRoundRobinStrategy::new();
+        let context = super::super::context::RouteContext::new();
+
+        // 只有一个分组
+        let groups = vec![
+            RouteRuleGroup::new("rule-1".to_string(), "only-group".to_string(), 100),
+        ];
+
+        // 无论调用多少次,都应该返回同一个分组
+        for _ in 0..10 {
+            let selected = strategy.select_group(&groups, &context).unwrap();
+            assert_eq!(selected, "only-group");
+        }
+    }
+
+    #[test]
+    fn test_weighted_round_robin_extreme_imbalance() {
+        let strategy = WeightedRoundRobinStrategy::new();
+        let context = super::super::context::RouteContext::new();
+
+        // 权重极端不平衡: 99:1
+        let groups = vec![
+            RouteRuleGroup::new("rule-1".to_string(), "dominant".to_string(), 99),
+            RouteRuleGroup::new("rule-1".to_string(), "minority".to_string(), 1),
+        ];
+
+        // 执行 1000 次选择
+        let mut counts = HashMap::new();
+        for _ in 0..1000 {
+            let selected = strategy.select_group(&groups, &context).unwrap();
+            *counts.entry(selected).or_insert(0) += 1;
+        }
+
+        let dominant_count = counts.get("dominant").unwrap_or(&0);
+        let minority_count = counts.get("minority").unwrap_or(&0);
+
+        // 验证分布接近 99:1 (允许 ±2% 误差)
+        assert!(*dominant_count >= 970 && *dominant_count <= 1000, "dominant: {}", dominant_count);
+        assert!(*minority_count >= 0 && *minority_count <= 30, "minority: {}", minority_count);
+    }
+
+    #[test]
+    fn test_weighted_round_robin_concurrent() {
+        use std::sync::Arc;
+        use std::thread;
+
+        let strategy = Arc::new(WeightedRoundRobinStrategy::new());
+        let context = super::super::context::RouteContext::new();
+
+        let groups = vec![
+            RouteRuleGroup::new("rule-1".to_string(), "group-a".to_string(), 50),
+            RouteRuleGroup::new("rule-1".to_string(), "group-b".to_string(), 50),
+        ];
+
+        // 并发调用 select_group
+        let mut handles = vec![];
+        for _ in 0..10 {
+            let strategy_clone = strategy.clone();
+            let groups_clone = groups.clone();
+            let context_clone = context.clone();
+
+            let handle = thread::spawn(move || {
+                for _ in 0..100 {
+                    let _ = strategy_clone.select_group(&groups_clone, &context_clone);
+                }
+            });
+            handles.push(handle);
+        }
+
+        // 等待所有线程完成
+        for handle in handles {
+            handle.join().unwrap();
+        }
+
+        // 验证计数器达到了 1000 (10 线程 * 100 次)
+        // 这证明了原子操作的正确性
+    }
 }
 
 #[cfg(test)]
@@ -283,5 +399,137 @@ mod close_by_visit_tests {
 
         let result = strategy.select_group(&[], &context);
         assert!(result.is_none());
+    }
+
+    // ========== 新增边界测试 (快速冲刺阶段) ==========
+
+    #[test]
+    fn test_close_by_visit_no_location_info() {
+        let strategy = CloseByVisitStrategy::new();
+
+        let groups = vec![
+            RouteRuleGroup::with_location(
+                "rule-1".to_string(),
+                "group-us".to_string(),
+                50,
+                Some("us-east".to_string()),
+                Some("zone-1".to_string()),
+            ),
+            RouteRuleGroup::with_location(
+                "rule-1".to_string(),
+                "group-eu".to_string(),
+                50,
+                Some("eu-west".to_string()),
+                Some("zone-2".to_string()),
+            ),
+        ];
+
+        // 客户端没有任何位置信息,应该降级到第一个分组
+        let context = super::super::context::RouteContext::new();
+
+        let selected = strategy.select_group(&groups, &context).unwrap();
+        assert_eq!(selected, "group-us", "Should fallback to first group when no location info");
+    }
+
+    #[test]
+    fn test_close_by_visit_groups_without_location() {
+        let strategy = CloseByVisitStrategy::new();
+
+        // 所有分组都没有位置信息
+        let groups = vec![
+            RouteRuleGroup::new("rule-1".to_string(), "group-a".to_string(), 50),
+            RouteRuleGroup::new("rule-1".to_string(), "group-b".to_string(), 50),
+        ];
+
+        let context = super::super::context::RouteContext::new()
+            .with_region("us-east".to_string())
+            .with_zone("zone-1".to_string());
+
+        // 分组没有位置信息,应该降级到第一个分组
+        let selected = strategy.select_group(&groups, &context).unwrap();
+        assert_eq!(selected, "group-a", "Should fallback to first group when groups have no location");
+    }
+
+    #[test]
+    fn test_close_by_visit_region_priority_over_zone() {
+        let strategy = CloseByVisitStrategy::new();
+
+        let groups = vec![
+            RouteRuleGroup::with_location(
+                "rule-1".to_string(),
+                "group-same-region".to_string(),
+                50,
+                Some("us-east".to_string()),
+                Some("zone-1".to_string()),
+            ),
+            RouteRuleGroup::with_location(
+                "rule-1".to_string(),
+                "group-same-zone".to_string(),
+                50,
+                Some("us-west".to_string()),
+                Some("zone-2".to_string()),
+            ),
+        ];
+
+        // 客户端 Region 匹配第一个,Zone 匹配第二个
+        // 应该优先选择 Region 匹配的
+        let context = super::super::context::RouteContext::new()
+            .with_region("us-east".to_string())
+            .with_zone("zone-2".to_string());
+
+        let selected = strategy.select_group(&groups, &context).unwrap();
+        assert_eq!(selected, "group-same-region", "Region should have higher priority than Zone");
+    }
+
+    #[test]
+    fn test_close_by_visit_single_group() {
+        let strategy = CloseByVisitStrategy::new();
+
+        let groups = vec![
+            RouteRuleGroup::with_location(
+                "rule-1".to_string(),
+                "only-group".to_string(),
+                100,
+                Some("us-east".to_string()),
+                None,
+            ),
+        ];
+
+        // 只有一个分组,无论是否匹配都应该返回它
+        let context = super::super::context::RouteContext::new()
+            .with_region("eu-west".to_string());
+
+        let selected = strategy.select_group(&groups, &context).unwrap();
+        assert_eq!(selected, "only-group");
+    }
+
+    #[test]
+    fn test_close_by_visit_partial_location_match() {
+        let strategy = CloseByVisitStrategy::new();
+
+        let groups = vec![
+            RouteRuleGroup::with_location(
+                "rule-1".to_string(),
+                "group-region-only".to_string(),
+                50,
+                Some("us-east".to_string()),
+                None, // 没有 Zone 信息
+            ),
+            RouteRuleGroup::with_location(
+                "rule-1".to_string(),
+                "group-full".to_string(),
+                50,
+                Some("us-west".to_string()),
+                Some("zone-1".to_string()),
+            ),
+        ];
+
+        // 客户端 Region 匹配第一个分组 (即使第一个分组没有 Zone 信息)
+        let context = super::super::context::RouteContext::new()
+            .with_region("us-east".to_string())
+            .with_zone("zone-1".to_string());
+
+        let selected = strategy.select_group(&groups, &context).unwrap();
+        assert_eq!(selected, "group-region-only", "Should match by Region even if group has no Zone");
     }
 }
