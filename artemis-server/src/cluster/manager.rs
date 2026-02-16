@@ -213,4 +213,157 @@ mod tests {
         assert!(manager.update_heartbeat("node-1"));
         assert!(!manager.update_heartbeat("non-existent"));
     }
+
+    #[test]
+    fn test_cluster_manager_new_with_peers() {
+        let peers = vec![
+            "http://192.168.1.101:8080".to_string(),
+            "http://192.168.1.102:8080".to_string(),
+        ];
+        let manager = ClusterManager::new("node-0".to_string(), peers);
+
+        assert_eq!(manager.node_count(), 2);
+        assert_eq!(manager.node_id, "node-0");
+    }
+
+    #[test]
+    fn test_cluster_manager_default() {
+        let manager = ClusterManager::default();
+
+        assert_eq!(manager.node_id, "default-node");
+        assert_eq!(manager.node_count(), 0);
+    }
+
+    #[test]
+    fn test_get_healthy_peers() {
+        let manager = ClusterManager::new("node-0".to_string(), vec![]);
+
+        // Add self node (should be excluded from peers)
+        let self_node = ClusterNode::new("node-0".to_string(), "127.0.0.1".to_string(), 8080);
+        manager.register_node(self_node);
+
+        // Add other nodes
+        let node1 = ClusterNode::new("node-1".to_string(), "192.168.1.101".to_string(), 8080);
+        manager.register_node(node1);
+
+        let node2 = ClusterNode::new("node-2".to_string(), "192.168.1.102".to_string(), 8080);
+        manager.register_node(node2);
+
+        let peers = manager.get_healthy_peers();
+        // Should not include self
+        assert_eq!(peers.len(), 2);
+        assert!(peers.iter().all(|n| n.node_id != "node-0"));
+    }
+
+    #[test]
+    fn test_mark_node_down() {
+        let manager = ClusterManager::default();
+
+        let node = ClusterNode::new("node-1".to_string(), "192.168.1.100".to_string(), 8080);
+        manager.register_node(node);
+
+        manager.mark_node_down("node-1");
+
+        let healthy = manager.get_healthy_nodes();
+        assert_eq!(healthy.len(), 0); // Node should be marked down
+    }
+
+    #[test]
+    fn test_mark_nonexistent_node_down() {
+        let manager = ClusterManager::default();
+
+        // Should not panic
+        manager.mark_node_down("nonexistent-node");
+    }
+
+    #[test]
+    fn test_check_expired_nodes_empty() {
+        let manager = ClusterManager::default();
+
+        let expired = manager.check_expired_nodes();
+        assert_eq!(expired.len(), 0);
+    }
+
+    #[test]
+    fn test_check_expired_nodes_with_fresh_nodes() {
+        let manager = ClusterManager::default();
+
+        let node = ClusterNode::new("node-1".to_string(), "192.168.1.100".to_string(), 8080);
+        manager.register_node(node);
+
+        // Just registered, should not be expired
+        let expired = manager.check_expired_nodes();
+        assert_eq!(expired.len(), 0);
+    }
+
+    #[test]
+    fn test_node_count() {
+        let manager = ClusterManager::default();
+
+        assert_eq!(manager.node_count(), 0);
+
+        manager.register_node(ClusterNode::new("node-1".to_string(), "127.0.0.1".to_string(), 8080));
+        assert_eq!(manager.node_count(), 1);
+
+        manager.register_node(ClusterNode::new("node-2".to_string(), "127.0.0.2".to_string(), 8080));
+        assert_eq!(manager.node_count(), 2);
+    }
+
+    #[test]
+    fn test_cluster_manager_clone() {
+        let manager1 = ClusterManager::default();
+        manager1.register_node(ClusterNode::new("node-1".to_string(), "127.0.0.1".to_string(), 8080));
+
+        let manager2 = manager1.clone();
+        assert_eq!(manager2.node_count(), 1);
+        assert_eq!(manager2.node_id, manager1.node_id);
+    }
+
+    #[test]
+    fn test_multiple_nodes_registration() {
+        let manager = ClusterManager::default();
+
+        for i in 1..=5 {
+            let node = ClusterNode::new(
+                format!("node-{}", i),
+                format!("192.168.1.{}", 100 + i),
+                8080,
+            );
+            manager.register_node(node);
+        }
+
+        assert_eq!(manager.node_count(), 5);
+        let healthy = manager.get_healthy_nodes();
+        assert_eq!(healthy.len(), 5);
+    }
+
+    #[test]
+    fn test_heartbeat_update_nonexistent() {
+        let manager = ClusterManager::default();
+
+        let result = manager.update_heartbeat("nonexistent");
+        assert!(!result);
+    }
+
+    #[test]
+    fn test_get_healthy_nodes_with_down_nodes() {
+        let manager = ClusterManager::default();
+
+        let node1 = ClusterNode::new("node-1".to_string(), "192.168.1.101".to_string(), 8080);
+        let node2 = ClusterNode::new("node-2".to_string(), "192.168.1.102".to_string(), 8080);
+        manager.register_node(node1);
+        manager.register_node(node2);
+
+        manager.mark_node_down("node-1");
+
+        let healthy = manager.get_healthy_nodes();
+        assert_eq!(healthy.len(), 1);
+        assert_eq!(healthy[0].node_id, "node-2");
+    }
+
+    #[tokio::test]
+    async fn test_check_node_health_invalid_url() {
+        let result = check_node_health("http://invalid-host-that-does-not-exist:9999").await;
+        assert!(!result);
+    }
 }
