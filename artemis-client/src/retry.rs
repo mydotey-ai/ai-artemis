@@ -158,4 +158,189 @@ mod tests {
 
         assert_eq!(queue.len().await, 1);
     }
+
+    #[tokio::test]
+    async fn test_retry_queue_is_empty() {
+        let queue = RetryQueue::<String>::new(Duration::from_millis(100));
+
+        assert!(queue.is_empty().await);
+
+        queue.add("item".to_string()).await;
+        assert!(!queue.is_empty().await);
+
+        queue.remove(&"item".to_string()).await;
+        assert!(queue.is_empty().await);
+    }
+
+    #[tokio::test]
+    async fn test_retry_queue_zero_interval() {
+        let queue = RetryQueue::<String>::new(Duration::from_millis(0));
+
+        queue.add("item".to_string()).await;
+
+        // With zero interval, item should be ready immediately
+        tokio::time::sleep(Duration::from_millis(1)).await;
+        let items = queue.get_items_to_retry().await;
+        assert_eq!(items.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_retry_queue_long_interval() {
+        let queue = RetryQueue::<String>::new(Duration::from_secs(10));
+
+        queue.add("item".to_string()).await;
+
+        // With long interval, item should not be ready
+        let items = queue.get_items_to_retry().await;
+        assert_eq!(items.len(), 0);
+    }
+
+    #[tokio::test]
+    async fn test_retry_queue_multiple_items() {
+        let queue = RetryQueue::<String>::new(Duration::from_millis(50));
+
+        queue.add("item1".to_string()).await;
+        queue.add("item2".to_string()).await;
+        queue.add("item3".to_string()).await;
+
+        assert_eq!(queue.len().await, 3);
+
+        tokio::time::sleep(Duration::from_millis(60)).await;
+
+        let items = queue.get_items_to_retry().await;
+        assert_eq!(items.len(), 3);
+    }
+
+    #[tokio::test]
+    async fn test_retry_queue_remove_nonexistent() {
+        let queue = RetryQueue::<String>::new(Duration::from_millis(100));
+
+        queue.add("item1".to_string()).await;
+
+        // Remove non-existent item
+        queue.remove(&"item2".to_string()).await;
+
+        assert_eq!(queue.len().await, 1);
+    }
+
+    #[tokio::test]
+    async fn test_retry_queue_duplicate_add() {
+        let queue = RetryQueue::<String>::new(Duration::from_millis(100));
+
+        queue.add("item".to_string()).await;
+        queue.add("item".to_string()).await; // Add same item again
+
+        // Should still have only 1 item (HashMap overwrites)
+        assert_eq!(queue.len().await, 1);
+    }
+
+    #[tokio::test]
+    async fn test_retry_item_clone() {
+        let item = RetryItem {
+            data: "test".to_string(),
+            last_attempt: Instant::now(),
+        };
+
+        let cloned = item.clone();
+        assert_eq!(item.data, cloned.data);
+    }
+
+    #[tokio::test]
+    async fn test_retry_item_debug() {
+        let item = RetryItem {
+            data: "test".to_string(),
+            last_attempt: Instant::now(),
+        };
+
+        let debug_str = format!("{:?}", item);
+        assert!(debug_str.contains("RetryItem"));
+        assert!(debug_str.contains("test"));
+    }
+
+    #[tokio::test]
+    async fn test_retry_queue_partial_retry() {
+        let queue = RetryQueue::<String>::new(Duration::from_millis(50));
+
+        // Add items at different times
+        queue.add("item1".to_string()).await;
+        tokio::time::sleep(Duration::from_millis(30)).await;
+        queue.add("item2".to_string()).await;
+
+        // Wait for first item's interval to elapse
+        tokio::time::sleep(Duration::from_millis(30)).await;
+
+        // Only first item should be ready
+        let items = queue.get_items_to_retry().await;
+        assert_eq!(items.len(), 1);
+        assert_eq!(items[0], "item1");
+    }
+
+    #[tokio::test]
+    async fn test_retry_queue_with_integers() {
+        let queue = RetryQueue::<i32>::new(Duration::from_millis(50));
+
+        queue.add(1).await;
+        queue.add(2).await;
+        queue.add(3).await;
+
+        assert_eq!(queue.len().await, 3);
+
+        tokio::time::sleep(Duration::from_millis(60)).await;
+
+        let items = queue.get_items_to_retry().await;
+        assert_eq!(items.len(), 3);
+    }
+
+    #[tokio::test]
+    async fn test_retry_loop_success() {
+        let queue = Arc::new(RetryQueue::<String>::new(Duration::from_millis(50)));
+
+        queue.add("success-item".to_string()).await;
+
+        let success_count = Arc::new(Mutex::new(0));
+        let success_count_clone = success_count.clone();
+
+        // Start retry loop with always-success function
+        queue.clone().start_retry_loop(move |_item| {
+            let count = success_count_clone.clone();
+            async move {
+                *count.lock() += 1;
+                true // Always succeed
+            }
+        });
+
+        // Wait for retry loop to process
+        tokio::time::sleep(Duration::from_millis(100)).await;
+
+        // Item should be removed after successful retry
+        assert_eq!(queue.len().await, 0);
+        assert!(*success_count.lock() >= 1);
+    }
+
+    #[tokio::test]
+    async fn test_retry_loop_failure() {
+        let queue = Arc::new(RetryQueue::<String>::new(Duration::from_millis(50)));
+
+        queue.add("fail-item".to_string()).await;
+
+        let attempt_count = Arc::new(Mutex::new(0));
+        let attempt_count_clone = attempt_count.clone();
+
+        // Start retry loop with always-failure function
+        queue.clone().start_retry_loop(move |_item| {
+            let count = attempt_count_clone.clone();
+            async move {
+                *count.lock() += 1;
+                false // Always fail
+            }
+        });
+
+        // Wait for multiple retry attempts
+        tokio::time::sleep(Duration::from_millis(200)).await;
+
+        // Item should still be in queue
+        assert_eq!(queue.len().await, 1);
+        // Should have attempted multiple times
+        assert!(*attempt_count.lock() >= 2);
+    }
 }
