@@ -223,7 +223,7 @@ async fn run_stress_test(args: Args) {
                     "register" => register_instances(&client, &base_url, instances.clone()).await,
                     "heartbeat" => heartbeat_instances(&client, &base_url, instance_keys.clone()).await,
                     "mixed" => {
-                        if request_count % 10 == 0 {
+                        if request_count.is_multiple_of(10) {
                             register_instances(&client, &base_url, instances.clone()).await
                         } else {
                             heartbeat_instances(&client, &base_url, instance_keys.clone()).await
@@ -264,7 +264,7 @@ async fn run_stress_test(args: Args) {
             while start_time.elapsed() < test_duration {
                 let elapsed_secs = start_time.elapsed().as_secs();
                 pb.set_position(elapsed_secs);
-                pb.set_message(format!("进行中..."));
+                pb.set_message("进行中...".to_string());
                 tokio::time::sleep(Duration::from_millis(100)).await;
             }
             pb.finish_with_message("完成!");

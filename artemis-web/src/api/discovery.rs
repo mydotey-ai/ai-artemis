@@ -167,7 +167,6 @@ pub async fn lookup_instance(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use artemis_core::model::{DiscoveryConfig, GetServiceRequest, GetServicesRequest};
 
     #[test]

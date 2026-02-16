@@ -323,7 +323,7 @@ fn test_concurrent_update_and_read() {
     }
 
     // 验证最终状态一致
-    assert!(manager.get_all_services().len() > 0, "应该有服务存在");
+    assert!(!manager.get_all_services().is_empty(), "应该有服务存在");
 }
 
 // ===== 增量差异计算测试 =====

@@ -163,7 +163,7 @@ mod tests {
             server_urls: vec!["http://localhost:8080".to_string()],
             ..Default::default()
         };
-        let client = RegistryClient::new(config);
+        let _client = RegistryClient::new(config);
 
         // Test URL format (can't actually call without server)
         let expected_register_url = "http://localhost:8080/api/registry/register";

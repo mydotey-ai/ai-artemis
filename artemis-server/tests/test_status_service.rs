@@ -137,7 +137,7 @@ async fn test_get_cluster_status_with_cluster_manager() {
 
     // 至少有当前节点 (集群节点可能因为健康检查未通过而不在列表中)
     assert!(response.node_count >= 1);
-    assert!(response.nodes_status.len() >= 1);
+    assert!(!response.nodes_status.is_empty());
 
     // 验证当前节点存在
     let has_current_node = response

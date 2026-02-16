@@ -280,7 +280,7 @@ mod tests {
     #[test]
     fn test_node_status_clone() {
         let status = NodeStatus::Up;
-        let cloned = status.clone();
+        let cloned = status;
         assert_eq!(status, cloned);
     }
 

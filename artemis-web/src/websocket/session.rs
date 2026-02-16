@@ -293,7 +293,7 @@ mod tests {
         }
 
         // 等待所有任务完成
-        while let Some(_) = join_set.join_next().await {}
+        while join_set.join_next().await.is_some() {}
 
         // 验证所有订阅都已清理
         if let Some(subs) = manager.subscriptions.get(&service_id) {
@@ -391,7 +391,7 @@ mod tests {
         }
 
         // 等待所有任务完成
-        while let Some(_) = join_set.join_next().await {}
+        while join_set.join_next().await.is_some() {}
 
         // 验证订阅数量
         assert_eq!(manager.subscriptions.len(), 3);

@@ -189,7 +189,7 @@ fn bench_concurrent_register(c: &mut Criterion) {
                     }
 
                     for handle in handles {
-                        black_box(handle.await);
+                        let _ = black_box(handle.await);
                     }
                 });
             });

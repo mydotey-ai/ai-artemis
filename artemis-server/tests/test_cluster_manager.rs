@@ -9,7 +9,6 @@
 
 use artemis_server::cluster::{ClusterManager, ClusterNode, NodeStatus};
 use std::sync::Arc;
-use std::time::Duration;
 
 // ===== 节点注册和管理测试 =====
 

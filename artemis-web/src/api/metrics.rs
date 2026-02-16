@@ -76,6 +76,6 @@ mod tests {
         // 验证可以收集指标
         let metric_families = prometheus::gather();
         // 指标已经在 lazy_static 中注册,所以应该可以收集到
-        assert!(metric_families.len() >= 0, "Should be able to gather metrics");
+        assert!(!metric_families.is_empty(), "Should be able to gather metrics");
     }
 }
