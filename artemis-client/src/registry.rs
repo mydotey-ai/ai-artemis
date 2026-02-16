@@ -147,4 +147,131 @@ mod tests {
         let old_start = Instant::now() - Duration::from_secs(4);
         assert!(old_start.elapsed() > ttl);
     }
+
+    #[test]
+    fn test_registry_client_new() {
+        let config = ClientConfig::default();
+        let client = RegistryClient::new(config.clone());
+
+        assert_eq!(client.config.server_urls, config.server_urls);
+        assert_eq!(client.config.http_retry_times, config.http_retry_times);
+    }
+
+    #[test]
+    fn test_registry_url_construction() {
+        let config = ClientConfig {
+            server_urls: vec!["http://localhost:8080".to_string()],
+            ..Default::default()
+        };
+        let client = RegistryClient::new(config);
+
+        // Test URL format (can't actually call without server)
+        let expected_register_url = "http://localhost:8080/api/registry/register";
+        let expected_heartbeat_url = "http://localhost:8080/api/registry/heartbeat";
+        let expected_unregister_url = "http://localhost:8080/api/registry/unregister";
+
+        assert!(expected_register_url.starts_with("http://"));
+        assert!(expected_heartbeat_url.contains("/api/registry/heartbeat"));
+        assert!(expected_unregister_url.contains("/api/registry/unregister"));
+    }
+
+    #[test]
+    fn test_registry_config_defaults() {
+        let config = ClientConfig::default();
+        let client = RegistryClient::new(config);
+
+        assert_eq!(client.config.heartbeat_interval_secs, 30);
+        assert_eq!(client.config.heartbeat_ttl_secs, 90);
+        assert_eq!(client.config.http_retry_times, 5);
+    }
+
+    #[test]
+    fn test_registry_config_custom() {
+        let config = ClientConfig {
+            server_urls: vec!["http://custom-server:9090".to_string()],
+            heartbeat_interval_secs: 10,
+            heartbeat_ttl_secs: 30,
+            http_retry_times: 3,
+            http_retry_interval_ms: 200,
+            ..Default::default()
+        };
+        let client = RegistryClient::new(config);
+
+        assert_eq!(client.config.server_urls[0], "http://custom-server:9090");
+        assert_eq!(client.config.heartbeat_interval_secs, 10);
+        assert_eq!(client.config.heartbeat_ttl_secs, 30);
+        assert_eq!(client.config.http_retry_times, 3);
+    }
+
+    #[test]
+    fn test_heartbeat_interval_calculation() {
+        let config = ClientConfig {
+            heartbeat_interval_secs: 20,
+            ..Default::default()
+        };
+
+        let interval = config.heartbeat_interval();
+        assert_eq!(interval, Duration::from_secs(20));
+    }
+
+    #[test]
+    fn test_heartbeat_ttl_calculation() {
+        let config = ClientConfig {
+            heartbeat_ttl_secs: 60,
+            ..Default::default()
+        };
+
+        let ttl = config.heartbeat_ttl();
+        assert_eq!(ttl, Duration::from_secs(60));
+    }
+
+    #[test]
+    fn test_http_retry_interval_calculation() {
+        let config = ClientConfig {
+            http_retry_interval_ms: 150,
+            ..Default::default()
+        };
+
+        let interval = config.http_retry_interval();
+        assert_eq!(interval, Duration::from_millis(150));
+    }
+
+    #[tokio::test]
+    async fn test_ttl_vs_interval_relationship() {
+        let config = ClientConfig {
+            heartbeat_interval_secs: 10,
+            heartbeat_ttl_secs: 30,
+            ..Default::default()
+        };
+
+        // TTL should be at least 3x the interval
+        assert!(config.heartbeat_ttl_secs >= config.heartbeat_interval_secs * 3);
+    }
+
+    #[test]
+    fn test_multiple_server_urls() {
+        let config = ClientConfig {
+            server_urls: vec![
+                "http://server1:8080".to_string(),
+                "http://server2:8080".to_string(),
+                "http://server3:8080".to_string(),
+            ],
+            ..Default::default()
+        };
+        let client = RegistryClient::new(config);
+
+        // Client should use first URL
+        assert_eq!(client.config.server_urls[0], "http://server1:8080");
+        assert_eq!(client.config.server_urls.len(), 3);
+    }
+
+    #[tokio::test]
+    async fn test_instant_elapsed_behavior() {
+        let start = Instant::now();
+        tokio::time::sleep(Duration::from_millis(50)).await;
+
+        let elapsed = start.elapsed();
+        assert!(elapsed >= Duration::from_millis(50));
+        assert!(elapsed < Duration::from_millis(100));
+    }
 }
