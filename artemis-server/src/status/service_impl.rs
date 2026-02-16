@@ -314,6 +314,35 @@ impl StatusService {
 mod tests {
     use super::*;
 
+    fn create_test_service() -> StatusService {
+        let lease_manager = Arc::new(LeaseManager::new(std::time::Duration::from_secs(30)));
+        StatusService::new(
+            None,
+            lease_manager,
+            "test-node".to_string(),
+            "test-region".to_string(),
+            "test-zone".to_string(),
+            "http://localhost:8080".to_string(),
+            "test-app".to_string(),
+        )
+    }
+
+    fn create_test_service_with_cluster() -> StatusService {
+        let cluster_manager = Arc::new(ClusterManager::default());
+        let lease_manager = Arc::new(LeaseManager::new(std::time::Duration::from_secs(30)));
+        StatusService::new(
+            Some(cluster_manager),
+            lease_manager,
+            "test-node".to_string(),
+            "test-region".to_string(),
+            "test-zone".to_string(),
+            "http://localhost:8080".to_string(),
+            "test-app".to_string(),
+        )
+    }
+
+    // ========== URL 解析测试 ==========
+
     #[test]
     fn test_parse_url() {
         let (ip, port, protocol, path) = StatusService::parse_url("http://10.0.0.1:8080/api");
@@ -328,5 +357,151 @@ mod tests {
         assert_eq!(port, 9090);
         assert_eq!(protocol, "https");
         assert_eq!(path, "/");
+    }
+
+    // ========== 新增测试 (Phase 1.1 - StatusService 覆盖提升) ==========
+
+    #[test]
+    fn test_parse_url_with_ipv4() {
+        let (ip, port, protocol, path) = StatusService::parse_url("http://192.168.1.100:9090/api/v1");
+        assert_eq!(ip, "192.168.1.100");
+        assert_eq!(port, 9090);
+        assert_eq!(protocol, "http");
+        assert_eq!(path, "/api/v1");
+    }
+
+    #[test]
+    fn test_parse_url_without_port() {
+        let (ip, port, protocol, path) = StatusService::parse_url("http://example.com/path");
+        assert_eq!(ip, "example.com");
+        assert_eq!(port, 8080); // 默认端口
+        assert_eq!(protocol, "http");
+        assert_eq!(path, "/path");
+    }
+
+    #[test]
+    fn test_parse_url_https_without_path() {
+        let (ip, port, protocol, path) = StatusService::parse_url("https://secure.com:443");
+        assert_eq!(ip, "secure.com");
+        assert_eq!(port, 443);
+        assert_eq!(protocol, "https");
+        assert_eq!(path, "/");
+    }
+
+    #[test]
+    fn test_parse_url_localhost() {
+        let (ip, port, protocol, path) = StatusService::parse_url("http://localhost:8080");
+        assert_eq!(ip, "localhost");
+        assert_eq!(port, 8080);
+        assert_eq!(protocol, "http");
+        assert_eq!(path, "/");
+    }
+
+    // ========== StatusService 创建测试 ==========
+
+    #[test]
+    fn test_status_service_creation() {
+        let service = create_test_service();
+        assert_eq!(service.node_id, "test-node");
+        assert_eq!(service.region_id, "test-region");
+        assert_eq!(service.zone_id, "test-zone");
+        assert_eq!(service.server_url, "http://localhost:8080");
+        assert_eq!(service.app_id, "test-app");
+    }
+
+    #[test]
+    fn test_status_service_with_cluster_manager() {
+        let service = create_test_service_with_cluster();
+        assert!(service.cluster_manager.is_some());
+        assert_eq!(service.node_id, "test-node");
+    }
+
+    #[test]
+    fn test_status_service_without_cluster_manager() {
+        let service = create_test_service();
+        assert!(service.cluster_manager.is_none());
+    }
+
+    // ========== Node Status 测试 ==========
+
+    #[tokio::test]
+    async fn test_get_cluster_node_status() {
+        let service = create_test_service();
+        let request = GetClusterNodeStatusRequest {};
+
+        let response = service.get_cluster_node_status(request).await;
+
+        assert!(response.node_status.is_some());
+        let node_status = response.node_status.unwrap();
+        assert_eq!(node_status.node.node_id, "test-node");
+        assert_eq!(node_status.node.region_id, "test-region");
+        assert_eq!(node_status.node.zone_id, "test-zone");
+        assert_eq!(node_status.status, node_status::UP);
+        assert!(node_status.can_service_discovery);
+        assert!(node_status.can_service_registry);
+    }
+
+    // ========== Cluster Status 测试 ==========
+
+    #[tokio::test]
+    async fn test_get_cluster_status_without_cluster() {
+        let service = create_test_service();
+        let request = GetClusterStatusRequest {};
+
+        let response = service.get_cluster_status(request).await;
+
+        // 应该只包含当前节点
+        assert_eq!(response.node_count, 1);
+        assert_eq!(response.nodes_status.len(), 1);
+        assert_eq!(response.nodes_status[0].node.node_id, "test-node");
+    }
+
+    #[tokio::test]
+    async fn test_get_cluster_status_with_cluster() {
+        let service = create_test_service_with_cluster();
+        let request = GetClusterStatusRequest {};
+
+        let response = service.get_cluster_status(request).await;
+
+        // 至少包含当前节点
+        assert!(response.node_count >= 1);
+        assert!(!response.nodes_status.is_empty());
+        assert!(matches!(response.response_status.error_code, artemis_core::model::ErrorCode::Success));
+    }
+
+    // ========== Config Status 测试 ==========
+
+    #[tokio::test]
+    async fn test_get_config_status() {
+        let service = create_test_service();
+        let request = GetConfigStatusRequest {};
+
+        let response = service.get_config_status(request).await;
+
+        assert!(response.properties.contains_key("node_id"));
+        assert_eq!(response.properties.get("node_id").unwrap(), "test-node");
+        assert_eq!(response.properties.get("region_id").unwrap(), "test-region");
+        assert_eq!(response.properties.get("zone_id").unwrap(), "test-zone");
+        assert_eq!(response.properties.get("app_id").unwrap(), "test-app");
+        assert!(response.sources.contains_key("default"));
+    }
+
+    // ========== Deployment Status 测试 ==========
+
+    #[tokio::test]
+    async fn test_get_deployment_status() {
+        let service = create_test_service();
+        let request = GetDeploymentStatusRequest {};
+
+        let response = service.get_deployment_status(request).await;
+
+        assert_eq!(response.region_id, "test-region");
+        assert_eq!(response.zone_id, "test-zone");
+        assert_eq!(response.app_id, "test-app");
+        assert_eq!(response.ip, "localhost");
+        assert_eq!(response.port, 8080);
+        assert_eq!(response.protocol, "http");
+        assert!(!response.machine_name.is_empty());
+        assert!(response.sources.contains_key("default"));
     }
 }
