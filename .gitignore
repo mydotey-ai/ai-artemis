@@ -38,6 +38,3 @@ artemis.toml
 # Temporary documentation (not version controlled)
 docs/reports/
 docs/archive/
-
-# Claude AI Assistant files
-.claude/
