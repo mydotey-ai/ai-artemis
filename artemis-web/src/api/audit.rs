@@ -226,3 +226,121 @@ pub async fn query_service_instance_logs(
 
     (StatusCode::OK, Json(ApiResponse::success(logs)))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_api_response_success() {
+        let response: ApiResponse<Vec<String>> = ApiResponse::success(vec!["test".to_string()]);
+        assert!(response.success);
+        assert!(response.data.is_some());
+        assert_eq!(response.data.unwrap().len(), 1);
+        assert!(response.message.is_none());
+    }
+
+    #[test]
+    fn test_query_logs_params_deserialize() {
+        // 测试参数结构体可以正常反序列化
+        let params = QueryLogsParams {
+            operation_type: Some("group".to_string()),
+            operator_id: Some("admin".to_string()),
+            limit: Some(10),
+        };
+        assert_eq!(params.operation_type, Some("group".to_string()));
+        assert_eq!(params.operator_id, Some("admin".to_string()));
+        assert_eq!(params.limit, Some(10));
+    }
+
+    #[test]
+    fn test_query_instance_logs_params() {
+        let params = QueryInstanceLogsParams {
+            service_id: Some("service1".to_string()),
+            operator_id: None,
+            limit: Some(5),
+        };
+        assert!(params.service_id.is_some());
+        assert!(params.operator_id.is_none());
+    }
+
+    #[test]
+    fn test_query_server_logs_params() {
+        let params = QueryServerLogsParams {
+            server_id: Some("server1".to_string()),
+            operator_id: Some("admin".to_string()),
+            limit: Some(10),
+        };
+        assert_eq!(params.server_id.as_deref(), Some("server1"));
+    }
+
+    #[test]
+    fn test_query_group_logs_params() {
+        let params = QueryGroupLogsParams {
+            group_id: Some("g1".to_string()),
+            operator_id: None,
+            limit: None,
+        };
+        assert!(params.group_id.is_some());
+        assert!(params.limit.is_none());
+    }
+
+    #[test]
+    fn test_query_route_rule_logs_params() {
+        let params = QueryRouteRuleLogsParams {
+            rule_id: Some("r1".to_string()),
+            operator_id: Some("user1".to_string()),
+            limit: Some(20),
+        };
+        assert_eq!(params.rule_id, Some("r1".to_string()));
+        assert_eq!(params.limit, Some(20));
+    }
+
+    #[test]
+    fn test_query_route_rule_group_logs_params() {
+        let params = QueryRouteRuleGroupLogsParams {
+            rule_id: Some("r1".to_string()),
+            group_id: Some("g1".to_string()),
+            operator_id: None,
+            limit: None,
+        };
+        assert!(params.rule_id.is_some());
+        assert!(params.group_id.is_some());
+    }
+
+    #[test]
+    fn test_query_zone_logs_params() {
+        let params = QueryZoneLogsParams {
+            zone_id: Some("zone1".to_string()),
+            region_id: Some("us-east".to_string()),
+            operator_id: Some("admin".to_string()),
+            limit: Some(15),
+        };
+        assert_eq!(params.zone_id, Some("zone1".to_string()));
+        assert_eq!(params.region_id, Some("us-east".to_string()));
+    }
+
+    #[test]
+    fn test_query_group_instance_logs_params() {
+        let params = QueryGroupInstanceLogsParams {
+            group_id: Some("g1".to_string()),
+            instance_id: Some("inst1".to_string()),
+            operator_id: None,
+            limit: Some(10),
+        };
+        assert!(params.group_id.is_some());
+        assert!(params.instance_id.is_some());
+    }
+
+    #[test]
+    fn test_query_service_instance_logs_params() {
+        let params = QueryServiceInstanceLogsParams {
+            service_id: Some("service1".to_string()),
+            region_id: Some("us-east".to_string()),
+            operator_id: Some("admin".to_string()),
+            limit: Some(25),
+        };
+        assert_eq!(params.service_id, Some("service1".to_string()));
+        assert_eq!(params.limit, Some(25));
+    }
+}
