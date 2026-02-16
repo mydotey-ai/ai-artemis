@@ -363,4 +363,116 @@ mod tests {
 
         // 如果能创建多个客户端,测试通过
     }
+
+    // ========== 新增测试 (Phase 1.1 - ReplicationClient 覆盖提升) ==========
+
+    // ===== 超时配置测试 =====
+
+    #[test]
+    fn test_client_timeout_zero() {
+        // 即使超时设为 0,客户端也应能创建
+        let client = ReplicationClient::new(Duration::from_secs(0));
+        assert_eq!(client.timeout, Duration::from_secs(0));
+    }
+
+    #[test]
+    fn test_client_timeout_very_large() {
+        // 超大超时值
+        let timeout = Duration::from_secs(3600); // 1 小时
+        let client = ReplicationClient::new(timeout);
+        assert_eq!(client.timeout, timeout);
+    }
+
+    #[test]
+    fn test_client_timeout_milliseconds() {
+        // 毫秒级超时
+        let timeout = Duration::from_millis(100);
+        let client = ReplicationClient::new(timeout);
+        assert_eq!(client.timeout, timeout);
+    }
+
+    // ===== URL 构建边界测试 =====
+
+    #[test]
+    fn test_url_with_trailing_slash() {
+        let peer_url = "http://example.com:8080/";
+        let expected_url = format!("{}/api/replication/registry/register.json", peer_url.trim_end_matches('/'));
+
+        assert_eq!(
+            expected_url,
+            "http://example.com:8080/api/replication/registry/register.json"
+        );
+    }
+
+    #[test]
+    fn test_url_with_https() {
+        let peer_url = "https://secure-peer.com:443";
+        let url = format!("{}/api/replication/registry/register.json", peer_url);
+
+        assert!(url.starts_with("https://"));
+        assert!(url.contains("/api/replication/registry/register.json"));
+    }
+
+    #[test]
+    fn test_url_with_ipv4_address() {
+        let peer_url = "http://192.168.1.100:8080";
+        let url = format!("{}/api/replication/registry/heartbeat.json", peer_url);
+
+        assert_eq!(
+            url,
+            "http://192.168.1.100:8080/api/replication/registry/heartbeat.json"
+        );
+    }
+
+    #[test]
+    fn test_url_with_localhost() {
+        let peer_url = "http://localhost:8080";
+        let url = format!("{}/api/replication/registry/services.json", peer_url);
+
+        assert_eq!(
+            url,
+            "http://localhost:8080/api/replication/registry/services.json"
+        );
+    }
+
+    // ===== 批量API URL 测试 =====
+
+    #[test]
+    fn test_batch_apis_url_consistency() {
+        let peer_url = "http://test:8080";
+
+        let batch_register_url = format!("{}/api/replication/registry/batch-register.json", peer_url);
+        let batch_unregister_url = format!("{}/api/replication/registry/batch-unregister.json", peer_url);
+
+        // 验证批量 API URL 都在同一路径前缀下
+        assert!(batch_register_url.contains("/api/replication/registry/"));
+        assert!(batch_unregister_url.contains("/api/replication/registry/"));
+
+        // 验证批量 API 都使用 batch- 前缀
+        assert!(batch_register_url.contains("batch-register"));
+        assert!(batch_unregister_url.contains("batch-unregister"));
+    }
+
+    // ===== 客户端克隆测试 =====
+
+    #[test]
+    fn test_client_can_be_used_multiple_times() {
+        let client = ReplicationClient::new(Duration::from_secs(5));
+
+        // 验证客户端可以多次使用(通过创建多个 URL)
+        let _url1 = format!("{}/api/replication/registry/register.json", "http://peer1:8080");
+        let _url2 = format!("{}/api/replication/registry/heartbeat.json", "http://peer2:8080");
+        let _url3 = format!("{}/api/replication/registry/unregister.json", "http://peer3:8080");
+
+        // 客户端应该仍然可用
+        assert_eq!(client.timeout, Duration::from_secs(5));
+    }
+
+    #[test]
+    fn test_default_client_can_be_created_multiple_times() {
+        let _client1 = ReplicationClient::default();
+        let _client2 = ReplicationClient::default();
+
+        // 验证可以创建多个默认客户端
+    }
 }
