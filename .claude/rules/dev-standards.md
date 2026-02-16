@@ -1,5 +1,44 @@
 # Artemis 开发规范
 
+## 开发环境
+
+### 一键启动开发环境
+
+使用 `dev.sh` 脚本可以快速启动完整的开发环境（后端服务 + Web Console）：
+
+```bash
+# 启动开发环境
+./scripts/dev.sh start              # 启动后端 + 前端
+./scripts/dev.sh start 1            # 启动单节点 + 前端
+./scripts/dev.sh start 3 9000       # 启动 3 节点集群 (端口从 9000 开始) + 前端
+
+# 查看状态
+./scripts/dev.sh status             # 查看所有服务状态
+
+# 查看日志
+./scripts/dev.sh logs               # 查看所有日志
+./scripts/dev.sh logs backend       # 仅查看后端日志
+./scripts/dev.sh logs frontend      # 仅查看前端日志
+
+# 重启服务
+./scripts/dev.sh restart            # 重启所有服务
+./scripts/dev.sh restart 1          # 重启为单节点
+
+# 停止服务
+./scripts/dev.sh stop               # 停止所有服务
+
+# 清理环境
+./scripts/dev.sh clean              # 清理日志和数据文件
+```
+
+**访问地址**:
+- **Web Console**: http://localhost:5173
+- **API 端点**: http://localhost:8080 (或指定的端口)
+
+详见: [`docs/development.md`](../../docs/development.md)
+
+---
+
 ## 代码质量规范
 
 ### 运行测试

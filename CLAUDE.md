@@ -10,6 +10,26 @@
 
 ## 快速开始
 
+### 开发环境一键启动
+
+使用 `dev.sh` 脚本可以同时启动后端和前端服务：
+
+```bash
+# 启动开发环境 (后端 + Web Console)
+./scripts/dev.sh start
+
+# 查看服务状态
+./scripts/dev.sh status
+
+# 查看日志
+./scripts/dev.sh logs
+
+# 停止所有服务
+./scripts/dev.sh stop
+```
+
+详见: [开发指南](docs/development.md)
+
 ### 单节点启动
 
 ```bash
