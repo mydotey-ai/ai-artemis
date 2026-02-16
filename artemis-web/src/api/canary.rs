@@ -174,4 +174,72 @@ mod tests {
         assert_eq!(config.ip_whitelist.len(), 2);
         assert!(config.enabled);
     }
+
+    #[test]
+    fn test_canary_config_disabled() {
+        use artemis_core::model::CanaryConfig;
+        let config = CanaryConfig {
+            service_id: "service2".to_string(),
+            ip_whitelist: vec![],
+            enabled: false,
+        };
+        assert!(!config.enabled);
+        assert_eq!(config.ip_whitelist.len(), 0);
+    }
+
+    #[test]
+    fn test_enable_canary_request_disabled() {
+        use artemis_core::model::EnableCanaryRequest;
+        let req = EnableCanaryRequest {
+            service_id: "service2".to_string(),
+            enabled: false,
+        };
+        assert_eq!(req.service_id, "service2");
+        assert!(!req.enabled);
+    }
+
+    #[test]
+    fn test_set_canary_config_request_empty_whitelist() {
+        use artemis_core::model::SetCanaryConfigRequest;
+        let req = SetCanaryConfigRequest {
+            service_id: "service3".to_string(),
+            ip_whitelist: vec![],
+        };
+        assert_eq!(req.service_id, "service3");
+        assert!(req.ip_whitelist.is_empty());
+    }
+
+    #[test]
+    fn test_set_canary_config_request_multiple_ips() {
+        use artemis_core::model::SetCanaryConfigRequest;
+        let ips = vec![
+            "192.168.1.1".to_string(),
+            "192.168.1.2".to_string(),
+            "10.0.0.1".to_string(),
+        ];
+        let req = SetCanaryConfigRequest {
+            service_id: "service4".to_string(),
+            ip_whitelist: ips.clone(),
+        };
+        assert_eq!(req.ip_whitelist.len(), 3);
+        assert_eq!(req.ip_whitelist[0], "192.168.1.1");
+        assert_eq!(req.ip_whitelist[2], "10.0.0.1");
+    }
+
+    #[test]
+    fn test_api_response_success_with_message() {
+        let response: ApiResponse<String> = ApiResponse::success("Success message".to_string());
+        assert!(response.success);
+        assert_eq!(response.data, Some("Success message".to_string()));
+        assert!(response.message.is_none());
+    }
+
+    #[test]
+    fn test_api_response_error_with_details() {
+        let error_msg = "Configuration not found".to_string();
+        let response: ApiResponse<CanaryConfig> = ApiResponse::error(error_msg.clone());
+        assert!(!response.success);
+        assert!(response.data.is_none());
+        assert_eq!(response.message, Some(error_msg));
+    }
 }

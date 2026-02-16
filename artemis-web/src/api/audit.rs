@@ -343,4 +343,108 @@ mod tests {
         assert_eq!(params.service_id, Some("service1".to_string()));
         assert_eq!(params.limit, Some(25));
     }
+
+    #[test]
+    fn test_query_logs_params_all_none() {
+        let params = QueryLogsParams {
+            operation_type: None,
+            operator_id: None,
+            limit: None,
+        };
+        assert!(params.operation_type.is_none());
+        assert!(params.operator_id.is_none());
+        assert!(params.limit.is_none());
+    }
+
+    #[test]
+    fn test_query_instance_logs_params_partial() {
+        let params = QueryInstanceLogsParams {
+            service_id: Some("service2".to_string()),
+            operator_id: Some("user2".to_string()),
+            limit: None,
+        };
+        assert!(params.service_id.is_some());
+        assert!(params.limit.is_none());
+    }
+
+    #[test]
+    fn test_query_server_logs_params_no_limit() {
+        let params = QueryServerLogsParams {
+            server_id: None,
+            operator_id: Some("system".to_string()),
+            limit: None,
+        };
+        assert!(params.server_id.is_none());
+        assert_eq!(params.operator_id, Some("system".to_string()));
+    }
+
+    #[test]
+    fn test_query_route_rule_group_logs_params_full() {
+        let params = QueryRouteRuleGroupLogsParams {
+            rule_id: Some("rule-123".to_string()),
+            group_id: Some("group-456".to_string()),
+            operator_id: Some("admin".to_string()),
+            limit: Some(100),
+        };
+        assert_eq!(params.rule_id, Some("rule-123".to_string()));
+        assert_eq!(params.group_id, Some("group-456".to_string()));
+        assert_eq!(params.limit, Some(100));
+    }
+
+    #[test]
+    fn test_query_zone_logs_params_minimal() {
+        let params = QueryZoneLogsParams {
+            zone_id: None,
+            region_id: None,
+            operator_id: None,
+            limit: Some(50),
+        };
+        assert!(params.zone_id.is_none());
+        assert!(params.region_id.is_none());
+        assert_eq!(params.limit, Some(50));
+    }
+
+    #[test]
+    fn test_query_group_instance_logs_params_no_operator() {
+        let params = QueryGroupInstanceLogsParams {
+            group_id: Some("group-789".to_string()),
+            instance_id: Some("instance-abc".to_string()),
+            operator_id: None,
+            limit: Some(30),
+        };
+        assert!(params.group_id.is_some());
+        assert!(params.operator_id.is_none());
+        assert_eq!(params.limit, Some(30));
+    }
+
+    #[test]
+    fn test_api_response_with_vec() {
+        let data = vec!["log1".to_string(), "log2".to_string(), "log3".to_string()];
+        let response: ApiResponse<Vec<String>> = ApiResponse::success(data.clone());
+        assert!(response.success);
+        assert_eq!(response.data.unwrap().len(), 3);
+    }
+
+    #[test]
+    fn test_query_logs_params_with_limit() {
+        let params = QueryLogsParams {
+            operation_type: Some("zone".to_string()),
+            operator_id: None,
+            limit: Some(1000),
+        };
+        assert_eq!(params.operation_type, Some("zone".to_string()));
+        assert_eq!(params.limit, Some(1000));
+    }
+
+    #[test]
+    fn test_query_service_instance_logs_params_no_region() {
+        let params = QueryServiceInstanceLogsParams {
+            service_id: Some("my-service".to_string()),
+            region_id: None,
+            operator_id: None,
+            limit: None,
+        };
+        assert_eq!(params.service_id, Some("my-service".to_string()));
+        assert!(params.region_id.is_none());
+    }
 }
