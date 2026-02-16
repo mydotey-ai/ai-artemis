@@ -90,13 +90,6 @@ API 数量：34 个
 | Phase 24 | [phase-24-audit-logs-detail.md](phases/phase-24-audit-logs-detail.md) | 审计日志细分 API (6 API) | ✅ 完成 |
 | Phase 25 | [phase-25-batch-operations-query.md](phases/phase-25-batch-operations-query.md) | 批量操作查询 API (4 API) | ✅ 完成 |
 
-### 综合设计文档
-
-| 文档 | 描述 | 状态 |
-|------|------|------|
-| [phase10-11-12-complete-design.md](phases/phase10-11-12-complete-design.md) | Phase 10-12 综合设计文档 | ✅ 参考 |
-| [phase12-13-implementation-plan.md](phases/phase12-13-implementation-plan.md) | Phase 12-13 实施计划 | ✅ 参考 |
-
 ---
 
 ## 🎯 Phase 实施状态
