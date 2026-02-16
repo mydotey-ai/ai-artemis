@@ -6,6 +6,7 @@ members = [
     "artemis-management",
     "artemis-client",
     "artemis",
+    "tools/stress-test",
 ]
 resolver = "2"
 
