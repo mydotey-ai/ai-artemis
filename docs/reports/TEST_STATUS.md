@@ -154,11 +154,11 @@ Lookup:
 ### 本地运行
 ```bash
 # 使用便捷脚本
-./run-tests.sh           # 运行所有测试
-./run-tests.sh web       # 仅 Web API 测试
-./run-tests.sh registry  # 仅 Registry API 测试
-./run-tests.sh summary   # 显示测试摘要
-./run-tests.sh coverage  # 生成覆盖率报告
+./scripts/run-tests.sh           # 运行所有测试
+./scripts/run-tests.sh web       # 仅 Web API 测试
+./scripts/run-tests.sh registry  # 仅 Registry API 测试
+./scripts/run-tests.sh summary   # 显示测试摘要
+./scripts/run-tests.sh coverage  # 生成覆盖率报告
 
 # 使用 cargo 命令
 cargo test --workspace --lib            # 所有单元测试
@@ -244,7 +244,7 @@ cargo test -p artemis-web --test test_discovery_api # Discovery API 测试
 如果遇到测试问题或有改进建议:
 
 1. 查看测试文档 (`docs/TEST_STRATEGY.md`, `TEST_QUICK_START.md`)
-2. 运行 `./run-tests.sh help` 查看可用命令
+2. 运行 `./scripts/run-tests.sh help` 查看可用命令
 3. 检查 CI/CD 日志 (GitHub Actions)
 4. 提交 Issue 或 Pull Request
 

@@ -20,7 +20,7 @@ Artemis 使用 **SeaORM 1.1** 作为数据库 ORM,支持运行时在 **SQLite** 
 
 ### 1. SQLite 配置 (开发/测试)
 
-**配置文件**: `artemis-sqlite.toml`
+**配置文件**: `config/examples/artemis-sqlite.toml`
 
 ```toml
 [database]
@@ -37,7 +37,7 @@ max_connections = 10
 
 **启动命令**:
 ```bash
-./artemis server --config artemis-sqlite.toml
+./artemis server --config config/examples/artemis-sqlite.toml
 ```
 
 **数据文件位置**:
@@ -57,7 +57,7 @@ sqlite3 artemis.db ".backup artemis.db.backup"
 
 ### 2. MySQL 配置 (生产环境)
 
-**配置文件**: `artemis-mysql.toml`
+**配置文件**: `config/examples/artemis-mysql.toml`
 
 ```toml
 [database]
@@ -82,7 +82,7 @@ FLUSH PRIVILEGES;
 
 **启动命令**:
 ```bash
-./artemis server --config artemis-mysql.toml
+./artemis server --config config/examples/artemis-mysql.toml
 ```
 
 **高可用配置** (可选):
@@ -394,7 +394,7 @@ DELETE FROM instance_operation_log WHERE timestamp < DATE_SUB(NOW(), INTERVAL 90
 ### 完整的 SQLite 配置
 
 ```toml
-# artemis-sqlite.toml
+# config/examples/artemis-sqlite.toml
 [server]
 node_id = "node-dev"
 listen_addr = "0.0.0.0:8080"
@@ -408,7 +408,7 @@ max_connections = 10
 ### 完整的 MySQL 配置
 
 ```toml
-# artemis-mysql.toml
+# config/examples/artemis-mysql.toml
 [server]
 node_id = "node-prod-1"
 listen_addr = "0.0.0.0:8080"

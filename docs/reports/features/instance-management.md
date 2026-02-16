@@ -169,7 +169,7 @@ test result: ok. 52 passed; 0 failed; 0 ignored
 ./target/release/artemis server
 
 # 2. 运行测试 (另一个终端)
-./test-instance-management.sh
+./scripts/test-instance-management.sh
 ```
 
 **预期输出**:

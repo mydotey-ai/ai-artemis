@@ -265,7 +265,7 @@ mod tests {
 
 **运行结果**:
 ```bash
-$ ./test-instance-management.sh
+$ ./scripts/test-instance-management.sh
 ✅ All 13 tests passed!
 ```
 

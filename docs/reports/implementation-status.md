@@ -202,19 +202,19 @@ cargo clippy --workspace -- -D warnings
 ### Multi-Node Cluster
 ```bash
 # Start 3-node cluster
-./cluster.sh start 3
+./scripts/cluster.sh start 3
 
 # Run automated cluster API tests
-./test-cluster-api.sh
+./scripts/test-cluster-api.sh
 
 # Check cluster status
-./cluster.sh status
+./scripts/cluster.sh status
 
 # View logs
-./cluster.sh logs
+./scripts/cluster.sh logs
 
 # Stop cluster
-./cluster.sh stop
+./scripts/cluster.sh stop
 ```
 
 ## Production Deployment

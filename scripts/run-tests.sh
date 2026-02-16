@@ -37,7 +37,7 @@ print_info() {
 show_help() {
     echo "Artemis 测试运行脚本"
     echo ""
-    echo "用法: ./run-tests.sh [命令]"
+    echo "用法: ./scripts/run-tests.sh [命令]"
     echo ""
     echo "可用命令:"
     echo "  all           - 运行所有测试 (默认)"

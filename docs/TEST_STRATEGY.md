@@ -733,7 +733,7 @@ fn bench_dao_operations(c: &mut Criterion) {
 # 压力测试脚本
 
 # 1. 启动 3 节点集群
-./cluster.sh start
+./scripts/cluster.sh start
 
 # 2. 注册 10,000 实例
 for i in {1..10000}; do
@@ -747,7 +747,7 @@ wrk -t10 -c100 -d300s http://localhost:8080/api/discovery/service.json
 curl http://localhost:8080/metrics | grep artemis_
 
 # 5. 清理
-./cluster.sh stop
+./scripts/cluster.sh stop
 ```
 
 **预计工时**: 3 天
@@ -799,11 +799,11 @@ jobs:
       - name: Build
         run: cargo build --release
       - name: Run cluster tests
-        run: ./test-cluster-api.sh
+        run: ./scripts/test-cluster-api.sh
       - name: Run instance management tests
-        run: ./test-instance-management.sh
+        run: ./scripts/test-instance-management.sh
       - name: Run group routing tests
-        run: ./test-group-routing.sh
+        run: ./scripts/test-group-routing.sh
 
   benchmarks:
     runs-on: ubuntu-latest

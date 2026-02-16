@@ -167,10 +167,13 @@
 - ✅ **性能基准** - Criterion benchmark 套件
 
 #### 额外工具
-- ✅ **本地集群管理** - cluster.sh 脚本,一键启动/停止多节点集群
-- ✅ **集群 API 测试** - test-cluster-api.sh 脚本,完整的集群 API 测试
-- ✅ **实例管理测试** - test-instance-management.sh 脚本,13 步集成测试
-- ✅ **分组路由测试** - test-group-routing.sh 脚本,13 步集成测试验证加权路由
+- ✅ **本地集群管理** - `scripts/cluster.sh` 脚本,一键启动/停止多节点集群
+- ✅ **测试运行工具** - `scripts/run-tests.sh` 脚本,便捷的测试命令封装
+- ✅ **12 个集成测试脚本** - `scripts/test-*.sh`,覆盖所有核心功能
+  - `test-cluster-api.sh` - 集群 API 完整测试 (7 步)
+  - `test-instance-management.sh` - 实例管理测试 (13 步)
+  - `test-group-routing.sh` - 分组路由测试 (13 步)
+  - 其他 9 个测试脚本 - 覆盖 Phase 19-25 功能
 
 ## 📁 项目文档组织规范
 
@@ -183,6 +186,12 @@ ai-artemis/
 ├── README.md                           # 项目首页 - 快速开始和 API 使用
 ├── CLAUDE.md                           # 本文件 - 项目完成总结和文档规范
 ├── CLUSTER.md                          # 集群管理指南
+│
+├── scripts/                            # 脚本工具集 (集群管理和测试)
+│   ├── README.md                       # 脚本使用说明
+│   ├── cluster.sh                      # 集群管理工具
+│   ├── run-tests.sh                    # 测试运行工具
+│   └── test-*.sh                       # 12 个集成测试脚本
 │
 └── docs/                               # 文档中心 (所有技术文档)
     ├── README.md                       # 文档导航索引
@@ -393,16 +402,16 @@ cargo run --release --bin artemis -- server
 
 ```bash
 # 启动 3 节点集群
-./cluster.sh start
+./scripts/cluster.sh start
 
 # 查看状态
-./cluster.sh status
+./scripts/cluster.sh status
 
 # 查看日志
-./cluster.sh logs
+./scripts/cluster.sh logs
 
 # 停止集群
-./cluster.sh stop
+./scripts/cluster.sh stop
 ```
 
 ### Docker 部署
@@ -615,9 +624,9 @@ cargo build --workspace
 **使用方式**:
 ```bash
 # SQLite 模式 (开发环境)
-DB_TYPE=sqlite ./cluster.sh start
+DB_TYPE=sqlite ./scripts/cluster.sh start
 
 # MySQL 模式 (生产环境)
-DB_TYPE=mysql DB_URL="mysql://user:pass@host:3306/artemis" ./cluster.sh start
+DB_TYPE=mysql DB_URL="mysql://user:pass@host:3306/artemis" ./scripts/cluster.sh start
 ```
 

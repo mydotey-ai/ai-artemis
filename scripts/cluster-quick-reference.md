@@ -6,72 +6,72 @@
 
 ```bash
 # 默认: 3节点, 端口 8080-8082, 纯内存模式
-./cluster.sh start
+./scripts/cluster.sh start
 
 # 5节点集群
-./cluster.sh start 5
+./scripts/cluster.sh start 5
 
 # 自定义端口 (9000-9002)
-./cluster.sh start 3 9000
+./scripts/cluster.sh start 3 9000
 ```
 
 ### 启动集群(使用数据库 - 实验性)
 
 ```bash
 # 使用 SQLite (每个节点独立数据库文件)
-DB_TYPE=sqlite ./cluster.sh start
+DB_TYPE=sqlite ./scripts/cluster.sh start
 
 # 使用 MySQL (所有节点共享数据库)
-DB_TYPE=mysql DB_URL="mysql://user:pass@host:3306/artemis" ./cluster.sh start
+DB_TYPE=mysql DB_URL="mysql://user:pass@host:3306/artemis" ./scripts/cluster.sh start
 
 # SQLite + 自定义连接数
-DB_TYPE=sqlite DB_MAX_CONN=20 ./cluster.sh start
+DB_TYPE=sqlite DB_MAX_CONN=20 ./scripts/cluster.sh start
 ```
 
-**注意**: 数据库功能生成配置文件,但可能需要特殊编译配置。推荐生产环境使用 `config/production-cluster-node*.toml`。
+**注意**: 数据库功能生成配置文件,但可能需要特殊编译配置。推荐生产环境使用 `scripts/examples/production-cluster-node*.toml`。
 
 ### 查看状态
 
 ```bash
 # 查看集群状态
-./cluster.sh status
+./scripts/cluster.sh status
 
 # 查看自定义端口集群状态
-./cluster.sh status 9000
+./scripts/cluster.sh status 9000
 ```
 
 ### 查看日志
 
 ```bash
 # 查看所有节点日志
-./cluster.sh logs
+./scripts/cluster.sh logs
 
 # 查看特定节点日志
-./cluster.sh logs 1
+./scripts/cluster.sh logs 1
 ```
 
 ### 停止集群
 
 ```bash
 # 停止所有节点
-./cluster.sh stop
+./scripts/cluster.sh stop
 ```
 
 ### 重启集群
 
 ```bash
 # 重启集群(保持配置)
-./cluster.sh restart
+./scripts/cluster.sh restart
 
 # 重启并修改节点数
-./cluster.sh restart 5
+./scripts/cluster.sh restart 5
 ```
 
 ### 清理环境
 
 ```bash
 # 停止集群并删除所有文件
-./cluster.sh clean
+./scripts/cluster.sh clean
 ```
 
 ## 集群配置
@@ -108,7 +108,7 @@ peers = [
 ## 文件位置
 
 ```
-.cluster/
+scripts/.cluster/
 ├── config/        # 节点配置文件
 │   ├── node1.toml
 │   ├── node2.toml
@@ -129,7 +129,7 @@ peers = [
 
 ```bash
 # 1. 启动集群
-./cluster.sh start
+./scripts/cluster.sh start
 
 # 2. 在节点1注册服务
 curl -X POST http://localhost:8080/api/registry/register.json \
@@ -174,7 +174,7 @@ done
 
 ```bash
 # 查看节点1的复制事件
-grep "Replicating" .cluster/logs/node1.log
+grep "Replicating" scripts/.cluster/logs/node1.log
 ```
 
 ## 故障排查
@@ -183,7 +183,7 @@ grep "Replicating" .cluster/logs/node1.log
 
 ```bash
 # 查看节点日志
-cat .cluster/logs/node1.log
+cat scripts/.cluster/logs/node1.log
 
 # 检查端口占用
 lsof -i :8080
@@ -193,10 +193,10 @@ lsof -i :8080
 
 ```bash
 # 检查peers配置
-cat .cluster/config/node1.toml | grep -A 5 "peers ="
+cat scripts/.cluster/config/node1.toml | grep -A 5 "peers ="
 
 # 查看集群日志
-grep "peer" .cluster/logs/node*.log
+grep "peer" scripts/.cluster/logs/node*.log
 ```
 
 ### 清理残留进程
@@ -206,7 +206,7 @@ grep "peer" .cluster/logs/node*.log
 pkill -f "artemis server"
 
 # 清理目录
-rm -rf .cluster
+rm -rf scripts/.cluster
 ```
 
 ## 性能指标
@@ -248,5 +248,5 @@ expiry_secs = 300  # 缓存过期时间
 ## 相关文档
 
 - [CLUSTER.md](../CLUSTER.md) - 集群功能详细说明
-- [docs/reports/features/cluster-replication.md](reports/features/cluster-replication.md) - 集群复制实现
+- [docs/reports/features/cluster-replication.md](../docs/reports/features/cluster-replication.md) - 集群复制实现
 - [README.md](../README.md) - 项目总览

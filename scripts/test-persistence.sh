@@ -17,7 +17,7 @@
 #   8. 清理测试数据
 #
 # 使用方法:
-#   ./test-persistence.sh
+#   ./scripts/test-persistence.sh
 #
 # 配置文件: artemis-test-with-db.toml
 #

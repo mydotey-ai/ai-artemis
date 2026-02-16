@@ -15,7 +15,7 @@
 #   [审计日志] Audit Logs (3步)
 #
 # 使用方法:
-#   ./test-management.sh [module]
+#   ./scripts/test-management.sh [module]
 #
 #   module: 指定测试模块 (可选)
 #     - instance    测试实例管理
@@ -27,7 +27,7 @@
 #     - all         测试所有模块 (默认)
 #
 # 前置条件: Artemis 集群必须已启动
-#   ./cluster.sh start 3
+#   ./scripts/cluster.sh start 3
 #
 # ================================================================
 

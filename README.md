@@ -83,16 +83,16 @@ cargo run --release --bin artemis -- server
 
 ```bash
 # 启动 3 节点集群
-./cluster.sh start
+./scripts/cluster.sh start
 
 # 查看集群状态
-./cluster.sh status
+./scripts/cluster.sh status
 
 # 查看日志
-./cluster.sh logs
+./scripts/cluster.sh logs
 
 # 停止集群
-./cluster.sh stop
+./scripts/cluster.sh stop
 ```
 
 详见 [本地集群管理](#本地集群管理) 章节。
@@ -408,7 +408,7 @@ curl -X POST http://localhost:8080/api/management/server/operate-server.json \
 
 运行集成测试:
 ```bash
-./test-instance-management.sh
+./scripts/test-instance-management.sh
 ```
 
 ### 分组路由 (Group Routing)
@@ -494,7 +494,7 @@ curl -X POST http://localhost:8080/api/routing/rules/canary-release/publish
 
 运行集成测试:
 ```bash
-./test-group-routing.sh
+./scripts/test-group-routing.sh
 ```
 
 ### 客户端 SDK 使用
@@ -635,51 +635,51 @@ async fn main() -> anyhow::Result<()> {
 
 ```bash
 # 启动默认 3 节点集群 (纯内存模式,端口 8080-8082)
-./cluster.sh start
+./scripts/cluster.sh start
 
 # 使用 SQLite 数据库模式 (配置持久化)
-DB_TYPE=sqlite ./cluster.sh start
+DB_TYPE=sqlite ./scripts/cluster.sh start
 
 # 使用 MySQL 数据库模式
-DB_TYPE=mysql DB_URL="mysql://user:pass@localhost:3306/artemis" ./cluster.sh start
+DB_TYPE=mysql DB_URL="mysql://user:pass@localhost:3306/artemis" ./scripts/cluster.sh start
 
 # 启动 5 节点集群
-./cluster.sh start 5
+./scripts/cluster.sh start 5
 
 # 自定义端口范围
-./cluster.sh start 3 8000 9000
+./scripts/cluster.sh start 3 8000 9000
 ```
 
 ### 集群管理命令
 
 ```bash
 # 查看集群状态
-./cluster.sh status
+./scripts/cluster.sh status
 
 # 查看所有节点日志
-./cluster.sh logs
+./scripts/cluster.sh logs
 
 # 查看特定节点日志
-./cluster.sh logs 1
+./scripts/cluster.sh logs 1
 
 # 重启集群
-./cluster.sh restart
+./scripts/cluster.sh restart
 
 # 停止集群
-./cluster.sh stop
+./scripts/cluster.sh stop
 
 # 清理所有文件
-./cluster.sh clean
+./scripts/cluster.sh clean
 ```
 
 ### 集群测试示例
 
 ```bash
 # 1. 启动 3 节点集群
-./cluster.sh start
+./scripts/cluster.sh start
 
 # 2. 运行自动化测试套件 (推荐)
-./test-cluster-api.sh
+./scripts/test-cluster-api.sh
 
 # 或者手动测试:
 
@@ -694,10 +694,10 @@ curl -X POST http://localhost:8081/api/discovery/service.json \
   -d '{"discovery_config": {...}}'
 
 # 5. 查看集群状态
-./cluster.sh status
+./scripts/cluster.sh status
 ```
 
-详细文档请参阅 [CLUSTER.md](CLUSTER.md)。
+详细文档请参阅 [CLUSTER.md](scripts/CLUSTER.md)。
 
 ---
 
@@ -857,7 +857,7 @@ docker-compose down
 
 ### 使用文档
 
-- [**集群管理**](CLUSTER.md) - 本地多节点集群启动和管理指南
+- [**集群管理**](scripts/CLUSTER.md) - 本地多节点集群启动和管理指南
 - [**数据库配置**](docs/DATABASE.md) - SQLite/MySQL 数据库配置和迁移指南
 - [**部署指南**](docs/deployment.md) - Docker、Kubernetes、监控配置
 

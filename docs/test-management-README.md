@@ -25,7 +25,7 @@
 
 1. **启动 Artemis 集群**:
    ```bash
-   ./cluster.sh start 3
+   ./scripts/cluster.sh start 3
    ```
 
 2. **确保服务健康**:
@@ -37,28 +37,28 @@
 
 #### 1. 测试所有模块 (推荐)
 ```bash
-./test-management.sh all
+./scripts/test-management.sh all
 ```
 
 #### 2. 测试单个模块
 ```bash
 # 实例管理
-./test-management.sh instance
+./scripts/test-management.sh instance
 
 # 服务器管理
-./test-management.sh server
+./scripts/test-management.sh server
 
 # Zone管理
-./test-management.sh zone
+./scripts/test-management.sh zone
 
 # 金丝雀发布
-./test-management.sh canary
+./scripts/test-management.sh canary
 
 # 分组路由
-./test-management.sh routing
+./scripts/test-management.sh routing
 
 # 审计日志
-./test-management.sh audit
+./scripts/test-management.sh audit
 ```
 
 ## 测试结果示例
@@ -205,20 +205,20 @@
 #### 1. 服务器未启动
 ```
 错误: 服务器启动超时
-解决: ./cluster.sh start 3
+解决: ./scripts/cluster.sh start 3
 ```
 
 #### 2. 端口冲突
 ```
 错误: 端口 8080 已被占用
-解决: ./cluster.sh stop && ./cluster.sh start 3
+解决: ./scripts/cluster.sh stop && ./scripts/cluster.sh start 3
 ```
 
 #### 3. 测试数据冲突
 ```
 错误: Group already exists
 解决: 重启集群清空内存数据
-      ./cluster.sh stop && ./cluster.sh start 3
+      ./scripts/cluster.sh stop && ./scripts/cluster.sh start 3
 ```
 
 ## 环境变量

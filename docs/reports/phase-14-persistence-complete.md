@@ -383,7 +383,7 @@ let result = self.conn.query_one(stmt).await?;
 
 ✅ **SQLite 模式** - 3节点集群测试通过:
 ```bash
-DB_TYPE=sqlite ./cluster.sh start
+DB_TYPE=sqlite ./scripts/cluster.sh start
 # ✅ 数据库连接成功
 # ✅ 表结构加载成功
 # ✅ ConfigLoader 恢复配置成功
@@ -413,10 +413,10 @@ max_connections = 20
 **使用方式**:
 ```bash
 # SQLite 模式
-DB_TYPE=sqlite ./cluster.sh start
+DB_TYPE=sqlite ./scripts/cluster.sh start
 
 # MySQL 模式
-DB_TYPE=mysql DB_URL="mysql://..." ./cluster.sh start
+DB_TYPE=mysql DB_URL="mysql://..." ./scripts/cluster.sh start
 ```
 
 ---

@@ -38,10 +38,10 @@ cargo build --release
 cargo test --test integration_tests
 
 # 3. 运行集成测试脚本
-./test-cluster-api.sh          # 集群 API 测试
-./test-instance-management.sh  # 实例管理测试
-./test-group-routing.sh         # 分组路由测试
-./test-persistence.sh           # 数据持久化测试
+./scripts/test-cluster-api.sh          # 集群 API 测试
+./scripts/test-instance-management.sh  # 实例管理测试
+./scripts/test-group-routing.sh         # 分组路由测试
+./scripts/test-persistence.sh           # 数据持久化测试
 
 # 4. 运行所有 scripts 目录下的测试
 for script in scripts/test-*.sh; do

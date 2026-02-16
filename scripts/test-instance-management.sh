@@ -22,7 +22,7 @@
 #   13. 清理测试数据
 #
 # 使用方法:
-#   ./test-instance-management.sh
+#   ./scripts/test-instance-management.sh
 #
 # 前置条件: Artemis 服务器必须已启动
 #   ./artemis server

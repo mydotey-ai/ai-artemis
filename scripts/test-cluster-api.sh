@@ -13,11 +13,11 @@
 #   - 集群一致性检查
 #
 # 使用方法:
-#   ./test-cluster-api.sh [基础端口] [节点数]
+#   ./scripts/test-cluster-api.sh [基础端口] [节点数]
 #   默认: ./test-cluster-api.sh 8080 3
 #
 # 前置条件: 集群必须已启动
-#   ./cluster.sh start
+#   ./scripts/cluster.sh start
 #
 # ================================================================
 

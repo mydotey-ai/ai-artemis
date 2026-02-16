@@ -464,7 +464,7 @@ curl -X POST http://localhost:8080/api/discovery/service.json \
 cargo run --bin artemis -- server
 
 # 2. 运行测试
-./test-group-routing.sh
+./scripts/test-group-routing.sh
 ```
 
 **预期输出**:

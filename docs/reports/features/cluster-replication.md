@@ -535,7 +535,7 @@ async fn start_server(config_path: Option<String>, addr_override: Option<String>
 
 ```bash
 # 1. 启动 3 节点集群
-./cluster.sh start 3
+./scripts/cluster.sh start 3
 
 # 2. 在节点 1 注册实例
 curl -X POST http://localhost:8080/api/registry/register.json \

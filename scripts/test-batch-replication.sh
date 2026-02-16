@@ -90,7 +90,7 @@ main() {
     print_step 1 8 "检查 3 节点集群是否运行"
     if ! curl -s "http://localhost:$NODE1_PORT/health" >/dev/null 2>&1; then
         echo -e "${RED}错误: 节点 1 未运行,请先启动集群${NC}"
-        echo "运行: ./cluster.sh start"
+        echo "运行: ./scripts/cluster.sh start"
         exit 1
     fi
     wait_for_node $NODE1_PORT

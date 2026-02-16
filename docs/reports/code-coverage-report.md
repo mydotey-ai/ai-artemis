@@ -245,7 +245,7 @@ start target/coverage/html/index.html    # Windows
 ### 便捷脚本
 ```bash
 # 使用测试脚本
-./run-tests.sh coverage
+./scripts/run-tests.sh coverage
 ```
 
 ---

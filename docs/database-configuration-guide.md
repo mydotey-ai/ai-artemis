@@ -26,7 +26,7 @@ Artemis 使用 **SeaORM** 作为数据库 ORM,支持运行时数据库切换:
 
 ```bash
 # 启动3节点集群 (纯内存,无数据库)
-./cluster.sh start
+./scripts/cluster.sh start
 
 # 优点: 快速启动,无需配置
 # 缺点: 重启后数据丢失
@@ -38,7 +38,7 @@ Artemis 使用 **SeaORM** 作为数据库 ORM,支持运行时数据库切换:
 
 ```bash
 # 启动3节点集群 (SQLite 共享模式)
-DB_TYPE=sqlite ./cluster.sh start
+DB_TYPE=sqlite ./scripts/cluster.sh start
 
 # 数据持久化在 .cluster/data/shared.db
 # 所有节点自动共享同一个数据库文件
@@ -52,16 +52,16 @@ sqlite3 .cluster/data/shared.db < artemis-management/migrations/001_initial_sche
 
 ### 方式3: SQLite 单节点
 
-使用现有的 `artemis-sqlite.toml` 配置:
+使用现有的 `config/examples/artemis-sqlite.toml` 配置:
 
 ```bash
 # 启动单节点服务
-artemis server --config artemis-sqlite.toml
+artemis server --config config/examples/artemis-sqlite.toml
 
 # 数据持久化在 artemis.db 文件
 ```
 
-配置示例 (`artemis-sqlite.toml`):
+配置示例 (`config/examples/artemis-sqlite.toml`):
 ```toml
 [database]
 db_type = "sqlite"
@@ -95,7 +95,7 @@ FLUSH PRIVILEGES;
 
 #### 2. 配置节点
 
-使用 `config/production-cluster-node*.toml` 模板:
+使用 `scripts/examples/production-cluster-node*.toml` 模板:
 
 ```toml
 [server]
@@ -123,13 +123,13 @@ max_connections = 20
 
 ```bash
 # 节点1
-artemis server --config config/production-cluster-node1.toml
+artemis server --config scripts/examples/production-cluster-node1.toml
 
 # 节点2
-artemis server --config config/production-cluster-node2.toml
+artemis server --config scripts/examples/production-cluster-node2.toml
 
 # 节点3
-artemis server --config config/production-cluster-node3.toml
+artemis server --config scripts/examples/production-cluster-node3.toml
 ```
 
 首次启动时,数据库 schema 会自动创建。
@@ -300,8 +300,8 @@ SHOW STATUS LIKE 'Threads_connected';
 
 ```
 ai-artemis/
-├── artemis-sqlite.toml          # 开发环境 SQLite 配置
-├── artemis-mysql.toml           # 单节点 MySQL 配置
+├── config/examples/artemis-sqlite.toml          # 开发环境 SQLite 配置
+├── config/examples/artemis-mysql.toml           # 单节点 MySQL 配置
 └── config/
     ├── production-cluster-node1.toml  # 生产集群节点1
     ├── production-cluster-node2.toml  # 生产集群节点2

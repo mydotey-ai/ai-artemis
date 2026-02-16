@@ -8,51 +8,51 @@
 
 ```bash
 # 启动默认 3 节点集群
-./cluster.sh start
+./scripts/cluster.sh start
 
 # 启动 5 节点集群
-./cluster.sh start 5
+./scripts/cluster.sh start 5
 
 # 自定义端口启动
-./cluster.sh start 3 8080 9090
+./scripts/cluster.sh start 3 8080 9090
 ```
 
 ### 查看状态
 
 ```bash
 # 查看集群状态
-./cluster.sh status
+./scripts/cluster.sh status
 ```
 
 ### 查看日志
 
 ```bash
 # 查看所有节点日志
-./cluster.sh logs
+./scripts/cluster.sh logs
 
 # 查看特定节点日志
-./cluster.sh logs 1
+./scripts/cluster.sh logs 1
 ```
 
 ### 停止集群
 
 ```bash
 # 停止所有节点
-./cluster.sh stop
+./scripts/cluster.sh stop
 ```
 
 ### 重启集群
 
 ```bash
 # 重启集群
-./cluster.sh restart
+./scripts/cluster.sh restart
 ```
 
 ### 清理文件
 
 ```bash
 # 停止集群并清理所有文件
-./cluster.sh clean
+./scripts/cluster.sh clean
 ```
 
 ## 命令详解
@@ -60,7 +60,7 @@
 ### start - 启动集群
 
 ```bash
-./cluster.sh start [节点数] [基础端口] [对等节点基础端口]
+./scripts/cluster.sh start [节点数] [基础端口] [对等节点基础端口]
 ```
 
 **参数:**
@@ -71,10 +71,10 @@
 **示例:**
 ```bash
 # 启动 3 节点集群,端口 8080-8082
-./cluster.sh start
+./scripts/cluster.sh start
 
 # 启动 5 节点集群,端口 8000-8004
-./cluster.sh start 5 8000 9000
+./scripts/cluster.sh start 5 8000 9000
 ```
 
 **节点分配:**
@@ -86,7 +86,7 @@
 ### stop - 停止集群
 
 ```bash
-./cluster.sh stop
+./scripts/cluster.sh stop
 ```
 
 优雅地停止所有运行中的节点。
@@ -94,7 +94,7 @@
 ### restart - 重启集群
 
 ```bash
-./cluster.sh restart [节点数] [基础端口] [对等节点基础端口]
+./scripts/cluster.sh restart [节点数] [基础端口] [对等节点基础端口]
 ```
 
 停止现有集群并重新启动,参数同 `start` 命令。
@@ -102,7 +102,7 @@
 ### status - 查看状态
 
 ```bash
-./cluster.sh status [基础端口]
+./scripts/cluster.sh status [基础端口]
 ```
 
 显示所有节点的运行状态,包括:
@@ -114,7 +114,7 @@
 ### logs - 查看日志
 
 ```bash
-./cluster.sh logs [节点ID]
+./scripts/cluster.sh logs [节点ID]
 ```
 
 **参数:**
@@ -123,16 +123,16 @@
 **示例:**
 ```bash
 # 查看所有节点日志
-./cluster.sh logs
+./scripts/cluster.sh logs
 
 # 仅查看节点 1 的日志
-./cluster.sh logs 1
+./scripts/cluster.sh logs 1
 ```
 
 ### clean - 清理文件
 
 ```bash
-./cluster.sh clean
+./scripts/cluster.sh clean
 ```
 
 停止集群并删除所有生成的文件,包括:
@@ -145,7 +145,7 @@
 集群运行时会在项目根目录下创建 `.cluster` 目录:
 
 ```
-.cluster/
+scripts/.cluster/
 ├── config/          # 节点配置文件
 │   ├── node1.toml
 │   ├── node2.toml
@@ -246,12 +246,12 @@ DB_MAX_CONN=10      # 最大连接数 (默认10)
 
 ```bash
 # 启动集群,所有节点共享同一个 SQLite 数据库
-DB_TYPE=sqlite ./cluster.sh start
+DB_TYPE=sqlite ./scripts/cluster.sh start
 
 # 首次启动需要创建 schema
-sqlite3 .cluster/data/shared.db < artemis-management/migrations/001_initial_schema.sql
+sqlite3 scripts/.cluster/data/shared.db < artemis-management/migrations/001_initial_schema.sql
 
-# 数据持久化在 .cluster/data/shared.db
+# 数据持久化在 scripts/.cluster/data/shared.db
 # 优点: 数据持久化,配置简单
 # 缺点: SQLite 并发写入性能有限,适合开发测试
 ```
@@ -260,7 +260,7 @@ sqlite3 .cluster/data/shared.db < artemis-management/migrations/001_initial_sche
 
 ```bash
 # 使用 MySQL 数据库 (适合生产环境)
-DB_TYPE=mysql DB_URL="mysql://user:pass@host:3306/artemis" ./cluster.sh start
+DB_TYPE=mysql DB_URL="mysql://user:pass@host:3306/artemis" ./scripts/cluster.sh start
 
 # 优点: 高并发性能,适合生产环境
 # 需要: 提前创建数据库和用户
@@ -270,7 +270,7 @@ DB_TYPE=mysql DB_URL="mysql://user:pass@host:3306/artemis" ./cluster.sh start
 
 ```bash
 # 纯内存模式,重启后数据丢失
-./cluster.sh start
+./scripts/cluster.sh start
 
 # 优点: 快速启动,无需配置
 # 缺点: 重启后数据丢失
@@ -279,7 +279,7 @@ DB_TYPE=mysql DB_URL="mysql://user:pass@host:3306/artemis" ./cluster.sh start
 ### 目录结构 (SQLite 模式)
 
 ```
-.cluster/
+scripts/.cluster/
 ├── config/          # 节点配置文件
 ├── logs/            # 节点日志文件
 ├── pids/            # 节点进程 PID 文件
@@ -295,13 +295,13 @@ DB_TYPE=mysql DB_URL="mysql://user:pass@host:3306/artemis" ./cluster.sh start
 
 ```bash
 # 使用默认配置测试 (基础端口 8080,3 个节点)
-./test-cluster-api.sh
+./scripts/test-cluster-api.sh
 
 # 自定义基础端口和节点数
-./test-cluster-api.sh 8080 3
+./scripts/test-cluster-api.sh 8080 3
 
 # 测试 5 节点集群
-./test-cluster-api.sh 8080 5
+./scripts/test-cluster-api.sh 8080 5
 ```
 
 **测试内容包括:**
@@ -332,10 +332,10 @@ brew install curl jq
 
 ```bash
 # 启动小型集群进行开发测试
-./cluster.sh start 3
+./scripts/cluster.sh start 3
 
 # 运行自动化测试验证功能
-./test-cluster-api.sh
+./scripts/test-cluster-api.sh
 
 # 或手动测试服务注册
 curl -X POST http://127.0.0.1:8080/api/registry/register.json \
@@ -369,23 +369,23 @@ curl -X POST http://127.0.0.1:8081/api/discovery/service.json \
 
 ```bash
 # 启动大规模集群进行性能测试
-./cluster.sh start 10
+./scripts/cluster.sh start 10
 
 # 使用压测工具测试
 # ...
 
 # 查看各节点日志
-./cluster.sh logs
+./scripts/cluster.sh logs
 ```
 
 ### 故障测试
 
 ```bash
 # 启动集群
-./cluster.sh start 3
+./scripts/cluster.sh start 3
 
 # 停止某个节点模拟故障
-kill $(cat .cluster/pids/node2.pid)
+kill $(cat scripts/.cluster/pids/node2.pid)
 
 # 验证其他节点继续工作
 curl http://127.0.0.1:8080/health
@@ -527,7 +527,7 @@ WS ws://127.0.0.1:8080/ws
 
 2. 查看节点日志:
    ```bash
-   cat .cluster/logs/node1.log
+   cat scripts/.cluster/logs/node1.log
    ```
 
 3. 检查编译是否成功:
@@ -544,19 +544,19 @@ WS ws://127.0.0.1:8080/ws
 
 2. 查看配置文件中的 peers 列表是否正确:
    ```bash
-   cat .cluster/config/node1.toml
+   cat scripts/.cluster/config/node1.toml
    ```
 
 ### 进程残留
 
-如果 `./cluster.sh stop` 后仍有残留进程:
+如果 `./scripts/cluster.sh stop` 后仍有残留进程:
 
 ```bash
 # 查找并终止 artemis 进程
 pkill -f artemis
 
 # 或清理所有文件
-./cluster.sh clean
+./scripts/cluster.sh clean
 ```
 
 ## 注意事项
@@ -573,22 +573,22 @@ pkill -f artemis
 
 1. 启动集群生成默认配置:
    ```bash
-   ./cluster.sh start
+   ./scripts/cluster.sh start
    ```
 
 2. 停止集群:
    ```bash
-   ./cluster.sh stop
+   ./scripts/cluster.sh stop
    ```
 
 3. 编辑配置文件:
    ```bash
-   vim .cluster/config/node1.toml
+   vim scripts/.cluster/config/node1.toml
    ```
 
 4. 重启集群应用新配置:
    ```bash
-   ./cluster.sh start
+   ./scripts/cluster.sh start
    ```
 
 ### 多区域部署模拟
@@ -614,6 +614,6 @@ zone = "zone1"
 
 ## 相关文档
 
-- [Artemis 设计文档](docs/plans/2026-02-13-artemis-rust-design.md)
-- [实现计划](docs/plans/2026-02-13-artemis-rust-implementation.md)
-- [产品规格说明](docs/artemis-rust-rewrite-specification.md)
+- [Artemis 设计文档](../docs/plans/2026-02-13-artemis-rust-design.md)
+- [实现计划](../docs/plans/2026-02-13-artemis-rust-implementation.md)
+- [产品规格说明](../docs/artemis-rust-rewrite-specification.md)

@@ -14,13 +14,13 @@
 #   - 优雅停止和清理
 #
 # 使用示例:
-#   ./cluster.sh start           # 启动3节点集群(默认端口8080+)
-#   ./cluster.sh start 5         # 启动5节点集群
-#   ./cluster.sh start 3 9000    # 启动3节点集群,从端口9000开始
-#   ./cluster.sh status          # 查看集群状态
-#   ./cluster.sh logs 1          # 查看节点1日志
-#   ./cluster.sh stop            # 停止集群
-#   ./cluster.sh clean           # 清理所有文件
+#   ./scripts/cluster.sh start           # 启动3节点集群(默认端口8080+)
+#   ./scripts/cluster.sh start 5         # 启动5节点集群
+#   ./scripts/cluster.sh start 3 9000    # 启动3节点集群,从端口9000开始
+#   ./scripts/cluster.sh status          # 查看集群状态
+#   ./scripts/cluster.sh logs 1          # 查看节点1日志
+#   ./scripts/cluster.sh stop            # 停止集群
+#   ./scripts/cluster.sh clean           # 清理所有文件
 #
 # 详细文档: CLUSTER.md
 #
