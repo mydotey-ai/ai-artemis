@@ -57,7 +57,7 @@ Artemis 服务注册中心 Web 管理控制台的完整文档。
   - 监控和分析
 
 ### 设计文档
-- **[../plans/2026-02-16-web-console-design.md](../plans/2026-02-16-web-console-design.md)** - 完整架构设计文档
+- **[../plans/web-console-design.md](../plans/web-console-design.md)** - 完整架构设计文档
   - 系统架构设计
   - 9 个核心模块规划
   - 6 周实施计划
@@ -75,12 +75,11 @@ docs/
 │   ├── websocket-implementation.md # WebSocket 实现文档
 │   ├── auth-implementation.md      # 认证系统文档
 │   ├── performance.md              # 性能优化快速指南
+│   ├── performance-optimization.md # 完整性能优化文档
 │   └── cluster-page-implementation.md # Cluster 页面文档
 │
-├── plans/
-│   └── 2026-02-16-web-console-design.md  # 架构设计文档
-│
-│   ├── performance-optimization.md     # 完整性能优化文档
+└── plans/
+    └── web-console-design.md       # 架构设计文档
 
 artemis-console/
 └── README.md                       # 项目 README (快速开始)

@@ -25,7 +25,7 @@ docs/
 │   ├── README.md                               # 计划文档索引
 │   ├── design.md                               # 架构设计
 │   ├── implementation-roadmap.md               # 实施路线图
-│   ├── 2026-02-16-web-console-design.md        # Web 控制台设计
+│   ├── web-console-design.md                   # Web 控制台设计
 │   └── phases/                                 # Phase 详细计划
 │       ├── phase1-infrastructure.md
 │       ├── phase2-core.md
