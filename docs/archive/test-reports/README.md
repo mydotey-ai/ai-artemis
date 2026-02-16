@@ -28,6 +28,7 @@
 
 ### 整理报告
 - `TESTING_DOCS_FINAL.md` - 测试文档最终整理完成报告
+- `ORGANIZATION_COMPLETE.md` - 测试文档整理完成报告
 
 ### 测试总结 (test-summaries/)
 各模块详细测试总结 (15 个文件):
