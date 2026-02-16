@@ -11,11 +11,22 @@ docs/
 ├── README.md                                   # 本文件 - 文档导航
 ├── artemis-rust-rewrite-specification.md      # 产品规格说明
 ├── deployment.md                               # 部署指南
+├── performance-optimization.md                 # 性能优化完整文档
+│
+├── web-console/                                # Web 控制台文档
+│   ├── README.md                               # Web 控制台文档索引
+│   ├── PROJECT_SUMMARY.md                      # 项目完成总结
+│   ├── WEBSOCKET_IMPLEMENTATION.md             # WebSocket 实现
+│   ├── AUTH_IMPLEMENTATION.md                  # 认证系统
+│   ├── PERFORMANCE.md                          # 性能优化快速指南
+│   ├── IMPLEMENTATION_SUMMARY.md               # 实现总结
+│   └── CLUSTER_PAGE_IMPLEMENTATION.md          # Cluster 页面
 │
 ├── plans/                                      # 设计和计划文档
 │   ├── README.md                               # 计划文档索引
 │   ├── design.md                               # 架构设计
 │   ├── implementation-roadmap.md               # 实施路线图
+│   ├── 2026-02-16-web-console-design.md        # Web 控制台设计
 │   └── phases/                                 # Phase 详细计划
 │       ├── phase1-infrastructure.md
 │       ├── phase2-core.md
