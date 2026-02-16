@@ -202,4 +202,138 @@ mod tests {
         assert!(!cached.is_expired());
         assert_eq!(cached.get().service_id, "test-updated");
     }
+
+    #[test]
+    fn test_cached_service_get() {
+        let service = make_test_service("my-service");
+        let cached = CachedService::new(service.clone(), Duration::from_secs(60));
+
+        let retrieved = cached.get();
+        assert_eq!(retrieved.service_id, "my-service");
+    }
+
+    #[test]
+    fn test_cached_service_clone() {
+        let service = make_test_service("test");
+        let cached = CachedService::new(service, Duration::from_secs(60));
+
+        let cloned = cached.clone();
+        assert_eq!(cached.get().service_id, cloned.get().service_id);
+    }
+
+    #[test]
+    fn test_cached_service_debug() {
+        let service = make_test_service("debug-test");
+        let cached = CachedService::new(service, Duration::from_secs(60));
+
+        let debug_str = format!("{:?}", cached);
+        assert!(debug_str.contains("CachedService"));
+    }
+
+    #[test]
+    fn test_cached_service_zero_ttl() {
+        let service = make_test_service("test");
+        let cached = CachedService::new(service, Duration::from_secs(0));
+
+        // With 0 TTL, should expire immediately
+        std::thread::sleep(Duration::from_millis(1));
+        assert!(cached.is_expired());
+    }
+
+    #[test]
+    fn test_cached_service_long_ttl() {
+        let service = make_test_service("test");
+        let cached = CachedService::new(service, Duration::from_secs(3600)); // 1 hour
+
+        assert!(!cached.is_expired());
+    }
+
+    #[test]
+    fn test_discovery_client_new() {
+        let config = ClientConfig::default();
+
+        let client = DiscoveryClient::new(config.clone());
+        assert_eq!(client.config.server_urls, config.server_urls);
+    }
+
+    #[test]
+    fn test_get_cached_services_empty() {
+        let config = ClientConfig::default();
+
+        let client = DiscoveryClient::new(config);
+        let cached = client.get_cached_services();
+        assert_eq!(cached.len(), 0);
+    }
+
+    #[test]
+    fn test_get_cached_services_with_valid_cache() {
+        let config = ClientConfig::default();
+
+        let client = DiscoveryClient::new(config);
+
+        // 手动添加一个未过期的缓存项
+        {
+            let service = make_test_service("cached-service");
+            let cached = CachedService::new(service, Duration::from_secs(60));
+            client.cache.write().insert("cached-service".to_string(), cached);
+        }
+
+        let cached_services = client.get_cached_services();
+        assert_eq!(cached_services.len(), 1);
+        assert_eq!(cached_services[0].service_id, "cached-service");
+    }
+
+    #[test]
+    fn test_get_cached_services_filters_expired() {
+        let config = ClientConfig::default();
+
+        let client = DiscoveryClient::new(config);
+
+        // 添加一个已过期的缓存项
+        {
+            let service = make_test_service("expired-service");
+            let cached = CachedService::new(service, Duration::from_secs(0));
+            client.cache.write().insert("expired-service".to_string(), cached);
+        }
+
+        std::thread::sleep(Duration::from_millis(10));
+
+        let cached_services = client.get_cached_services();
+        assert_eq!(cached_services.len(), 0); // 过期的应该被过滤掉
+    }
+
+    #[test]
+    fn test_get_cached_services_mixed() {
+        let config = ClientConfig::default();
+
+        let client = DiscoveryClient::new(config);
+
+        // 添加一个有效的和一个过期的缓存项
+        {
+            let valid_service = make_test_service("valid-service");
+            let valid_cached = CachedService::new(valid_service, Duration::from_secs(60));
+            client.cache.write().insert("valid-service".to_string(), valid_cached);
+
+            let expired_service = make_test_service("expired-service");
+            let expired_cached = CachedService::new(expired_service, Duration::from_secs(0));
+            client.cache.write().insert("expired-service".to_string(), expired_cached);
+        }
+
+        std::thread::sleep(Duration::from_millis(10));
+
+        let cached_services = client.get_cached_services();
+        assert_eq!(cached_services.len(), 1); // 只有有效的被返回
+        assert_eq!(cached_services[0].service_id, "valid-service");
+    }
+
+    #[tokio::test]
+    async fn test_get_services_batch_empty() {
+        let config = ClientConfig::default();
+
+        let client = DiscoveryClient::new(config);
+        let result = client.get_services_batch(vec![]).await;
+
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().len(), 0);
+    }
 }
