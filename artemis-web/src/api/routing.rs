@@ -924,4 +924,217 @@ mod tests {
         assert_eq!(req.instances.len(), 1);
         assert_eq!(req.instances[0].instance_id, "inst1");
     }
+
+    #[test]
+    fn test_batch_add_service_instances_request_empty() {
+        let req = BatchAddServiceInstancesRequest {
+            instances: vec![],
+        };
+        assert!(req.instances.is_empty());
+    }
+
+    #[test]
+    fn test_batch_add_service_instances_request_multiple() {
+        use artemis_core::model::group::BindingType;
+        let instances = vec![
+            GroupInstance {
+                id: None,
+                group_id: 1,
+                instance_id: "inst1".to_string(),
+                region_id: "us-east".to_string(),
+                zone_id: "zone1".to_string(),
+                service_id: "service1".to_string(),
+                binding_type: Some(BindingType::Manual),
+                operator_id: Some("admin".to_string()),
+                created_at: None,
+            },
+            GroupInstance {
+                id: None,
+                group_id: 1,
+                instance_id: "inst2".to_string(),
+                region_id: "us-east".to_string(),
+                zone_id: "zone1".to_string(),
+                service_id: "service1".to_string(),
+                binding_type: Some(BindingType::Auto),
+                operator_id: None,
+                created_at: None,
+            },
+        ];
+        let req = BatchAddServiceInstancesRequest {
+            instances: instances.clone(),
+        };
+        assert_eq!(req.instances.len(), 2);
+        assert_eq!(req.instances[0].instance_id, "inst1");
+        assert_eq!(req.instances[1].instance_id, "inst2");
+    }
+
+    // ===== UpdateGroupRequest 边界测试 =====
+
+    #[test]
+    fn test_update_group_request_empty() {
+        let req = UpdateGroupRequest {
+            description: None,
+            status: None,
+        };
+        assert!(req.description.is_none());
+        assert!(req.status.is_none());
+    }
+
+    #[test]
+    fn test_update_group_request_description_only() {
+        let req = UpdateGroupRequest {
+            description: Some("new description".to_string()),
+            status: None,
+        };
+        assert_eq!(req.description, Some("new description".to_string()));
+        assert!(req.status.is_none());
+    }
+
+    #[test]
+    fn test_update_group_request_status_only() {
+        let req = UpdateGroupRequest {
+            description: None,
+            status: Some(GroupStatus::Active),
+        };
+        assert!(req.description.is_none());
+        assert_eq!(req.status, Some(GroupStatus::Active));
+    }
+
+    // ===== UpdateRuleRequest 边界测试 =====
+
+    #[test]
+    fn test_update_rule_request_empty() {
+        let req = UpdateRuleRequest {
+            name: None,
+            description: None,
+            strategy: None,
+        };
+        assert!(req.name.is_none());
+        assert!(req.description.is_none());
+        assert!(req.strategy.is_none());
+    }
+
+    #[test]
+    fn test_update_rule_request_name_only() {
+        let req = UpdateRuleRequest {
+            name: Some("updated rule".to_string()),
+            description: None,
+            strategy: None,
+        };
+        assert_eq!(req.name, Some("updated rule".to_string()));
+        assert!(req.description.is_none());
+    }
+
+    #[test]
+    fn test_update_rule_request_description_only() {
+        let req = UpdateRuleRequest {
+            name: None,
+            description: Some("updated desc".to_string()),
+            strategy: None,
+        };
+        assert!(req.name.is_none());
+        assert_eq!(req.description, Some("updated desc".to_string()));
+    }
+
+    #[test]
+    fn test_update_rule_request_strategy_only() {
+        let req = UpdateRuleRequest {
+            name: None,
+            description: None,
+            strategy: Some(RouteStrategy::WeightedRoundRobin),
+        };
+        assert!(req.name.is_none());
+        assert!(req.strategy.is_some());
+    }
+
+    // ===== ListGroupsQuery 边界测试 =====
+
+    #[test]
+    fn test_list_groups_query_empty() {
+        let query = ListGroupsQuery {
+            service_id: None,
+            region_id: None,
+        };
+        assert!(query.service_id.is_none());
+        assert!(query.region_id.is_none());
+    }
+
+    // ===== GetGroupInstancesQuery 边界测试 =====
+
+    #[test]
+    fn test_get_group_instances_query_empty() {
+        let query = GetGroupInstancesQuery {
+            region_id: None,
+            zone_id: None,
+        };
+        assert!(query.region_id.is_none());
+        assert!(query.zone_id.is_none());
+    }
+
+    #[test]
+    fn test_get_group_instances_query_region_only() {
+        let query = GetGroupInstancesQuery {
+            region_id: Some("us-west".to_string()),
+            zone_id: None,
+        };
+        assert_eq!(query.region_id, Some("us-west".to_string()));
+        assert!(query.zone_id.is_none());
+    }
+
+    #[test]
+    fn test_get_group_instances_query_zone_only() {
+        let query = GetGroupInstancesQuery {
+            region_id: None,
+            zone_id: Some("zone2".to_string()),
+        };
+        assert!(query.region_id.is_none());
+        assert_eq!(query.zone_id, Some("zone2".to_string()));
+    }
+
+    // ===== AddInstanceToGroupRequest 边界测试 =====
+
+    #[test]
+    fn test_add_instance_to_group_request_different_regions() {
+        let req1 = AddInstanceToGroupRequest {
+            instance_id: "inst-us-east".to_string(),
+            region_id: "us-east".to_string(),
+            zone_id: "zone1".to_string(),
+            service_id: "service1".to_string(),
+            operator_id: "admin".to_string(),
+        };
+        let req2 = AddInstanceToGroupRequest {
+            instance_id: "inst-eu-west".to_string(),
+            region_id: "eu-west".to_string(),
+            zone_id: "zone2".to_string(),
+            service_id: "service1".to_string(),
+            operator_id: "system".to_string(),
+        };
+        assert_eq!(req1.region_id, "us-east");
+        assert_eq!(req2.region_id, "eu-west");
+    }
+
+    // ===== AddGroupTagsRequest 边界测试 =====
+
+    #[test]
+    fn test_add_group_tags_request_empty() {
+        let req = AddGroupTagsRequest {
+            tags: vec![],
+        };
+        assert!(req.tags.is_empty());
+    }
+
+    #[test]
+    fn test_add_group_tags_request_single() {
+        let req = AddGroupTagsRequest {
+            tags: vec![
+                GroupTag {
+                    key: "version".to_string(),
+                    value: "1.0.0".to_string(),
+                },
+            ],
+        };
+        assert_eq!(req.tags.len(), 1);
+        assert_eq!(req.tags[0].key, "version");
+        assert_eq!(req.tags[0].value, "1.0.0");
+    }
 }
