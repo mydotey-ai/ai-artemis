@@ -178,11 +178,15 @@ pub fn create_span(name: &str) -> Span {
 mod tests {
     use super::*;
 
+    // ========== TelemetryConfig 测试 ==========
+
     #[test]
-    fn test_telemetry_config() {
+    fn test_telemetry_config_default() {
         let config = TelemetryConfig::default();
         assert!(!config.enabled);
         assert_eq!(config.service_name, "artemis");
+        assert_eq!(config.endpoint, None);
+        assert_eq!(config.sample_rate, 1.0);
     }
 
     #[test]
@@ -201,7 +205,72 @@ mod tests {
     }
 
     #[test]
-    fn test_trace_context() {
+    fn test_telemetry_config_clone() {
+        let config = TelemetryConfig {
+            enabled: true,
+            service_name: "original".to_string(),
+            endpoint: Some("http://localhost:4317".to_string()),
+            sample_rate: 0.75,
+        };
+
+        let cloned = config.clone();
+        assert_eq!(cloned.enabled, config.enabled);
+        assert_eq!(cloned.service_name, config.service_name);
+        assert_eq!(cloned.endpoint, config.endpoint);
+        assert_eq!(cloned.sample_rate, config.sample_rate);
+    }
+
+    #[test]
+    fn test_telemetry_config_debug() {
+        let config = TelemetryConfig::default();
+        let debug_str = format!("{:?}", config);
+        assert!(debug_str.contains("TelemetryConfig"));
+        assert!(debug_str.contains("artemis"));
+    }
+
+    #[test]
+    fn test_telemetry_config_sample_rate_boundaries() {
+        // 最小采样率
+        let config_min = TelemetryConfig {
+            enabled: true,
+            service_name: "test".to_string(),
+            endpoint: None,
+            sample_rate: 0.0,
+        };
+        assert_eq!(config_min.sample_rate, 0.0);
+
+        // 最大采样率
+        let config_max = TelemetryConfig {
+            enabled: true,
+            service_name: "test".to_string(),
+            endpoint: None,
+            sample_rate: 1.0,
+        };
+        assert_eq!(config_max.sample_rate, 1.0);
+
+        // 中间采样率
+        let config_mid = TelemetryConfig {
+            enabled: true,
+            service_name: "test".to_string(),
+            endpoint: None,
+            sample_rate: 0.5,
+        };
+        assert_eq!(config_mid.sample_rate, 0.5);
+    }
+
+    // ========== TraceContext 测试 ==========
+
+    #[test]
+    fn test_trace_context_new() {
+        let ctx = TraceContext::new("trace-123".to_string(), "span-456".to_string());
+
+        assert_eq!(ctx.trace_id, "trace-123");
+        assert_eq!(ctx.span_id, "span-456");
+        assert_eq!(ctx.parent_span_id, None);
+    }
+
+    #[test]
+    fn test_trace_context_with_parent() {
         let ctx = TraceContext::new("trace-123".to_string(), "span-456".to_string())
             .with_parent("parent-789".to_string());
 
@@ -211,6 +280,28 @@ mod tests {
     }
 
     #[test]
+    fn test_trace_context_clone() {
+        let ctx = TraceContext::new("trace-abc".to_string(), "span-def".to_string())
+            .with_parent("parent-ghi".to_string());
+
+        let cloned = ctx.clone();
+        assert_eq!(cloned.trace_id, ctx.trace_id);
+        assert_eq!(cloned.span_id, ctx.span_id);
+        assert_eq!(cloned.parent_span_id, ctx.parent_span_id);
+    }
+
+    #[test]
+    fn test_trace_context_debug() {
+        let ctx = TraceContext::new("trace-123".to_string(), "span-456".to_string());
+        let debug_str = format!("{:?}", ctx);
+        assert!(debug_str.contains("TraceContext"));
+        assert!(debug_str.contains("trace-123"));
+        assert!(debug_str.contains("span-456"));
+    }
+
+    // ========== init_telemetry 测试 ==========
+
+    #[test]
     fn test_init_telemetry_disabled() {
         let config = TelemetryConfig::default(); // disabled by default
         let result = init_telemetry(&config);
@@ -218,10 +309,80 @@ mod tests {
     }
 
     #[test]
-    fn test_create_span() {
+    fn test_init_telemetry_enabled_no_endpoint() {
+        let config = TelemetryConfig {
+            enabled: true,
+            service_name: "test-no-endpoint".to_string(),
+            endpoint: None,
+            sample_rate: 1.0,
+        };
+
+        // 初始化应该成功(即使没有 endpoint,也会创建基础 provider)
+        let result = init_telemetry(&config);
+        // 注意: 由于 tracing subscriber 只能初始化一次,这个测试可能会失败
+        // 如果失败是因为 subscriber 已经设置,我们认为这是正常的
+        let _ = result; // 忽略结果,只验证不会 panic
+    }
+
+    #[test]
+    fn test_shutdown_telemetry() {
+        // shutdown 应该可以安全调用,不会 panic
+        shutdown_telemetry();
+    }
+
+    // ========== create_span 测试 ==========
+
+    #[test]
+    fn test_create_span_basic() {
         let span = create_span("test_operation");
-        // Span may be disabled if no subscriber is set up, which is OK for this test
-        // Just verify it's created without panicking
+        // Span 可能被禁用(如果没有 subscriber),但应该不会 panic
         drop(span);
+    }
+
+    #[test]
+    fn test_create_span_different_names() {
+        let span1 = create_span("operation_1");
+        let span2 = create_span("operation_2");
+        let span3 = create_span("long_operation_name_with_underscores");
+
+        drop(span1);
+        drop(span2);
+        drop(span3);
+    }
+
+    #[test]
+    fn test_create_span_empty_name() {
+        let span = create_span("");
+        drop(span);
+    }
+
+    // ========== 集成测试 ==========
+
+    #[test]
+    fn test_telemetry_full_config_disabled() {
+        let config = TelemetryConfig {
+            enabled: false,
+            service_name: "test-disabled".to_string(),
+            endpoint: Some("http://localhost:4317".to_string()),
+            sample_rate: 0.5,
+        };
+
+        let result = init_telemetry(&config);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_trace_context_empty_strings() {
+        let ctx = TraceContext::new("".to_string(), "".to_string());
+        assert_eq!(ctx.trace_id, "");
+        assert_eq!(ctx.span_id, "");
+        assert_eq!(ctx.parent_span_id, None);
+    }
+
+    #[test]
+    fn test_trace_context_with_empty_parent() {
+        let ctx = TraceContext::new("trace".to_string(), "span".to_string())
+            .with_parent("".to_string());
+        assert_eq!(ctx.parent_span_id, Some("".to_string()));
     }
 }

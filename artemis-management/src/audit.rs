@@ -510,7 +510,40 @@ impl AuditManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use artemis_core::model::{InstanceKey, InstanceOperation};
+    use artemis_core::model::{InstanceKey, InstanceOperation, ServerOperation};
+
+    // ========== 基础功能测试 ==========
+
+    #[test]
+    fn test_audit_manager_new() {
+        let manager = AuditManager::new();
+        let logs = manager.query_logs(None, None, None);
+        assert_eq!(logs.len(), 0);
+    }
+
+    #[test]
+    fn test_audit_manager_default() {
+        let manager = AuditManager::default();
+        let logs = manager.query_logs(None, None, None);
+        assert_eq!(logs.len(), 0);
+    }
+
+    #[test]
+    fn test_audit_manager_clone() {
+        let manager = AuditManager::new();
+        manager.log_operation(
+            "test".to_string(),
+            "target-1".to_string(),
+            "create".to_string(),
+            "admin".to_string(),
+        );
+
+        let cloned = manager.clone();
+        let logs = cloned.query_logs(None, None, None);
+        assert_eq!(logs.len(), 1);
+    }
+
+    // ========== 实例操作日志测试 ==========
 
     #[test]
     fn test_log_instance_operation() {
@@ -535,33 +568,419 @@ mod tests {
         let logs = manager.query_instance_logs(Some("my-service"), None, None);
         assert_eq!(logs.len(), 1);
         assert_eq!(logs[0].operation_type, "instance");
+        assert_eq!(logs[0].operator_id, "operator-1");
+        assert!(logs[0].target_id.contains("my-service"));
     }
 
     #[test]
-    fn test_query_logs_with_filter() {
+    fn test_log_instance_operation_pull_in() {
+        let manager = AuditManager::new();
+
+        let record = InstanceOperationRecord {
+            instance_key: InstanceKey {
+                region_id: "us-west".to_string(),
+                zone_id: "zone-2".to_string(),
+                service_id: "test-service".to_string(),
+                group_id: "group-2".to_string(),
+                instance_id: "inst-2".to_string(),
+            },
+            operation: InstanceOperation::PullIn,
+            operation_complete: true,
+            operator_id: "operator-2".to_string(),
+            token: None,
+        };
+
+        manager.log_instance_operation(&record);
+
+        let logs = manager.query_instance_logs(Some("test-service"), None, None);
+        assert_eq!(logs.len(), 1);
+        assert_eq!(logs[0].operation, "pullin");
+    }
+
+    // ========== 服务器操作日志测试 ==========
+
+    #[test]
+    fn test_log_server_operation() {
+        let manager = AuditManager::new();
+
+        let record = ServerOperationRecord {
+            server_id: "server-1".to_string(),
+            region_id: "us-east".to_string(),
+            operation: ServerOperation::PullOut,
+            operator_id: "admin".to_string(),
+            operation_time: Utc::now().timestamp(),
+        };
+
+        manager.log_server_operation(&record);
+
+        let logs = manager.query_server_logs(Some("server-1"), None, None);
+        assert_eq!(logs.len(), 1);
+        assert_eq!(logs[0].operation_type, "server");
+        assert!(logs[0].target_id.contains("server-1"));
+    }
+
+    #[test]
+    fn test_log_server_operation_pull_in() {
+        let manager = AuditManager::new();
+
+        let record = ServerOperationRecord {
+            server_id: "server-2".to_string(),
+            region_id: "eu-west".to_string(),
+            operation: ServerOperation::PullIn,
+            operator_id: "operator-3".to_string(),
+            operation_time: Utc::now().timestamp(),
+        };
+
+        manager.log_server_operation(&record);
+
+        let logs = manager.query_server_logs(None, Some("operator-3"), None);
+        assert_eq!(logs.len(), 1);
+        assert_eq!(logs[0].operation, "pullin");
+    }
+
+    // ========== 通用操作日志测试 ==========
+
+    #[test]
+    fn test_log_operation() {
         let manager = AuditManager::new();
 
         manager.log_operation(
-            "instance".to_string(),
-            "service-1:us-east:inst-1".to_string(),
-            "pullout".to_string(),
-            "operator-1".to_string(),
+            "group".to_string(),
+            "group-123".to_string(),
+            "create".to_string(),
+            "admin".to_string(),
         );
 
-        manager.log_operation(
-            "server".to_string(),
-            "192.168.1.100:us-east".to_string(),
-            "pullout".to_string(),
-            "operator-2".to_string(),
-        );
+        let logs = manager.query_logs(Some("group"), None, None);
+        assert_eq!(logs.len(), 1);
+        assert_eq!(logs[0].operation_type, "group");
+        assert_eq!(logs[0].target_id, "group-123");
+        assert_eq!(logs[0].operation, "create");
+    }
+
+    // ========== 查询日志测试 ==========
+
+    #[test]
+    fn test_query_logs_no_filter() {
+        let manager = AuditManager::new();
+
+        manager.log_operation("type1".to_string(), "target1".to_string(), "op1".to_string(), "user1".to_string());
+        manager.log_operation("type2".to_string(), "target2".to_string(), "op2".to_string(), "user2".to_string());
+
+        let logs = manager.query_logs(None, None, None);
+        assert_eq!(logs.len(), 2);
+    }
+
+    #[test]
+    fn test_query_logs_with_operation_type_filter() {
+        let manager = AuditManager::new();
+
+        manager.log_operation("instance".to_string(), "service-1:us-east:inst-1".to_string(), "pullout".to_string(), "operator-1".to_string());
+        manager.log_operation("server".to_string(), "192.168.1.100:us-east".to_string(), "pullout".to_string(), "operator-2".to_string());
 
         let instance_logs = manager.query_logs(Some("instance"), None, None);
         assert_eq!(instance_logs.len(), 1);
 
         let server_logs = manager.query_logs(Some("server"), None, None);
         assert_eq!(server_logs.len(), 1);
+    }
+
+    #[test]
+    fn test_query_logs_with_operator_filter() {
+        let manager = AuditManager::new();
+
+        manager.log_operation("type1".to_string(), "target1".to_string(), "op1".to_string(), "operator-1".to_string());
+        manager.log_operation("type2".to_string(), "target2".to_string(), "op2".to_string(), "operator-2".to_string());
 
         let operator1_logs = manager.query_logs(None, Some("operator-1"), None);
         assert_eq!(operator1_logs.len(), 1);
+        assert_eq!(operator1_logs[0].operator_id, "operator-1");
+    }
+
+    #[test]
+    fn test_query_logs_with_limit() {
+        let manager = AuditManager::new();
+
+        for i in 1..=5 {
+            manager.log_operation(
+                "test".to_string(),
+                format!("target-{}", i),
+                "create".to_string(),
+                "admin".to_string(),
+            );
+        }
+
+        let logs = manager.query_logs(None, None, Some(3));
+        assert_eq!(logs.len(), 3);
+    }
+
+    #[test]
+    fn test_query_logs_sorting() {
+        let manager = AuditManager::new();
+
+        manager.log_operation("type1".to_string(), "target1".to_string(), "op1".to_string(), "user1".to_string());
+        std::thread::sleep(std::time::Duration::from_secs(1));
+        manager.log_operation("type2".to_string(), "target2".to_string(), "op2".to_string(), "user2".to_string());
+
+        let logs = manager.query_logs(None, None, None);
+        assert_eq!(logs.len(), 2);
+        // 应该按时间降序排列(最新的在前)
+        // 由于时间戳精度问题,只验证长度
+        assert!(logs[0].operation_time >= logs[1].operation_time);
+    }
+
+    // ========== 查询实例日志测试 ==========
+
+    #[test]
+    fn test_query_instance_logs_by_service() {
+        let manager = AuditManager::new();
+
+        manager.log_operation("instance".to_string(), "service-1:region:inst-1".to_string(), "register".to_string(), "admin".to_string());
+        manager.log_operation("instance".to_string(), "service-2:region:inst-2".to_string(), "register".to_string(), "admin".to_string());
+
+        let logs = manager.query_instance_logs(Some("service-1"), None, None);
+        assert_eq!(logs.len(), 1);
+        assert!(logs[0].target_id.starts_with("service-1:"));
+    }
+
+    #[test]
+    fn test_query_instance_logs_by_operator() {
+        let manager = AuditManager::new();
+
+        manager.log_operation("instance".to_string(), "service-1:region:inst-1".to_string(), "register".to_string(), "operator-1".to_string());
+        manager.log_operation("instance".to_string(), "service-1:region:inst-2".to_string(), "register".to_string(), "operator-2".to_string());
+
+        let logs = manager.query_instance_logs(None, Some("operator-1"), None);
+        assert_eq!(logs.len(), 1);
+        assert_eq!(logs[0].operator_id, "operator-1");
+    }
+
+    #[test]
+    fn test_query_instance_logs_with_limit() {
+        let manager = AuditManager::new();
+
+        for i in 1..=5 {
+            manager.log_operation("instance".to_string(), format!("service-{}:region:inst-{}", i, i), "register".to_string(), "admin".to_string());
+        }
+
+        let logs = manager.query_instance_logs(None, None, Some(2));
+        assert_eq!(logs.len(), 2);
+    }
+
+    // ========== 查询服务器日志测试 ==========
+
+    #[test]
+    fn test_query_server_logs_by_server_id() {
+        let manager = AuditManager::new();
+
+        manager.log_operation("server".to_string(), "server-1:region-1".to_string(), "pullout".to_string(), "admin".to_string());
+        manager.log_operation("server".to_string(), "server-2:region-1".to_string(), "pullout".to_string(), "admin".to_string());
+
+        let logs = manager.query_server_logs(Some("server-1"), None, None);
+        assert_eq!(logs.len(), 1);
+        assert!(logs[0].target_id.starts_with("server-1:"));
+    }
+
+    #[test]
+    fn test_query_server_logs_with_limit() {
+        let manager = AuditManager::new();
+
+        for i in 1..=5 {
+            manager.log_operation("server".to_string(), format!("server-{}:region", i), "pullout".to_string(), "admin".to_string());
+        }
+
+        let logs = manager.query_server_logs(None, None, Some(3));
+        assert_eq!(logs.len(), 3);
+    }
+
+    // ========== 清理过期日志测试 ==========
+
+    #[test]
+    fn test_cleanup_old_logs() {
+        let manager = AuditManager::new();
+
+        // 添加一些日志
+        manager.log_operation("test".to_string(), "target-1".to_string(), "create".to_string(), "admin".to_string());
+        manager.log_operation("test".to_string(), "target-2".to_string(), "create".to_string(), "admin".to_string());
+
+        // 验证日志存在
+        let logs_before = manager.query_logs(None, None, None);
+        assert_eq!(logs_before.len(), 2);
+
+        // 清理未来的日志(retention_days = -1 表示清理所有)
+        manager.cleanup_old_logs(-1);
+
+        // 验证日志已清理
+        let logs_after = manager.query_logs(None, None, None);
+        assert_eq!(logs_after.len(), 0);
+    }
+
+    #[test]
+    fn test_cleanup_old_logs_retention() {
+        let manager = AuditManager::new();
+
+        manager.log_operation("test".to_string(), "target-1".to_string(), "create".to_string(), "admin".to_string());
+
+        // 保留 30 天的日志(不应该清理刚创建的日志)
+        manager.cleanup_old_logs(30);
+
+        let logs = manager.query_logs(None, None, None);
+        assert_eq!(logs.len(), 1);
+    }
+
+    // ========== Phase 24: 审计日志细分 API 测试 ==========
+
+    #[test]
+    fn test_query_group_logs() {
+        let manager = AuditManager::new();
+
+        manager.log_operation("group".to_string(), "group-1".to_string(), "create".to_string(), "admin".to_string());
+        manager.log_operation("group".to_string(), "group-2".to_string(), "update".to_string(), "admin".to_string());
+        manager.log_operation("route_rule".to_string(), "rule-1".to_string(), "create".to_string(), "admin".to_string());
+
+        let logs = manager.query_group_logs(None, None, None);
+        assert_eq!(logs.len(), 2);
+
+        let group1_logs = manager.query_group_logs(Some("group-1"), None, None);
+        assert_eq!(group1_logs.len(), 1);
+    }
+
+    #[test]
+    fn test_query_route_rule_logs() {
+        let manager = AuditManager::new();
+
+        manager.log_operation("route_rule".to_string(), "rule-1".to_string(), "create".to_string(), "admin".to_string());
+        manager.log_operation("route_rule".to_string(), "rule-2".to_string(), "update".to_string(), "operator-1".to_string());
+
+        let logs = manager.query_route_rule_logs(None, None, None);
+        assert_eq!(logs.len(), 2);
+
+        let rule1_logs = manager.query_route_rule_logs(Some("rule-1"), None, None);
+        assert_eq!(rule1_logs.len(), 1);
+    }
+
+    #[test]
+    fn test_query_route_rule_group_logs() {
+        let manager = AuditManager::new();
+
+        manager.log_operation("route_rule_group".to_string(), "rule:rule-1,group:group-1".to_string(), "add".to_string(), "admin".to_string());
+        manager.log_operation("route_rule_group".to_string(), "rule:rule-1,group:group-2".to_string(), "add".to_string(), "admin".to_string());
+
+        let logs = manager.query_route_rule_group_logs(None, None, None, None);
+        assert_eq!(logs.len(), 2);
+
+        let rule1_logs = manager.query_route_rule_group_logs(Some("rule-1"), None, None, None);
+        assert_eq!(rule1_logs.len(), 2);
+
+        let group1_logs = manager.query_route_rule_group_logs(None, Some("group-1"), None, None);
+        assert_eq!(group1_logs.len(), 1);
+    }
+
+    #[test]
+    fn test_query_zone_logs() {
+        let manager = AuditManager::new();
+
+        manager.log_operation("zone".to_string(), "region:us-east,zone:zone-1".to_string(), "pullout".to_string(), "admin".to_string());
+        manager.log_operation("zone".to_string(), "region:eu-west,zone:zone-2".to_string(), "pullin".to_string(), "admin".to_string());
+
+        let logs = manager.query_zone_logs(None, None, None, None);
+        assert_eq!(logs.len(), 2);
+
+        let zone1_logs = manager.query_zone_logs(Some("zone-1"), None, None, None);
+        assert_eq!(zone1_logs.len(), 1);
+
+        let region_logs = manager.query_zone_logs(None, Some("us-east"), None, None);
+        assert_eq!(region_logs.len(), 1);
+    }
+
+    #[test]
+    fn test_query_group_instance_logs() {
+        let manager = AuditManager::new();
+
+        manager.log_operation("group_instance".to_string(), "group:group-1,instance:inst-1".to_string(), "bind".to_string(), "admin".to_string());
+        manager.log_operation("group_instance".to_string(), "group:group-1,instance:inst-2".to_string(), "bind".to_string(), "admin".to_string());
+
+        let logs = manager.query_group_instance_logs(None, None, None, None);
+        assert_eq!(logs.len(), 2);
+
+        let group1_logs = manager.query_group_instance_logs(Some("group-1"), None, None, None);
+        assert_eq!(group1_logs.len(), 2);
+
+        let inst1_logs = manager.query_group_instance_logs(None, Some("inst-1"), None, None);
+        assert_eq!(inst1_logs.len(), 1);
+    }
+
+    #[test]
+    fn test_query_service_instance_logs() {
+        let manager = AuditManager::new();
+
+        manager.log_operation("service_instance".to_string(), "service:svc-1,region:us-east,instance:inst-1".to_string(), "register".to_string(), "admin".to_string());
+        manager.log_operation("instance".to_string(), "svc-2:us-west:inst-2".to_string(), "unregister".to_string(), "admin".to_string());
+
+        let logs = manager.query_service_instance_logs(None, None, None, None);
+        assert_eq!(logs.len(), 2);
+
+        let svc1_logs = manager.query_service_instance_logs(Some("svc-1"), None, None, None);
+        assert_eq!(svc1_logs.len(), 1);
+
+        let region_logs = manager.query_service_instance_logs(None, Some("us-east"), None, None);
+        assert_eq!(region_logs.len(), 1);
+    }
+
+    #[test]
+    fn test_query_with_operator_and_limit() {
+        let manager = AuditManager::new();
+
+        for i in 1..=5 {
+            manager.log_operation(
+                "group".to_string(),
+                format!("group-{}", i),
+                "create".to_string(),
+                "operator-1".to_string(),
+            );
+        }
+
+        manager.log_operation("group".to_string(), "group-6".to_string(), "create".to_string(), "operator-2".to_string());
+
+        let logs = manager.query_group_logs(None, Some("operator-1"), Some(3));
+        assert_eq!(logs.len(), 3);
+        assert_eq!(logs[0].operator_id, "operator-1");
+    }
+
+    // ========== AuditLog 结构测试 ==========
+
+    #[test]
+    fn test_audit_log_debug() {
+        let log = AuditLog {
+            log_id: 1,
+            operation_type: "test".to_string(),
+            target_id: "target-1".to_string(),
+            operation: "create".to_string(),
+            operator_id: "admin".to_string(),
+            operation_time: Utc::now().timestamp(),
+            details: None,
+        };
+
+        let debug_str = format!("{:?}", log);
+        assert!(debug_str.contains("AuditLog"));
+        assert!(debug_str.contains("test"));
+    }
+
+    #[test]
+    fn test_audit_log_clone() {
+        let log = AuditLog {
+            log_id: 1,
+            operation_type: "test".to_string(),
+            target_id: "target-1".to_string(),
+            operation: "create".to_string(),
+            operator_id: "admin".to_string(),
+            operation_time: Utc::now().timestamp(),
+            details: Some("test details".to_string()),
+        };
+
+        let cloned = log.clone();
+        assert_eq!(cloned.log_id, log.log_id);
+        assert_eq!(cloned.operation_type, log.operation_type);
+        assert_eq!(cloned.details, log.details);
     }
 }
