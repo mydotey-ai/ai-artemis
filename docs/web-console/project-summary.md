@@ -45,7 +45,7 @@
 ### Phase 3: 高级特性 (2026-02-17)
 - ✅ WebSocket 实时推送 ([详细文档](websocket-implementation.md))
 - ✅ 完整用户认证系统 ([详细文档](auth-implementation.md))
-- ✅ 性能优化 ([快速指南](performance.md) | [完整文档](../performance-optimization.md))
+- ✅ 性能优化 ([快速指南](performance.md) | [完整文档](performance-optimization.md))
   - 懒加载、代码分割、虚拟滚动
   - API 响应缓存、性能监控
 - **成果**: 34 个文件, 6,498 行新增代码
@@ -230,7 +230,7 @@ artemis-console/
   - 401/403 错误处理
 
 ### 3. 性能优化
-详见: [performance.md](performance.md) | [完整文档](../performance-optimization.md)
+详见: [performance.md](performance.md) | [完整文档](performance-optimization.md)
 
 - **路由懒加载**: React.lazy() + Suspense
 - **代码分割**: 15+ chunks (vendor、api、page)
@@ -321,7 +321,7 @@ artemis-console/
 - [auth-implementation.md](auth-implementation.md) - 用户认证系统
 - [cluster-page-implementation.md](cluster-page-implementation.md) - Cluster 页面实现
 - [performance.md](performance.md) - 性能优化快速指南
-- [../performance-optimization.md](../performance-optimization.md) - 完整性能优化文档 (9,000+ 字)
+- [performance-optimization.md](performance-optimization.md) - 完整性能优化文档 (9,000+ 字)
 
 ### 项目文档
 - [../../artemis-console/README.md](../../artemis-console/README.md) - 项目 README (快速开始)

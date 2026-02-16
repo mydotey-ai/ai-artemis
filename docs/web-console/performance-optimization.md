@@ -1,10 +1,18 @@
-# Artemis Console - Performance Optimization Guide
+# Artemis Console - 性能优化完整指南
 
-## Overview
+**文档状态**: ✅ 最新
+**最后更新**: 2026-02-17
+**相关 Phase**: Phase 3
+**快速指南**: [performance.md](performance.md)
+**源代码**: `artemis-console/src/`
 
-This document describes the performance optimizations implemented in the Artemis Console frontend application to ensure fast load times, smooth interactions, and efficient resource usage.
+---
 
-**Last Updated**: 2026-02-17
+## 概述
+
+本文档详细描述了 Artemis Console 前端应用的性能优化实现，包括优化策略、实现细节、性能指标和最佳实践，确保快速加载、流畅交互和高效资源利用。
+
+如需快速上手使用，请参阅 [性能优化快速指南](performance.md)。
 
 ---
 

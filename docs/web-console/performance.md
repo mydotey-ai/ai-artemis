@@ -4,13 +4,13 @@
 **最后更新**: 2026-02-17
 **相关 Phase**: Phase 3
 **源代码**: `artemis-console/src/components/VirtualTable.tsx`, `artemis-console/src/utils/cache.ts`, `artemis-console/src/utils/performance.ts`
-**完整文档**: [../performance-optimization.md](../performance-optimization.md)
+**完整文档**: [performance-optimization.md](performance-optimization.md)
 
 ---
 
 ## 概述
 
-本文档是 Artemis Console 性能优化功能的快速使用指南。如需完整的实现细节和最佳实践，请参阅 [完整性能优化文档](../performance-optimization.md)。
+本文档是 Artemis Console 性能优化功能的快速使用指南。如需完整的实现细节和最佳实践，请参阅 [完整性能优化文档](performance-optimization.md)。
 
 ---
 
@@ -259,7 +259,7 @@ configurePerformanceMonitoring({
 
 ## Additional Resources
 
-- **Full Documentation**: `/docs/performance-optimization.md`
+- **Full Documentation**: `docs/web-console/performance-optimization.md`
 - **VirtualTable API**: `/src/components/VirtualTable.tsx`
 - **Cache API**: `/src/utils/cache.ts`
 - **Performance API**: `/src/utils/performance.ts`

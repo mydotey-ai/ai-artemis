@@ -11,7 +11,6 @@ docs/
 ├── README.md                                   # 本文件 - 文档导航
 ├── artemis-rust-rewrite-specification.md      # 产品规格说明
 ├── deployment.md                               # 部署指南
-├── performance-optimization.md                 # 性能优化完整文档
 │
 ├── web-console/                                # Web 控制台文档
 │   ├── README.md                               # Web 控制台文档索引
@@ -19,6 +18,7 @@ docs/
 │   ├── websocket-implementation.md             # WebSocket 实现
 │   ├── auth-implementation.md                  # 认证系统
 │   ├── performance.md                          # 性能优化快速指南
+│   ├── performance-optimization.md             # 性能优化完整文档
 │   └── cluster-page-implementation.md          # Cluster 页面
 │
 ├── plans/                                      # 设计和计划文档

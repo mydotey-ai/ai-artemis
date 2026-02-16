@@ -50,7 +50,7 @@ Artemis 服务注册中心 Web 管理控制台的完整文档。
   - API 缓存
   - Bundle 分析
 
-- **[../performance-optimization.md](../performance-optimization.md)** - 完整性能优化文档 (9,000+ 字)
+- **[performance-optimization.md](performance-optimization.md)** - 完整性能优化文档 (9,000+ 字)
   - 详细的优化策略
   - 性能基准测试
   - 最佳实践
@@ -80,7 +80,7 @@ docs/
 ├── plans/
 │   └── 2026-02-16-web-console-design.md  # 架构设计文档
 │
-└── performance-optimization.md     # 完整性能优化文档
+│   ├── performance-optimization.md     # 完整性能优化文档
 
 artemis-console/
 └── README.md                       # 项目 README (快速开始)
