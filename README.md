@@ -14,6 +14,7 @@
 - ✨ **零 GC 停顿**: Rust 原生内存管理，消除 GC 导致的性能抖动
 - 🔄 **集群支持**: 内置集群管理和数据复制，支持多节点高可用部署
 - 📊 **企业级监控**: Prometheus metrics + OpenTelemetry 分布式追踪
+- 🖥️ **Web 管理控制台**: 现代化 React 控制台，实时监控和可视化管理
 - 🐳 **容器化支持**: Docker 镜像 < 50MB，秒级启动
 
 ## 快速开始
@@ -69,6 +70,33 @@ curl http://localhost:8080/health
 ```
 
 详细的集群管理请参阅 [集群部署指南](#集群部署)。
+
+### Web 管理控制台
+
+使用现代化的 Web 控制台进行可视化管理：
+
+```bash
+# 进入控制台目录
+cd artemis-console
+
+# 安装依赖
+npm install
+
+# 启动开发服务器
+npm run dev
+
+# 访问 http://localhost:3000
+```
+
+**核心功能**:
+- 📊 **实时监控**: Dashboard 展示服务、实例、集群状态
+- 🔍 **服务管理**: 可视化管理服务和实例，支持批量操作
+- 🌐 **集群可视化**: SVG 拓扑图展示集群节点状态
+- ⚙️ **路由配置**: 图形化配置分组路由和负载均衡策略
+- 📝 **审计日志**: 完整的操作审计和多维度查询
+- 🔐 **用户认证**: JWT 认证 + 权限控制
+
+详细文档请参阅 [Web Console 文档](docs/web-console/README.md)。
 
 ## API 使用
 
@@ -623,6 +651,11 @@ cargo bench --package artemis-server
 - [架构设计](docs/plans/design.md) - 系统架构和模块设计
 - [实施路线图](docs/plans/implementation-roadmap.md) - 项目实施路线图（25 个 Phase）
 - [开发规范](.claude/rules/dev-standards.md) - 代码规范和测试标准
+
+### Web 控制台文档
+- [Web Console 概览](docs/web-console/README.md) - Web 控制台文档导航
+- [项目完成总结](docs/web-console/project-summary.md) - Web Console 开发总结
+- [架构设计](docs/plans/web-console-design.md) - Web Console 架构设计
 
 ### 原始项目
 - [Java 版本](https://github.com/mydotey/artemis) - 原始 Java 实现（1.5.16）

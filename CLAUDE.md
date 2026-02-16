@@ -66,16 +66,24 @@ Claude 助手使用以下规则文件理解项目上下文：
 
 ### 项目文档 (`docs/`)
 
+**后端服务文档**:
 - **[implementation-roadmap.md](docs/plans/implementation-roadmap.md)** - 项目完成总结、25个Phase详情、性能指标
 - **[design.md](docs/plans/design.md)** - 系统架构设计
 - **[client-enterprise-features.md](docs/plans/client-enterprise-features.md)** - 客户端 SDK 功能
+
+**Web 控制台文档**:
+- **[web-console/README.md](docs/web-console/README.md)** - Web Console 文档导航
+- **[web-console/project-summary.md](docs/web-console/project-summary.md)** - Web Console 完成总结
+- **[plans/web-console-design.md](docs/plans/web-console-design.md)** - Web Console 架构设计
 
 ---
 
 ## 维护信息
 
 - **开发者**: Claude Sonnet 4.5 (AI) + koqizhao
-- **开发时间**: 2026-02-13 至 2026-02-15
+- **开发时间**:
+  - 后端服务: 2026-02-13 至 2026-02-15
+  - Web 控制台: 2026-02-16 至 2026-02-17
 - **许可证**: MIT OR Apache-2.0
 
 ---
