@@ -8,8 +8,8 @@
 
 | 文档 | 描述 | 状态 |
 |------|------|------|
+| [实施路线图](implementation-roadmap.md) | 项目完成总结、分阶段实施计划（25个Phase）、性能指标、交付成果 | ✅ 最新 |
 | [架构设计](design.md) | 系统架构、模块结构、数据模型的详细设计 | ✅ 最新 |
-| [实施路线图](implementation-roadmap.md) | 分阶段实施计划和优先级定义（25个Phase） | ✅ 已完成 |
 | [客户端企业功能](client-enterprise-features.md) | 客户端SDK企业级功能详细文档 | ✅ 补充文档 |
 
 ### 架构设计文档
