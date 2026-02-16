@@ -4,6 +4,10 @@
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)]()
 [![Rust](https://img.shields.io/badge/rust-1.93%2B-orange)]()
 [![Status](https://img.shields.io/badge/status-production%20ready-success)]()
+[![Coverage](https://img.shields.io/badge/coverage-76.70%25-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-465%20passed-success)]()
+[![APIs](https://img.shields.io/badge/APIs-101%20implemented-blue)]()
+[![Lines of Code](https://img.shields.io/badge/lines-19k-informational)]()
 
 高性能服务注册中心的 Rust 重写版本,消除 GC 问题,实现亚毫秒级 P99 延迟 (< 0.5ms)。
 
@@ -1064,13 +1068,14 @@ cargo test --workspace --lib
 ```
 
 ### 测试统计
-- **总测试数量**: 41 个 ✅
-- **测试通过率**: 100%
-- **测试代码**: 1,300 行
-- **API 覆盖**: 8/101 端点 (8%)
+- **总测试数量**: 465 个 ✅ (100% 通过率)
+- **代码覆盖率**: 76.70% (区域覆盖率), 78.69% (行覆盖率), 78.31% (函数覆盖率)
+- **单元测试**: 454 个 (核心逻辑覆盖)
+- **集成测试**: 11 个自动化测试脚本
+- **测试代码**: 8,000+ 行
 
 ### 测试文档
-- [测试策略](docs/TEST_STRATEGY.md) - 完整测试方案
-- [快速开始](TEST_QUICK_START.md) - 测试快速指南
-- [实施报告](docs/reports/test-implementation-phase1.md) - Phase 1 实施报告
+- [**测试总结**](docs/reports/FINAL_TEST_SUMMARY_2026-02-16.md) - 65% 覆盖率里程碑总结
+- [**测试管理**](docs/test-management-README.md) - 测试管理和执行指南
+- [**测试报告**](docs/reports/test-summaries/) - 15 个模块级测试总结
 
