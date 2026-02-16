@@ -78,6 +78,19 @@ docs/
 - [性能基准测试](reports/performance/performance-report.md) - 完整的性能测试结果
 - [性能优化措施](reports/performance/optimizations.md) - 性能优化技术细节
 - [复制测试结果](reports/performance/replication-test-results.md) - 集群复制性能
+- [压力测试报告](reports/performance/stress-test-report-2026-02-16.md) - 大规模压力测试
+- [批量优化分析](reports/performance/batch-replication-optimization.md) - 批量复制优化
+
+### 🧪 测试
+
+**测试文档**:
+- [测试文档中心](testing/README.md) - **测试文档导航和快速开始** ⭐
+- [测试状态报告](testing/test-status.md) - 最新的测试统计和覆盖率 (493 测试, 100% 通过)
+- [测试策略和方案](testing/test-strategy.md) - 完整的测试策略和实施计划
+
+**测试脚本**:
+- 12 个集成测试脚本 - 参见 [scripts/README.md](../scripts/README.md)
+- 集成测试覆盖所有核心功能
 
 ### 🚀 运维和部署
 
