@@ -685,3 +685,243 @@ pub async fn batch_add_service_instances(
         ),
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use artemis_core::model::{GroupTag, GroupType, GroupStatus, RouteStrategy};
+
+    // ===== ApiResponse 测试 =====
+
+    #[test]
+    fn test_api_response_success() {
+        let response: ApiResponse<String> = ApiResponse::success("test".to_string());
+        assert!(response.success);
+        assert_eq!(response.data, Some("test".to_string()));
+        assert!(response.message.is_none());
+    }
+
+    #[test]
+    fn test_api_response_error() {
+        let response: ApiResponse<String> = ApiResponse::error("error message".to_string());
+        assert!(!response.success);
+        assert!(response.data.is_none());
+        assert_eq!(response.message, Some("error message".to_string()));
+    }
+
+    // ===== CreateGroupRequest 测试 =====
+
+    #[test]
+    fn test_create_group_request() {
+        let req = CreateGroupRequest {
+            service_id: "service1".to_string(),
+            region_id: "us-east".to_string(),
+            zone_id: "zone1".to_string(),
+            name: "group1".to_string(),
+            group_type: GroupType::Physical,
+            description: Some("test group".to_string()),
+        };
+        assert_eq!(req.service_id, "service1");
+        assert_eq!(req.name, "group1");
+        assert_eq!(req.description, Some("test group".to_string()));
+    }
+
+    #[test]
+    fn test_create_group_request_no_description() {
+        let req = CreateGroupRequest {
+            service_id: "service2".to_string(),
+            region_id: "us-west".to_string(),
+            zone_id: "zone2".to_string(),
+            name: "group2".to_string(),
+            group_type: GroupType::Logical,
+            description: None,
+        };
+        assert_eq!(req.service_id, "service2");
+        assert!(req.description.is_none());
+    }
+
+    // ===== CreateRuleRequest 测试 =====
+
+    #[test]
+    fn test_create_rule_request() {
+        let req = CreateRuleRequest {
+            route_id: "route1".to_string(),
+            service_id: "service1".to_string(),
+            name: "rule1".to_string(),
+            description: Some("test rule".to_string()),
+            strategy: RouteStrategy::WeightedRoundRobin,
+        };
+        assert_eq!(req.route_id, "route1");
+        assert_eq!(req.name, "rule1");
+    }
+
+    // ===== AddRuleGroupRequest 测试 =====
+
+    #[test]
+    fn test_add_rule_group_request() {
+        let req = AddRuleGroupRequest {
+            group_id: "group1".to_string(),
+            weight: 100,
+            region_id: Some("us-east".to_string()),
+            zone_id: Some("zone1".to_string()),
+        };
+        assert_eq!(req.group_id, "group1");
+        assert_eq!(req.weight, 100);
+        assert_eq!(req.region_id, Some("us-east".to_string()));
+    }
+
+    #[test]
+    fn test_add_rule_group_request_no_location() {
+        let req = AddRuleGroupRequest {
+            group_id: "group2".to_string(),
+            weight: 50,
+            region_id: None,
+            zone_id: None,
+        };
+        assert_eq!(req.weight, 50);
+        assert!(req.region_id.is_none());
+        assert!(req.zone_id.is_none());
+    }
+
+    // ===== ListGroupsQuery 测试 =====
+
+    #[test]
+    fn test_list_groups_query_by_service() {
+        let query = ListGroupsQuery {
+            service_id: Some("service1".to_string()),
+            region_id: None,
+        };
+        assert_eq!(query.service_id, Some("service1".to_string()));
+        assert!(query.region_id.is_none());
+    }
+
+    #[test]
+    fn test_list_groups_query_by_region() {
+        let query = ListGroupsQuery {
+            service_id: None,
+            region_id: Some("us-east".to_string()),
+        };
+        assert!(query.service_id.is_none());
+        assert_eq!(query.region_id, Some("us-east".to_string()));
+    }
+
+    // ===== UpdateGroupRequest 测试 =====
+
+    #[test]
+    fn test_update_group_request_full() {
+        let req = UpdateGroupRequest {
+            description: Some("updated description".to_string()),
+            status: Some(GroupStatus::Inactive),
+        };
+        assert_eq!(req.description, Some("updated description".to_string()));
+        assert_eq!(req.status, Some(GroupStatus::Inactive));
+    }
+
+    #[test]
+    fn test_update_group_request_partial() {
+        let req = UpdateGroupRequest {
+            description: Some("updated".to_string()),
+            status: None,
+        };
+        assert!(req.description.is_some());
+        assert!(req.status.is_none());
+    }
+
+    // ===== UpdateRuleRequest 测试 =====
+
+    #[test]
+    fn test_update_rule_request() {
+        let req = UpdateRuleRequest {
+            name: Some("new name".to_string()),
+            description: Some("new desc".to_string()),
+            strategy: Some(RouteStrategy::CloseByVisit),
+        };
+        assert_eq!(req.name, Some("new name".to_string()));
+        assert!(req.strategy.is_some());
+    }
+
+    // ===== UpdateRuleGroupRequest 测试 =====
+
+    #[test]
+    fn test_update_rule_group_request() {
+        let req = UpdateRuleGroupRequest {
+            weight: 75,
+        };
+        assert_eq!(req.weight, 75);
+    }
+
+    // ===== AddGroupTagsRequest 测试 =====
+
+    #[test]
+    fn test_add_group_tags_request() {
+        let tags = vec![
+            GroupTag {
+                key: "env".to_string(),
+                value: "prod".to_string(),
+            },
+            GroupTag {
+                key: "team".to_string(),
+                value: "platform".to_string(),
+            },
+        ];
+        let req = AddGroupTagsRequest {
+            tags: tags.clone(),
+        };
+        assert_eq!(req.tags.len(), 2);
+        assert_eq!(req.tags[0].key, "env");
+        assert_eq!(req.tags[1].value, "platform");
+    }
+
+    // ===== GetGroupInstancesQuery 测试 =====
+
+    #[test]
+    fn test_get_group_instances_query() {
+        let query = GetGroupInstancesQuery {
+            region_id: Some("us-east".to_string()),
+            zone_id: Some("zone1".to_string()),
+        };
+        assert_eq!(query.region_id, Some("us-east".to_string()));
+        assert_eq!(query.zone_id, Some("zone1".to_string()));
+    }
+
+    // ===== AddInstanceToGroupRequest 测试 =====
+
+    #[test]
+    fn test_add_instance_to_group_request() {
+        let req = AddInstanceToGroupRequest {
+            instance_id: "inst1".to_string(),
+            region_id: "us-east".to_string(),
+            zone_id: "zone1".to_string(),
+            service_id: "service1".to_string(),
+            operator_id: "admin".to_string(),
+        };
+        assert_eq!(req.instance_id, "inst1");
+        assert_eq!(req.operator_id, "admin");
+    }
+
+    // ===== BatchAddServiceInstancesRequest 测试 =====
+
+    #[test]
+    fn test_batch_add_service_instances_request() {
+        use artemis_core::model::group::BindingType;
+        let instances = vec![
+            GroupInstance {
+                id: None,
+                group_id: 1,
+                instance_id: "inst1".to_string(),
+                region_id: "us-east".to_string(),
+                zone_id: "zone1".to_string(),
+                service_id: "service1".to_string(),
+                binding_type: Some(BindingType::Manual),
+                operator_id: Some("admin".to_string()),
+                created_at: None,
+            },
+        ];
+        let req = BatchAddServiceInstancesRequest {
+            instances: instances.clone(),
+        };
+        assert_eq!(req.instances.len(), 1);
+        assert_eq!(req.instances[0].instance_id, "inst1");
+    }
+}

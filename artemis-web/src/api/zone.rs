@@ -138,6 +138,7 @@ pub async fn delete_zone_operation(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use artemis_core::model::OperateZoneRequest;
 
     #[test]
     fn test_api_response_success() {
@@ -153,5 +154,66 @@ mod tests {
         assert!(!response.success);
         assert!(response.data.is_none());
         assert!(response.message.is_some());
+    }
+
+    #[test]
+    fn test_api_response_success_with_data() {
+        let data = vec!["zone1".to_string(), "zone2".to_string()];
+        let response: ApiResponse<Vec<String>> = ApiResponse::success(data.clone());
+        assert!(response.success);
+        assert_eq!(response.data, Some(data));
+        assert!(response.message.is_none());
+    }
+
+    #[test]
+    fn test_api_response_error_with_message() {
+        let error_msg = "Zone not found".to_string();
+        let response: ApiResponse<()> = ApiResponse::error(error_msg.clone());
+        assert!(!response.success);
+        assert!(response.data.is_none());
+        assert_eq!(response.message, Some(error_msg));
+    }
+
+    #[test]
+    fn test_operate_zone_request() {
+        use artemis_core::model::ZoneOperation;
+        let request = OperateZoneRequest {
+            zone_id: "zone-1".to_string(),
+            region_id: "us-east".to_string(),
+            operation: ZoneOperation::PullOut,
+            operator_id: "admin".to_string(),
+        };
+        assert_eq!(request.zone_id, "zone-1");
+        assert_eq!(request.region_id, "us-east");
+        assert_eq!(request.operator_id, "admin");
+    }
+
+    #[test]
+    fn test_operate_zone_request_pull_in() {
+        use artemis_core::model::ZoneOperation;
+        let request = OperateZoneRequest {
+            zone_id: "zone-2".to_string(),
+            region_id: "eu-west".to_string(),
+            operation: ZoneOperation::PullIn,
+            operator_id: "system".to_string(),
+        };
+        assert_eq!(request.zone_id, "zone-2");
+        assert_eq!(request.operator_id, "system");
+    }
+
+    #[test]
+    fn test_list_zone_ops_query() {
+        let query = ListZoneOpsQuery {
+            region_id: Some("us-west".to_string()),
+        };
+        assert_eq!(query.region_id, Some("us-west".to_string()));
+    }
+
+    #[test]
+    fn test_list_zone_ops_query_no_region() {
+        let query = ListZoneOpsQuery {
+            region_id: None,
+        };
+        assert!(query.region_id.is_none());
     }
 }
