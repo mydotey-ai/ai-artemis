@@ -1,8 +1,15 @@
-# Cluster Page Implementation
+# Cluster 页面实现
 
-## Overview
+**文档状态**: ✅ 最新
+**最后更新**: 2026-02-17
+**相关 Phase**: Phase 2
+**源代码**: `artemis-console/src/pages/Cluster/Cluster.tsx`
 
-完整实现了 Artemis Console 的 Cluster 页面，包含集群拓扑可视化、节点列表、统计信息和节点详情等功能。
+---
+
+## 概述
+
+Artemis Console 的 Cluster 页面完整实现文档，包含集群拓扑可视化、节点列表、统计信息和节点详情等功能。
 
 ## 功能清单
 

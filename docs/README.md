@@ -15,12 +15,11 @@ docs/
 │
 ├── web-console/                                # Web 控制台文档
 │   ├── README.md                               # Web 控制台文档索引
-│   ├── PROJECT_SUMMARY.md                      # 项目完成总结
-│   ├── WEBSOCKET_IMPLEMENTATION.md             # WebSocket 实现
-│   ├── AUTH_IMPLEMENTATION.md                  # 认证系统
-│   ├── PERFORMANCE.md                          # 性能优化快速指南
-│   ├── IMPLEMENTATION_SUMMARY.md               # 实现总结
-│   └── CLUSTER_PAGE_IMPLEMENTATION.md          # Cluster 页面
+│   ├── project-summary.md                      # 项目完成总结
+│   ├── websocket-implementation.md             # WebSocket 实现
+│   ├── auth-implementation.md                  # 认证系统
+│   ├── performance.md                          # 性能优化快速指南
+│   └── cluster-page-implementation.md          # Cluster 页面
 │
 ├── plans/                                      # 设计和计划文档
 │   ├── README.md                               # 计划文档索引

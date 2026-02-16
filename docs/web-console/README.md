@@ -1,5 +1,10 @@
 # Artemis Web Console 文档
 
+**文档状态**: ✅ 最新
+**最后更新**: 2026-02-17
+
+---
+
 Artemis 服务注册中心 Web 管理控制台的完整文档。
 
 ## 📚 文档导航
@@ -8,7 +13,7 @@ Artemis 服务注册中心 Web 管理控制台的完整文档。
 - **[项目 README](../../artemis-console/README.md)** - 快速开始指南、技术栈、配置说明
 
 ### 项目总结
-- **[PROJECT_SUMMARY.md](PROJECT_SUMMARY.md)** - 项目完成总结
+- **[project-summary.md](project-summary.md)** - 项目完成总结 ⭐
   - 项目概述和开发历程
   - 3 个 Phase 的详细完成情况
   - 9 个核心功能详解
@@ -18,27 +23,27 @@ Artemis 服务注册中心 Web 管理控制台的完整文档。
 ### 技术文档
 
 #### 功能实现
-- **[WEBSOCKET_IMPLEMENTATION.md](WEBSOCKET_IMPLEMENTATION.md)** - WebSocket 实时推送系统
+- **[websocket-implementation.md](websocket-implementation.md)** - WebSocket 实时推送系统
   - WebSocket 管理器实现
   - React Hooks 集成
   - 事件订阅系统
   - 连接状态管理
   - 使用示例
 
-- **[AUTH_IMPLEMENTATION.md](AUTH_IMPLEMENTATION.md)** - 用户认证系统
+- **[auth-implementation.md](auth-implementation.md)** - 用户认证系统
   - JWT Token 管理
   - 路由守卫实现
   - Login 页面
   - 密码管理
   - Axios 拦截器
 
-- **[CLUSTER_PAGE_IMPLEMENTATION.md](CLUSTER_PAGE_IMPLEMENTATION.md)** - Cluster 页面实现
+- **[cluster-page-implementation.md](cluster-page-implementation.md)** - Cluster 页面实现
   - 集群拓扑可视化 (SVG)
   - 节点状态监控
   - 实时数据更新
 
 #### 性能优化
-- **[PERFORMANCE.md](PERFORMANCE.md)** - 性能优化快速指南
+- **[performance.md](performance.md)** - 性能优化快速指南
   - 路由懒加载
   - 代码分割策略
   - 虚拟滚动
@@ -50,13 +55,6 @@ Artemis 服务注册中心 Web 管理控制台的完整文档。
   - 性能基准测试
   - 最佳实践
   - 监控和分析
-
-#### 开发指南
-- **[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)** - 实现总结和检查清单
-  - 功能完成度检查
-  - 代码质量标准
-  - 测试状态
-  - 文档状态
 
 ### 设计文档
 - **[../plans/2026-02-16-web-console-design.md](../plans/2026-02-16-web-console-design.md)** - 完整架构设计文档
@@ -73,12 +71,11 @@ Artemis 服务注册中心 Web 管理控制台的完整文档。
 docs/
 ├── web-console/                    # Web 控制台文档 (本目录)
 │   ├── README.md                   # 文档索引 (本文件)
-│   ├── PROJECT_SUMMARY.md          # 项目完成总结
-│   ├── WEBSOCKET_IMPLEMENTATION.md # WebSocket 实现文档
-│   ├── AUTH_IMPLEMENTATION.md      # 认证系统文档
-│   ├── PERFORMANCE.md              # 性能优化快速指南
-│   ├── IMPLEMENTATION_SUMMARY.md   # 实现总结
-│   └── CLUSTER_PAGE_IMPLEMENTATION.md # Cluster 页面文档
+│   ├── project-summary.md          # 项目完成总结
+│   ├── websocket-implementation.md # WebSocket 实现文档
+│   ├── auth-implementation.md      # 认证系统文档
+│   ├── performance.md              # 性能优化快速指南
+│   └── cluster-page-implementation.md # Cluster 页面文档
 │
 ├── plans/
 │   └── 2026-02-16-web-console-design.md  # 架构设计文档
@@ -94,7 +91,7 @@ artemis-console/
 ## 🎯 文档说明
 
 ### 版本化文档
-所有文档均纳入版本管理 (git),记录项目开发过程和技术决策。
+所有文档均纳入版本管理 (git)，记录项目开发过程和技术决策。
 
 ### 文档更新
 - 功能变更时更新对应的实现文档
@@ -118,13 +115,13 @@ artemis-console/
 ### 部署
 - [生产构建](../../artemis-console/README.md#production-build)
 - [环境变量](../../artemis-console/README.md#environment-variables)
-- [Docker 部署](PROJECT_SUMMARY.md#-部署)
+- [Docker 部署](project-summary.md#-部署)
 
 ### 功能
-- [9 个核心页面](PROJECT_SUMMARY.md#-核心功能)
-- [WebSocket 实时推送](WEBSOCKET_IMPLEMENTATION.md)
-- [用户认证](AUTH_IMPLEMENTATION.md)
-- [性能优化](PERFORMANCE.md)
+- [9 个核心页面](project-summary.md#-核心功能)
+- [WebSocket 实时推送](websocket-implementation.md)
+- [用户认证](auth-implementation.md)
+- [性能优化](performance.md)
 
 ---
 
@@ -145,7 +142,7 @@ artemis-console/
 ### 开发周期
 - **开发时间**: 2 天 (2026-02-16 至 2026-02-17)
 - **Git 提交**: 6 个主要提交
-- **文档数量**: 8 份完整文档
+- **文档数量**: 6 份完整文档
 
 ---
 
@@ -157,13 +154,13 @@ artemis-console/
 
 ### 后端文档
 - [Artemis Server](../../README.md)
-- [API 文档](../../docs/README.md)
-- [部署指南](../../docs/deployment.md)
+- [API 文档](../README.md)
+- [部署指南](../deployment.md)
 
 ### 开发规范
-- [开发规范](.claude/rules/dev-standards.md)
-- [项目上下文](.claude/rules/project.md)
-- [文档组织](.claude/rules/doc.md)
+- [开发规范](../../.claude/rules/dev-standards.md)
+- [项目上下文](../../.claude/rules/project.md)
+- [文档组织](../../.claude/rules/doc.md)
 
 ---
 

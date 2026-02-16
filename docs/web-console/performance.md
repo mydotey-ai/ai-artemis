@@ -1,6 +1,18 @@
-# Performance Optimization - Quick Start Guide
+# 性能优化 - 快速指南
 
-This guide shows how to use the performance optimization features in Artemis Console.
+**文档状态**: ✅ 最新
+**最后更新**: 2026-02-17
+**相关 Phase**: Phase 3
+**源代码**: `artemis-console/src/components/VirtualTable.tsx`, `artemis-console/src/utils/cache.ts`, `artemis-console/src/utils/performance.ts`
+**完整文档**: [../performance-optimization.md](../performance-optimization.md)
+
+---
+
+## 概述
+
+本文档是 Artemis Console 性能优化功能的快速使用指南。如需完整的实现细节和最佳实践，请参阅 [完整性能优化文档](../performance-optimization.md)。
+
+---
 
 ## 1. Using VirtualTable for Large Lists
 

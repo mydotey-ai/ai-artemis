@@ -1,10 +1,15 @@
-# WebSocket Real-time Push Implementation
+# WebSocket 实时推送实现
 
-This document describes the WebSocket real-time push functionality implemented in the Artemis Console.
+**文档状态**: ✅ 最新
+**最后更新**: 2026-02-17
+**相关 Phase**: Phase 3
+**源代码**: `artemis-console/src/utils/websocket.ts`, `artemis-console/src/hooks/useWebSocket.ts`
 
-## Overview
+---
 
-The WebSocket implementation provides real-time updates for service, instance, and cluster events through a comprehensive client-side solution.
+## 概述
+
+WebSocket 实现为 Artemis Console 提供实时更新功能，通过客户端解决方案实时推送服务、实例和集群事件。
 
 ## Architecture
 
