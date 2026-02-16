@@ -163,3 +163,63 @@ pub async fn lookup_instance(
         ),
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use artemis_core::model::{DiscoveryConfig, GetServiceRequest, GetServicesRequest};
+
+    #[test]
+    fn test_get_service_request() {
+        let config = DiscoveryConfig {
+            service_id: "test-service".to_string(),
+            region_id: "us-east".to_string(),
+            zone_id: "zone1".to_string(),
+            discovery_data: None,
+        };
+        let req = GetServiceRequest {
+            discovery_config: config.clone(),
+        };
+        assert_eq!(req.discovery_config.service_id, "test-service");
+        assert_eq!(req.discovery_config.region_id, "us-east");
+    }
+
+    #[test]
+    fn test_get_services_request() {
+        let req = GetServicesRequest {
+            region_id: "us-west".to_string(),
+            zone_id: "zone2".to_string(),
+        };
+        assert_eq!(req.region_id, "us-west");
+        assert_eq!(req.zone_id, "zone2");
+    }
+
+    #[test]
+    fn test_discovery_config_with_data() {
+        use std::collections::HashMap;
+        let mut data = HashMap::new();
+        data.insert("key1".to_string(), "value1".to_string());
+        
+        let config = DiscoveryConfig {
+            service_id: "service1".to_string(),
+            region_id: "us-east".to_string(),
+            zone_id: "zone1".to_string(),
+            discovery_data: Some(data),
+        };
+        assert!(config.discovery_data.is_some());
+        assert_eq!(config.discovery_data.unwrap().get("key1"), Some(&"value1".to_string()));
+    }
+
+    #[test]
+    fn test_discovery_config_without_data() {
+        let config = DiscoveryConfig {
+            service_id: "service2".to_string(),
+            region_id: "eu-west".to_string(),
+            zone_id: "zone3".to_string(),
+            discovery_data: None,
+        };
+        assert_eq!(config.service_id, "service2");
+        assert!(config.discovery_data.is_none());
+    }
+}

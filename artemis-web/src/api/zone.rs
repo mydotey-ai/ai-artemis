@@ -133,3 +133,25 @@ pub async fn delete_zone_operation(
         ),
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_api_response_success() {
+        let response: ApiResponse<String> = ApiResponse::success("test".to_string());
+        assert!(response.success);
+        assert!(response.data.is_some());
+        assert!(response.message.is_none());
+    }
+
+    #[test]
+    fn test_api_response_error() {
+        let response: ApiResponse<String> = ApiResponse::error("error".to_string());
+        assert!(!response.success);
+        assert!(response.data.is_none());
+        assert!(response.message.is_some());
+    }
+}

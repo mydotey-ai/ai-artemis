@@ -119,3 +119,59 @@ pub async fn list_canary_configs(State(state): State<AppState>) -> impl IntoResp
     let configs = state.canary_manager.list_configs();
     (StatusCode::OK, Json(ApiResponse::success(configs)))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_api_response_success() {
+        let response: ApiResponse<String> = ApiResponse::success("test".to_string());
+        assert!(response.success);
+        assert_eq!(response.data, Some("test".to_string()));
+        assert!(response.message.is_none());
+    }
+
+    #[test]
+    fn test_api_response_error() {
+        let response: ApiResponse<String> = ApiResponse::error("error".to_string());
+        assert!(!response.success);
+        assert!(response.data.is_none());
+        assert_eq!(response.message, Some("error".to_string()));
+    }
+
+    #[test]
+    fn test_set_canary_config_request() {
+        use artemis_core::model::SetCanaryConfigRequest;
+        let req = SetCanaryConfigRequest {
+            service_id: "service1".to_string(),
+            ip_whitelist: vec!["192.168.1.1".to_string()],
+        };
+        assert_eq!(req.service_id, "service1");
+        assert_eq!(req.ip_whitelist.len(), 1);
+    }
+
+    #[test]
+    fn test_enable_canary_request() {
+        use artemis_core::model::EnableCanaryRequest;
+        let req = EnableCanaryRequest {
+            service_id: "service1".to_string(),
+            enabled: true,
+        };
+        assert_eq!(req.service_id, "service1");
+        assert!(req.enabled);
+    }
+
+    #[test]
+    fn test_canary_config() {
+        use artemis_core::model::CanaryConfig;
+        let config = CanaryConfig {
+            service_id: "service1".to_string(),
+            ip_whitelist: vec!["192.168.1.1".to_string(), "10.0.0.1".to_string()],
+            enabled: true,
+        };
+        assert_eq!(config.service_id, "service1");
+        assert_eq!(config.ip_whitelist.len(), 2);
+        assert!(config.enabled);
+    }
+}
