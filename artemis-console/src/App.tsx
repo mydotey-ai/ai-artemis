@@ -3,6 +3,7 @@ import { RouterProvider } from 'react-router-dom';
 import { useUIStore } from '@/store/uiStore';
 import { lightTheme, darkTheme } from '@/theme';
 import { router } from '@/routes';
+import { WebSocketProvider } from '@/components/WebSocketProvider';
 
 function App() {
   const theme = useUIStore((state) => state.theme);
@@ -11,7 +12,9 @@ function App() {
   return (
     <ThemeProvider theme={currentTheme}>
       <CssBaseline />
-      <RouterProvider router={router} />
+      <WebSocketProvider>
+        <RouterProvider router={router} />
+      </WebSocketProvider>
     </ThemeProvider>
   );
 }

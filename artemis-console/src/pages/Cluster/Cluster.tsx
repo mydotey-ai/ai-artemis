@@ -54,6 +54,8 @@ import {
 } from '@mui/icons-material';
 import { getClusterStatus, getClusterNodeStatus } from '@/api/cluster';
 import type { ClusterNodeStatus } from '@/api/cluster';
+import { useWebSocket } from '@/hooks/useWebSocket';
+import { useUIStore } from '@/store/uiStore';
 
 /**
  * Cluster statistics data type
@@ -91,6 +93,9 @@ const Cluster: React.FC = () => {
     message: '',
     severity: 'info',
   });
+
+  // Get notification function from UI store
+  const showNotification = useUIStore((state) => state.showNotification);
 
   /**
    * Fetch cluster data
@@ -153,6 +158,48 @@ const Cluster: React.FC = () => {
   const handleRefresh = () => {
     fetchClusterData();
   };
+
+  // ===== WebSocket Event Handlers =====
+
+  /**
+   * Handle cluster node added event
+   */
+  const handleClusterNodeAdded = useCallback(
+    (data: unknown) => {
+      console.log('Cluster node added:', data);
+      const nodeData = data as { node_id?: string };
+      showNotification({
+        type: 'success',
+        message: `Cluster node added${nodeData.node_id ? `: ${nodeData.node_id}` : ''}`,
+        duration: 5000,
+      });
+      // Refresh cluster data
+      fetchClusterData();
+    },
+    [showNotification, fetchClusterData]
+  );
+
+  /**
+   * Handle cluster node removed event
+   */
+  const handleClusterNodeRemoved = useCallback(
+    (data: unknown) => {
+      console.log('Cluster node removed:', data);
+      const nodeData = data as { node_id?: string };
+      showNotification({
+        type: 'warning',
+        message: `Cluster node removed${nodeData.node_id ? `: ${nodeData.node_id}` : ''}`,
+        duration: 5000,
+      });
+      // Refresh cluster data
+      fetchClusterData();
+    },
+    [showNotification, fetchClusterData]
+  );
+
+  // Subscribe to cluster events
+  useWebSocket('cluster.node_added', handleClusterNodeAdded);
+  useWebSocket('cluster.node_removed', handleClusterNodeRemoved);
 
   /**
    * Handle node details view

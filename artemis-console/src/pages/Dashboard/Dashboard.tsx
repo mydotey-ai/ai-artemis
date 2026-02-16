@@ -61,6 +61,8 @@ import { getAllServices } from '@/api/discovery';
 import { getClusterStatus } from '@/api/cluster';
 import { listRules } from '@/api/routing';
 import type { Service } from '@/api/types';
+import { useWebSocket } from '@/hooks/useWebSocket';
+import { useUIStore } from '@/store/uiStore';
 
 /**
  * Statistic card data type
@@ -138,6 +140,9 @@ const Dashboard: React.FC = () => {
   // Default region and zone (can be configurable)
   const DEFAULT_REGION = 'default';
   const DEFAULT_ZONE = 'default';
+
+  // Get notification function from UI store
+  const showNotification = useUIStore((state) => state.showNotification);
 
   /**
    * Fetch all dashboard data
@@ -277,6 +282,138 @@ const Dashboard: React.FC = () => {
   const handleRefresh = () => {
     fetchDashboardData();
   };
+
+  // ===== WebSocket Event Handlers =====
+
+  /**
+   * Handle service registration event
+   */
+  const handleServiceRegistered = useCallback(
+    (data: unknown) => {
+      console.log('Service registered:', data);
+      showNotification({
+        type: 'success',
+        message: `New service registered: ${JSON.stringify(data)}`,
+        duration: 5000,
+      });
+      // Refresh dashboard data
+      fetchDashboardData();
+    },
+    [showNotification, fetchDashboardData]
+  );
+
+  /**
+   * Handle service unregistration event
+   */
+  const handleServiceUnregistered = useCallback(
+    (data: unknown) => {
+      console.log('Service unregistered:', data);
+      showNotification({
+        type: 'info',
+        message: `Service unregistered: ${JSON.stringify(data)}`,
+        duration: 5000,
+      });
+      // Refresh dashboard data
+      fetchDashboardData();
+    },
+    [showNotification, fetchDashboardData]
+  );
+
+  /**
+   * Handle instance registration event
+   */
+  const handleInstanceRegistered = useCallback(
+    (data: unknown) => {
+      console.log('Instance registered:', data);
+      showNotification({
+        type: 'success',
+        message: `New instance registered`,
+        duration: 3000,
+      });
+      // Refresh dashboard data
+      fetchDashboardData();
+    },
+    [showNotification, fetchDashboardData]
+  );
+
+  /**
+   * Handle instance unregistration event
+   */
+  const handleInstanceUnregistered = useCallback(
+    (data: unknown) => {
+      console.log('Instance unregistered:', data);
+      showNotification({
+        type: 'info',
+        message: `Instance unregistered`,
+        duration: 3000,
+      });
+      // Refresh dashboard data
+      fetchDashboardData();
+    },
+    [showNotification, fetchDashboardData]
+  );
+
+  /**
+   * Handle instance status change event
+   */
+  const handleInstanceStatusChanged = useCallback(
+    (data: unknown) => {
+      console.log('Instance status changed:', data);
+      const statusData = data as { instance_id?: string; status?: string };
+      showNotification({
+        type: 'warning',
+        message: `Instance status changed: ${statusData.instance_id || 'unknown'} → ${statusData.status || 'unknown'}`,
+        duration: 4000,
+      });
+      // Refresh dashboard data
+      fetchDashboardData();
+    },
+    [showNotification, fetchDashboardData]
+  );
+
+  /**
+   * Handle cluster node added event
+   */
+  const handleClusterNodeAdded = useCallback(
+    (data: unknown) => {
+      console.log('Cluster node added:', data);
+      showNotification({
+        type: 'success',
+        message: `Cluster node added: ${JSON.stringify(data)}`,
+        duration: 5000,
+      });
+      // Refresh dashboard data
+      fetchDashboardData();
+    },
+    [showNotification, fetchDashboardData]
+  );
+
+  /**
+   * Handle cluster node removed event
+   */
+  const handleClusterNodeRemoved = useCallback(
+    (data: unknown) => {
+      console.log('Cluster node removed:', data);
+      showNotification({
+        type: 'warning',
+        message: `Cluster node removed: ${JSON.stringify(data)}`,
+        duration: 5000,
+      });
+      // Refresh dashboard data
+      fetchDashboardData();
+    },
+    [showNotification, fetchDashboardData]
+  );
+
+  // ===== WebSocket Subscriptions =====
+
+  useWebSocket('service.registered', handleServiceRegistered);
+  useWebSocket('service.unregistered', handleServiceUnregistered);
+  useWebSocket('instance.registered', handleInstanceRegistered);
+  useWebSocket('instance.unregistered', handleInstanceUnregistered);
+  useWebSocket('instance.status_changed', handleInstanceStatusChanged);
+  useWebSocket('cluster.node_added', handleClusterNodeAdded);
+  useWebSocket('cluster.node_removed', handleClusterNodeRemoved);
 
   // ===== Styles =====
 

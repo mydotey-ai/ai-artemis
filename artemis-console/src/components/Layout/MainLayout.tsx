@@ -34,6 +34,7 @@ import {
 } from '@mui/material';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { NotificationSnackbar } from '@/components/NotificationSnackbar';
 
 // ===== Type Definitions =====
 
@@ -235,6 +236,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
           </Container>
         </Box>
       </Box>
+
+      {/* ===== Notification Snackbar ===== */}
+      <NotificationSnackbar />
     </Box>
   );
 };

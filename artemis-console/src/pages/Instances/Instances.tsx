@@ -61,6 +61,8 @@ import {
   type InstanceKey,
 } from '@/api/management';
 import type { Service, Instance, InstanceStatus } from '@/api/types';
+import { useWebSocket } from '@/hooks/useWebSocket';
+import { useUIStore } from '@/store/uiStore';
 
 /**
  * Instance row data for table display
@@ -181,6 +183,9 @@ const Instances: React.FC = () => {
   const [unregisterDialogOpen, setUnregisterDialogOpen] = useState<boolean>(false);
   const [instanceToUnregister, setInstanceToUnregister] = useState<InstanceRow | null>(null);
 
+  // Get notification function from UI store
+  const showNotification = useUIStore((state) => state.showNotification);
+
   // ===== Data Fetching =====
   const fetchInstances = useCallback(async () => {
     try {
@@ -232,6 +237,44 @@ const Instances: React.FC = () => {
     const interval = setInterval(fetchInstances, 10000);
     return () => clearInterval(interval);
   }, [fetchInstances]);
+
+  // ===== WebSocket Event Handlers =====
+
+  /**
+   * Handle instance-related events
+   */
+  const handleInstanceEvent = useCallback(
+    (data: unknown, eventType: string) => {
+      console.log(`Instance event: ${eventType}`, data);
+
+      const eventLabels: Record<string, string> = {
+        'instance.registered': 'Instance registered',
+        'instance.unregistered': 'Instance unregistered',
+        'instance.status_changed': 'Instance status changed',
+      };
+
+      const eventData = data as { instance_id?: string; status?: string };
+      const instanceInfo = eventData.instance_id
+        ? ` (${eventData.instance_id})`
+        : '';
+
+      showNotification({
+        type: eventType.includes('status_changed') ? 'warning' :
+              eventType.includes('unregistered') ? 'info' : 'success',
+        message: `${eventLabels[eventType] || 'Instance event'}${instanceInfo}`,
+        duration: 4000,
+      });
+
+      // Refresh instances list
+      fetchInstances();
+    },
+    [showNotification, fetchInstances]
+  );
+
+  // Subscribe to instance events
+  useWebSocket('instance.registered', (data) => handleInstanceEvent(data, 'instance.registered'));
+  useWebSocket('instance.unregistered', (data) => handleInstanceEvent(data, 'instance.unregistered'));
+  useWebSocket('instance.status_changed', (data) => handleInstanceEvent(data, 'instance.status_changed'));
 
   // ===== Filtering =====
   const availableServiceIds = useMemo(() => {

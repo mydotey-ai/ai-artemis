@@ -5,11 +5,14 @@
  * - 用户信息、访问令牌、权限
  * - 登录/登出操作
  * - 权限检查
- * - 令牌存储在 localStorage
+ * - 令牌存储在 localStorage/sessionStorage
+ * - JWT token 管理集成
  */
 
 import { create } from 'zustand';
 import type { User, Role } from '../api/types';
+import { saveToken, getToken, removeToken, isTokenValid } from '@/utils/token';
+import * as authApi from '@/api/auth';
 
 // ===== Store State Interface =====
 
@@ -37,42 +40,54 @@ interface AuthStoreState {
 
 // ===== Constants =====
 
-const LOCAL_STORAGE_TOKEN_KEY = 'artemis_auth_token';
 const LOCAL_STORAGE_USER_KEY = 'artemis_user';
 
 // ===== Helper Functions =====
 
 /**
- * 从 localStorage 恢复认证状态
+ * 从 storage 恢复认证状态
+ * 使用 token utility 获取 token，从 localStorage 获取 user
  */
 function restoreAuthState(): {
   token: string | null;
   user: User | null;
 } {
   try {
-    const token = localStorage.getItem(LOCAL_STORAGE_TOKEN_KEY);
+    // Get token from utility (handles both localStorage and sessionStorage)
+    const token = getToken();
+
+    // Validate token before restoring state
+    if (token && !isTokenValid(token)) {
+      // Token expired, clear everything
+      removeToken();
+      localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
+      return { token: null, user: null };
+    }
+
+    // Get user from localStorage
     const userJson = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
     const user = userJson ? JSON.parse(userJson) : null;
+
     return { token, user };
-  } catch {
+  } catch (error) {
+    console.error('Failed to restore auth state:', error);
     return { token: null, user: null };
   }
 }
 
 /**
- * 保存认证状态到 localStorage
+ * 保存用户信息到 localStorage
+ * Token 使用 token utility 管理
  */
-function persistAuthState(token: string | null, user: User | null): void {
-  if (token) {
-    localStorage.setItem(LOCAL_STORAGE_TOKEN_KEY, token);
-  } else {
-    localStorage.removeItem(LOCAL_STORAGE_TOKEN_KEY);
-  }
-
-  if (user) {
-    localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(user));
-  } else {
-    localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
+function persistUserState(user: User | null): void {
+  try {
+    if (user) {
+      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(user));
+    } else {
+      localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
+    }
+  } catch (error) {
+    console.error('Failed to persist user state:', error);
   }
 }
 
@@ -114,15 +129,20 @@ export const useAuthStore = create<AuthStoreState>((set, get) => {
     error: null,
 
     // ===== 登录 =====
-    login: async (username: string, _password: string) => {
+    login: async (username: string, password: string) => {
       set({ isLoading: true, error: null });
       try {
-        // TODO: 调用实际的登录 API
-        // const response = await loginAPI({ username, password });
-        // const { token, user } = response.data;
+        // Call login API (currently mock implementation in auth.ts)
+        const response = await authApi.login({ username, password });
 
-        // 模拟登录 (用于演示)
-        const mockToken = `token_${Date.now()}`;
+        if (!response.success || !response.data) {
+          throw new Error(response.message || 'Login failed');
+        }
+
+        const { access_token } = response.data;
+
+        // For now, create mock user until backend is implemented
+        // TODO: Replace with actual user data from API response
         const mockUser: User = {
           user_id: `user_${username}`,
           username,
@@ -153,13 +173,21 @@ export const useAuthStore = create<AuthStoreState>((set, get) => {
 
         const permissions = extractPermissionIds(mockUser);
 
-        // 保存到 localStorage
-        persistAuthState(mockToken, mockUser);
+        // Save token using utility (will use appropriate storage)
+        // Note: Remember me is handled in Login component
+        // Token is already saved there, but we ensure it's set
+        const currentToken = getToken();
+        if (!currentToken) {
+          saveToken(access_token, false);
+        }
 
-        // 更新状态
+        // Save user to localStorage
+        persistUserState(mockUser);
+
+        // Update state
         set({
           user: mockUser,
-          token: mockToken,
+          token: access_token,
           permissions,
           roles: mockUser.roles,
           isAuthenticated: true,
@@ -168,6 +196,12 @@ export const useAuthStore = create<AuthStoreState>((set, get) => {
         });
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Login failed';
+        console.error('Login error:', errorMessage);
+
+        // Clear any partial state
+        removeToken();
+        persistUserState(null);
+
         set({
           error: errorMessage,
           isLoading: false,
@@ -183,11 +217,13 @@ export const useAuthStore = create<AuthStoreState>((set, get) => {
     logout: async () => {
       set({ isLoading: true, error: null });
       try {
-        // TODO: 调用实际的登出 API
-        // await logoutAPI();
+        // Call logout API (currently mock implementation in auth.ts)
+        await authApi.logout();
 
-        // 清空所有认证状态
-        persistAuthState(null, null);
+        // Clear all authentication state
+        removeToken();
+        persistUserState(null);
+
         set({
           user: null,
           token: null,
@@ -197,13 +233,29 @@ export const useAuthStore = create<AuthStoreState>((set, get) => {
           isLoading: false,
           error: null,
         });
+
+        // Redirect to login page
+        window.location.href = '/login';
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Logout failed';
+        console.error('Logout error:', errorMessage);
+
+        // Even if API fails, clear local state
+        removeToken();
+        persistUserState(null);
+
         set({
+          user: null,
+          token: null,
+          permissions: [],
+          roles: [],
+          isAuthenticated: false,
           error: errorMessage,
           isLoading: false,
         });
-        throw err;
+
+        // Still redirect on error
+        window.location.href = '/login';
       }
     },
 
@@ -227,18 +279,23 @@ export const useAuthStore = create<AuthStoreState>((set, get) => {
         permissions,
         roles: user?.roles || [],
       });
-      persistAuthState(get().token, user);
+      persistUserState(user);
     },
 
     // ===== 设置令牌 =====
     setToken: (token: string | null) => {
       set({ token });
-      persistAuthState(token, get().user);
+      if (token) {
+        saveToken(token, false); // Default to sessionStorage
+      } else {
+        removeToken();
+      }
     },
 
     // ===== 清空认证状态 =====
     clearAuth: () => {
-      persistAuthState(null, null);
+      removeToken();
+      persistUserState(null);
       set({
         user: null,
         token: null,
@@ -251,12 +308,25 @@ export const useAuthStore = create<AuthStoreState>((set, get) => {
 
     // ===== 刷新令牌 =====
     refreshTokenIfNeeded: async () => {
-      // TODO: 实现令牌刷新逻辑
-      // 检查令牌是否过期，如果过期则刷新
-      // const { token } = get();
-      // if (isTokenExpired(token)) {
-      //   const newToken = await refreshTokenAPI(token);
-      //   get().setToken(newToken);
+      const { token } = get();
+
+      // Check if token needs refresh
+      if (!token || isTokenValid(token)) {
+        return; // Token is valid or doesn't exist
+      }
+
+      // Token is expired or invalid, clear auth
+      get().clearAuth();
+
+      // TODO: Implement token refresh when backend supports it
+      // try {
+      //   const response = await authApi.refreshToken({ refresh_token: token });
+      //   if (response.success && response.data) {
+      //     get().setToken(response.data.access_token);
+      //   }
+      // } catch (error) {
+      //   console.error('Token refresh failed:', error);
+      //   get().clearAuth();
       // }
     },
 

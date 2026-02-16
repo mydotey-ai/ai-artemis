@@ -21,6 +21,7 @@
  */
 
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   AppBar,
@@ -35,6 +36,7 @@ import {
   Menu,
   MenuItem,
   Avatar,
+  Badge,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -43,10 +45,14 @@ import {
   Close as CloseIcon,
   Logout as LogoutIcon,
   AccountCircle as AccountIcon,
-  Settings as SettingsIcon,
+  VpnKey as ChangePasswordIcon,
+  Circle as CircleIcon,
 } from '@mui/icons-material';
 import { useUIStore } from '@/store/uiStore';
 import { useAuthStore } from '@/store/authStore';
+import { useWebSocketState } from '@/hooks/useWebSocket';
+import { ConnectionState } from '@/utils/websocket';
+import { ChangePasswordDialog } from '@/components/ChangePasswordDialog';
 
 // ===== Type Definitions =====
 
@@ -166,10 +172,17 @@ export const Header: React.FC<HeaderProps> = ({
   const logout = useAuthStore((state) => state.logout);
   const isAuthLoading = useAuthStore((state) => state.isLoading);
 
-  // Local state for user menu
+  // Get WebSocket connection state
+  const wsConnectionState = useWebSocketState();
+
+  // Navigation
+  const navigate = useNavigate();
+
+  // Local state for user menu and change password dialog
   const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(
     null
   );
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
 
   /**
    * Memoize the theme icon to avoid unnecessary re-renders
@@ -226,17 +239,25 @@ export const Header: React.FC<HeaderProps> = ({
    */
   const handleProfileClick = (): void => {
     handleUserMenuClose();
-    // TODO: Navigate to profile page
-    console.log('Navigate to profile page');
+    // Navigate to users page with current user's ID
+    if (user) {
+      navigate(`/users?id=${user.user_id}`);
+    }
   };
 
   /**
-   * Handle settings click
+   * Handle change password click
    */
-  const handleSettingsClick = (): void => {
+  const handleChangePasswordClick = (): void => {
     handleUserMenuClose();
-    // TODO: Navigate to settings page
-    console.log('Navigate to settings page');
+    setChangePasswordOpen(true);
+  };
+
+  /**
+   * Handle change password dialog close
+   */
+  const handleChangePasswordClose = (): void => {
+    setChangePasswordOpen(false);
   };
 
   /**
@@ -246,7 +267,7 @@ export const Header: React.FC<HeaderProps> = ({
     handleUserMenuClose();
     try {
       await logout();
-      // Navigation to login page is handled by router guard
+      // Navigation to login page is handled by logout action
     } catch (error) {
       console.error('Logout failed:', error);
     }
@@ -256,6 +277,38 @@ export const Header: React.FC<HeaderProps> = ({
   const isUserMenuOpen = Boolean(userMenuAnchor);
   const avatarColor = user ? getAvatarColor(user.username) : '#9C27B0';
   const avatarInitials = user ? getAvatarInitials(user.username) : 'U';
+
+  // WebSocket connection indicator
+  const wsStatusColor = useMemo(() => {
+    switch (wsConnectionState) {
+      case 'connected':
+        return '#4caf50'; // green
+      case 'connecting':
+      case 'reconnecting':
+        return '#ff9800'; // orange
+      case 'failed':
+        return '#f44336'; // red
+      default:
+        return '#9e9e9e'; // grey
+    }
+  }, [wsConnectionState]);
+
+  const wsStatusText = useMemo(() => {
+    switch (wsConnectionState) {
+      case 'connected':
+        return 'WebSocket Connected';
+      case 'connecting':
+        return 'Connecting...';
+      case 'reconnecting':
+        return 'Reconnecting...';
+      case 'failed':
+        return 'Connection Failed';
+      case 'disconnected':
+        return 'Disconnected';
+      default:
+        return 'Unknown';
+    }
+  }, [wsConnectionState]);
 
   // ===== Styles =====
 
@@ -380,6 +433,41 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* ===== Controls Section ===== */}
         <Box sx={controlsBoxSx}>
+          {/* WebSocket Connection Status Indicator */}
+          <Tooltip title={wsStatusText} arrow>
+            <Badge
+              overlap="circular"
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+              variant="dot"
+              sx={{
+                '& .MuiBadge-badge': {
+                  backgroundColor: wsStatusColor,
+                  width: 10,
+                  height: 10,
+                  borderRadius: '50%',
+                  border: `2px solid ${theme.palette.background.paper}`,
+                  animation: wsConnectionState === 'connecting' ||
+                            wsConnectionState === 'reconnecting'
+                    ? 'pulse 2s infinite'
+                    : 'none',
+                  '@keyframes pulse': {
+                    '0%': { opacity: 1 },
+                    '50%': { opacity: 0.5 },
+                    '100%': { opacity: 1 },
+                  },
+                },
+              }}
+            >
+              <CircleIcon
+                sx={{
+                  fontSize: 12,
+                  color: wsStatusColor,
+                  visibility: 'hidden', // Hidden but takes space
+                }}
+              />
+            </Badge>
+          </Tooltip>
+
           {/* Theme toggle button */}
           <Tooltip
             title={
@@ -515,23 +603,23 @@ export const Header: React.FC<HeaderProps> = ({
                   <Typography variant="body2">Profile</Typography>
                 </MenuItem>
 
-                {/* Settings Menu Item */}
+                {/* Change Password Menu Item */}
                 <MenuItem
-                  onClick={handleSettingsClick}
+                  onClick={handleChangePasswordClick}
                   sx={{
                     '&:hover': {
                       backgroundColor: theme.palette.action.hover,
                     },
                   }}
                 >
-                  <SettingsIcon
+                  <ChangePasswordIcon
                     sx={{
                       mr: 1.5,
                       fontSize: '1.25rem',
                       color: theme.palette.text.secondary,
                     }}
                   />
-                  <Typography variant="body2">Settings</Typography>
+                  <Typography variant="body2">Change Password</Typography>
                 </MenuItem>
 
                 {/* Divider before Logout */}
@@ -598,6 +686,12 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </Box>
       </Toolbar>
+
+      {/* Change Password Dialog */}
+      <ChangePasswordDialog
+        open={changePasswordOpen}
+        onClose={handleChangePasswordClose}
+      />
     </AppBar>
   );
 };

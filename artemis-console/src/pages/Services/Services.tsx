@@ -12,7 +12,7 @@
  * - Responsive design with loading and error states
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -55,6 +55,8 @@ import {
 } from '@mui/icons-material';
 import { getAllServices } from '@/api/discovery';
 import type { Service, InstanceStatus, ErrorCode } from '@/api/types';
+import { useWebSocket } from '@/hooks/useWebSocket';
+import { useUIStore } from '@/store/uiStore';
 
 /**
  * Health status type
@@ -102,6 +104,9 @@ const Services: React.FC = () => {
   // Detail dialog
   const [detailDialogOpen, setDetailDialogOpen] = useState<boolean>(false);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
+
+  // Get notification function from UI store
+  const showNotification = useUIStore((state) => state.showNotification);
 
   // ===== Data Fetching =====
 
@@ -170,6 +175,37 @@ const Services: React.FC = () => {
   useEffect(() => {
     fetchServices();
   }, []);
+
+  // ===== WebSocket Event Handlers =====
+
+  /**
+   * Handle service-related events
+   */
+  const handleServiceEvent = useCallback(
+    (data: unknown, eventType: string) => {
+      console.log(`Service event: ${eventType}`, data);
+
+      // Show notification
+      const eventLabels: Record<string, string> = {
+        'service.registered': 'Service registered',
+        'service.unregistered': 'Service unregistered',
+      };
+
+      showNotification({
+        type: eventType.includes('unregistered') ? 'info' : 'success',
+        message: eventLabels[eventType] || 'Service event',
+        duration: 4000,
+      });
+
+      // Refresh services list
+      fetchServices();
+    },
+    [showNotification]
+  );
+
+  // Subscribe to service events
+  useWebSocket('service.registered', (data) => handleServiceEvent(data, 'service.registered'));
+  useWebSocket('service.unregistered', (data) => handleServiceEvent(data, 'service.unregistered'));
 
   // ===== Filtering and Sorting =====
 
