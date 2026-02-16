@@ -12,7 +12,6 @@
 | [实施状态](implementation-status.md) | 各 Phase 实施进度和状态跟踪 | 2026-02-14 |
 | [TODO 检查报告](todo-check-2026-02-15.md) | 全项目 TODO 检查和状态跟踪 | 2026-02-15 |
 | [TODO 实现报告](todo-implementations-2026-02-15.md) | 重试队列和 OpenTelemetry 实现完成报告 | 2026-02-15 |
-| [Phase 14 完成报告](phase-14-persistence-complete.md) | 数据持久化功能完成报告 | 2026-02-14 |
 
 ---
 
@@ -110,8 +109,8 @@
 
 ---
 
-**最后更新**: 2026-02-15
-**文档版本**: v1.1.0
+**最后更新**: 2026-02-16
+**文档版本**: v1.2.0
 
 Generated with [Claude Code](https://claude.com/claude-code)
 via [Happy](https://happy.engineering)

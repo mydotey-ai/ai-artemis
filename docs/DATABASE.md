@@ -16,6 +16,55 @@ Artemis 使用 **SeaORM 1.1** 作为数据库 ORM,支持运行时在 **SQLite** 
 
 ---
 
+## 快速开始
+
+### 开发环境快速配置
+
+根据不同的开发需求，可以选择以下三种方式：
+
+| 方式 | 命令 | 优点 | 缺点 | 适用场景 |
+|------|------|------|------|---------|
+| **无数据库** | `./scripts/cluster.sh start` | 快速启动，无需配置 | 重启后数据丢失 | 快速测试、开发 |
+| **SQLite 共享** | `DB_TYPE=sqlite ./scripts/cluster.sh start` | 数据持久化，集群模式 | SQLite 并发写入有限 | 开发、测试 |
+| **SQLite 单节点** | `artemis server --config config/examples/artemis-sqlite.toml` | 完整配置，单节点 | 需要配置文件 | 单节点开发 |
+
+#### 方式1: 无数据库（推荐用于快速测试）
+
+```bash
+# 启动3节点集群（纯内存，无数据库）
+./scripts/cluster.sh start
+
+# 优点: 快速启动，无需配置
+# 缺点: 重启后数据丢失
+```
+
+#### 方式2: SQLite 共享模式（推荐用于开发）
+
+```bash
+# 启动3节点集群（SQLite 共享模式）
+DB_TYPE=sqlite ./scripts/cluster.sh start
+
+# 数据持久化在 .cluster/data/shared.db
+# 所有节点自动共享同一个数据库文件
+
+# 首次启动需要创建 schema
+sqlite3 .cluster/data/shared.db < artemis-management/migrations/001_initial_schema.sql
+
+# 优点: 数据持久化，集群模式
+# 缺点: SQLite 并发写入性能有限，适合开发测试
+```
+
+#### 方式3: SQLite 单节点
+
+```bash
+# 启动单节点服务
+artemis server --config config/examples/artemis-sqlite.toml
+
+# 数据持久化在 artemis.db 文件
+```
+
+---
+
 ## 配置方式
 
 ### 1. SQLite 配置 (开发/测试)
@@ -92,6 +141,48 @@ db_type = "mysql"
 # 使用主从复制或 Galera 集群的虚拟 IP
 url = "mysql://artemis:password@vip.mysql.cluster:3306/artemis"
 max_connections = 50
+```
+
+---
+
+### 3. 环境变量配置
+
+除了配置文件，也可以通过环境变量覆盖数据库配置：
+
+```bash
+# 设置环境变量
+export ARTEMIS_DB_TYPE=mysql
+export ARTEMIS_DB_URL="mysql://artemis:password@localhost:3306/artemis"
+export ARTEMIS_DB_MAX_CONN=20
+
+# 启动服务
+artemis server
+```
+
+**优先级**: 环境变量 > 配置文件
+
+**使用场景**:
+- Docker 容器部署
+- Kubernetes ConfigMap
+- 临时覆盖配置
+
+---
+
+### 4. 配置文件位置
+
+Artemis 提供了多个配置文件模板：
+
+```
+ai-artemis/
+├── config/examples/
+│   ├── artemis-sqlite.toml          # SQLite 配置模板
+│   └── artemis-mysql.toml           # MySQL 配置模板
+├── scripts/
+│   └── cluster.sh                   # 自动生成集群配置
+└── .cluster/                        # cluster.sh 生成的配置
+    ├── node1.toml
+    ├── node2.toml
+    └── node3.toml
 ```
 
 ---

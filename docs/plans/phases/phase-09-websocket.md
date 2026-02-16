@@ -2,9 +2,10 @@
 
 > **For Claude:** 实现WebSocket实时推送功能，包括服务端和客户端。参考Java实现: `artemis-java/artemis-server/`
 
+**优先级**: P1 (强烈建议)
+**状态**: ✅ **已完成** (2026-02-13)
 **目标:** 完整实现WebSocket实时推送，支持服务变更通知
-
-**预计任务数:** 4个Task
+**任务数:** 4个Task
 
 ---
 

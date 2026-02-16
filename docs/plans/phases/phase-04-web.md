@@ -2,9 +2,10 @@
 
 > **For Claude:** HTTP/WebSocket API层，使用Axum框架。参考Java实现: `artemis-java/artemis-server/`
 
+**优先级**: P0 (必须完成)
+**状态**: ✅ **已完成** (2026-02-13)
 **目标:** 实现完整的Web API层
-
-**预计任务数:** 5个Task
+**任务数:** 5个Task
 
 ---
 
