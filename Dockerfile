@@ -1,5 +1,5 @@
 # Multi-stage Dockerfile for Artemis Service Registry
-FROM rust:1.85 as builder
+FROM rust:1.93 as builder
 
 WORKDIR /app
 COPY . .
