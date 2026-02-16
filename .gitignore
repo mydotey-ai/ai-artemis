@@ -34,3 +34,7 @@ artemis.toml
 
 # Local cluster files
 .cluster/
+
+# Temporary documentation (not version controlled)
+docs/reports/
+docs/archive/
