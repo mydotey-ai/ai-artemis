@@ -19,6 +19,31 @@
 
 ## 快速开始
 
+### 开发环境 (推荐)
+
+一键启动前后端服务，包含 Web 控制台、后端集群和 SQLite 数据库：
+
+```bash
+# 启动开发环境（默认: 3节点集群 + 前端 + SQLite）
+./scripts/dev.sh start
+
+# 启动单节点模式
+./scripts/dev.sh start 1
+
+# 查看服务状态
+./scripts/dev.sh status
+
+# 停止所有服务
+./scripts/dev.sh stop
+```
+
+服务启动后访问：
+- **Web 控制台**: `http://localhost:5173`
+- **后端 API**: `http://localhost:8080` (节点1)
+- **健康检查**: `http://localhost:8080/health`
+
+**默认配置**: 3 节点集群 (端口 8080-8082) + SQLite 数据库 + Web 控制台
+
 ### 单节点部署
 
 ```bash
