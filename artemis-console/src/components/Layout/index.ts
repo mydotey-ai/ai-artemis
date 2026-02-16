@@ -5,6 +5,6 @@
  * Provides clean imports for the entire application
  */
 
-export { MainLayout, type MainLayoutProps } from './MainLayout';
-export { Header, type HeaderProps } from './Header';
-export { Sidebar, type SidebarProps } from './Sidebar';
+export { MainLayout } from './MainLayout';
+export { Header } from './Header';
+export { Sidebar } from './Sidebar';

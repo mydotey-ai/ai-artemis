@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
+import axios, { type AxiosInstance, type AxiosResponse, AxiosError } from 'axios';
 
 /**
  * Create Axios instance with custom configuration

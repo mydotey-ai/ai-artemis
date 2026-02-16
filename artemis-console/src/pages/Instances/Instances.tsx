@@ -44,6 +44,7 @@ import {
   Menu,
   Snackbar,
   Tooltip,
+  type SelectChangeEvent,
 } from '@mui/material';
 import {
   Search as SearchIcon,

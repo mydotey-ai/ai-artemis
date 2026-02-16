@@ -22,15 +22,15 @@
  * └─────────────────────────────────┘
  */
 
-import React, { ReactNode } from 'react';
+import React, { type ReactNode } from 'react';
 import { Outlet } from 'react-router-dom';
 import {
   Box,
   Container,
   useTheme,
   useMediaQuery,
-  SxProps,
-  Theme,
+  type SxProps,
+  type Theme,
 } from '@mui/material';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';

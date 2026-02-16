@@ -8,27 +8,114 @@
 export * from './client';
 export * from './types';
 export * from './discovery';
-export * from './management';
+
+// Export only functions from management, types are already exported from ./types
+export {
+  operateInstance,
+  getInstanceOperations,
+  isInstanceDown,
+  operateServer,
+  isServerDown,
+  getAllInstanceOperations,
+  getAllInstanceOperationsGet,
+  getAllServerOperations,
+  getAllServerOperationsGet,
+} from './management';
 
 // ===== 新增 API 模块 =====
 
-// 分组和路由规则 API
-export * from './routing';
+// 分组和路由规则 API - export only functions
+export {
+  createGroup,
+  listGroups,
+  getGroup,
+  updateGroup,
+  deleteGroup,
+  addGroupTags,
+  createRule,
+  listRules,
+  getRule,
+  updateRule,
+  deleteRule,
+  addRuleGroup,
+  removeRuleGroup,
+  updateRuleGroup,
+  getGroupInstances,
+} from './routing';
 
-// 集群状态 API
-export * from './cluster';
+// 集群状态 API - export only functions
+export {
+  getClusterStatus,
+  getClusterNodeStatus,
+  getConfigStatus,
+  getDeploymentStatus,
+  getLeasesStatus,
+} from './cluster';
 
-// 审计日志 API
-export * from './audit';
+// 审计日志 API - export only functions
+export {
+  queryLogs,
+  queryLogsByOperation,
+  queryLogsByOperator,
+  queryLogsByResourceType,
+  queryLogsByTimeRange,
+  getLogDetail,
+  exportLogs,
+  cleanupOldLogs,
+  getLogStats,
+} from './audit';
 
-// Zone 操作 API
-export * from './zone';
+// Zone 操作 API - export only functions
+export {
+  pullOutZone,
+  pullInZone,
+  queryZoneOperations,
+  getZoneInfo,
+  listZones,
+  isZoneDown,
+  getZoneInstances,
+  updateZoneStatus,
+  batchPullOutZones,
+  batchPullInZones,
+} from './zone';
 
-// 金丝雀发布 API
-export * from './canary';
+// 金丝雀发布 API - export only functions
+export {
+  listCanaryConfigs,
+  getCanaryConfig,
+  setCanaryConfig,
+  deleteCanaryConfig,
+  enableCanary,
+  disableCanary,
+  addIpToWhitelist,
+  removeIpFromWhitelist,
+  getCanaryStats,
+} from './canary';
 
-// 认证 API
-export * from './auth';
+// 认证 API - export only functions
+export {
+  login,
+  logout,
+  refreshToken,
+  getCurrentUser,
+  getUserPermissions,
+  changePassword,
+  resetPassword,
+  listActiveSessions,
+  revokeSession,
+  listRoles,
+  checkPermission,
+  getAllUsers,
+  getUser,
+  createUser,
+  updateUser,
+  deleteUser,
+  resetUserPassword,
+  changeUserStatus,
+  getUserLoginHistory,
+  UserStatus,
+  UserRole,
+} from './auth';
 
 // ===== API 基础配置 =====
 

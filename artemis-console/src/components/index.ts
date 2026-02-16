@@ -9,7 +9,4 @@ export {
   MainLayout,
   Header,
   Sidebar,
-  type MainLayoutProps,
-  type HeaderProps,
-  type SidebarProps,
 } from './Layout';

@@ -695,7 +695,7 @@ const Canary: React.FC = () => {
    */
   const renderStatisticsCards = (): React.ReactElement => (
     <Grid container spacing={3} sx={{ marginBottom: 3 }}>
-      <Grid item xs={12} sm={4}>
+      <Grid size={{ xs: 12, sm: 4 }}>
         <Card>
           <CardContent sx={statsCardSx}>
             <Typography variant="h4" color="primary" fontWeight={600}>
@@ -707,7 +707,7 @@ const Canary: React.FC = () => {
           </CardContent>
         </Card>
       </Grid>
-      <Grid item xs={12} sm={4}>
+      <Grid size={{ xs: 12, sm: 4 }}>
         <Card>
           <CardContent sx={statsCardSx}>
             <Typography variant="h4" color="secondary" fontWeight={600}>
@@ -719,7 +719,7 @@ const Canary: React.FC = () => {
           </CardContent>
         </Card>
       </Grid>
-      <Grid item xs={12} sm={4}>
+      <Grid size={{ xs: 12, sm: 4 }}>
         <Card>
           <CardContent sx={statsCardSx}>
             <Typography variant="h4" color="success.main" fontWeight={600}>

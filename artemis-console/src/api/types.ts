@@ -14,13 +14,15 @@
  * Response Status Enum
  * Indicates the status of an API request
  */
-export enum ErrorCode {
-  SUCCESS = 'success',
-  BAD_REQUEST = 'bad-request',
-  SERVICE_UNAVAILABLE = 'service-unavailable',
-  RATE_LIMITED = 'rate-limited',
-  INTERNAL_ERROR = 'internal-error',
-}
+export const ErrorCode = {
+  SUCCESS: 'success',
+  BAD_REQUEST: 'bad-request',
+  SERVICE_UNAVAILABLE: 'service-unavailable',
+  RATE_LIMITED: 'rate-limited',
+  INTERNAL_ERROR: 'internal-error',
+} as const;
+
+export type ErrorCode = typeof ErrorCode[keyof typeof ErrorCode];
 
 /**
  * Standard Response Status
@@ -57,13 +59,15 @@ export interface PaginationParams {
  * Instance Status Enum
  * Represents the health status of a service instance
  */
-export enum InstanceStatus {
-  STARTING = 'starting',
-  UP = 'up',
-  DOWN = 'down',
-  UNHEALTHY = 'unhealthy',
-  UNKNOWN = 'unknown',
-}
+export const InstanceStatus = {
+  STARTING: 'starting',
+  UP: 'up',
+  DOWN: 'down',
+  UNHEALTHY: 'unhealthy',
+  UNKNOWN: 'unknown',
+} as const;
+
+export type InstanceStatus = typeof InstanceStatus[keyof typeof InstanceStatus];
 
 /**
  * Service Instance
@@ -123,18 +127,22 @@ export interface ServiceGroup {
 /**
  * Group Status Enum
  */
-export enum GroupStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-}
+export const GroupStatus = {
+  ACTIVE: 'active',
+  INACTIVE: 'inactive',
+} as const;
+
+export type GroupStatus = typeof GroupStatus[keyof typeof GroupStatus];
 
 /**
  * Group Type Enum
  */
-export enum GroupType {
-  PHYSICAL = 'physical',
-  LOGICAL = 'logical',
-}
+export const GroupType = {
+  PHYSICAL: 'physical',
+  LOGICAL: 'logical',
+} as const;
+
+export type GroupType = typeof GroupType[keyof typeof GroupType];
 
 /**
  * Group Tag
@@ -164,10 +172,12 @@ export interface GroupInstance {
 /**
  * Binding Type Enum
  */
-export enum BindingType {
-  MANUAL = 'manual',
-  AUTO = 'auto',
-}
+export const BindingType = {
+  MANUAL: 'manual',
+  AUTO: 'auto',
+} as const;
+
+export type BindingType = typeof BindingType[keyof typeof BindingType];
 
 /**
  * Service
@@ -334,10 +344,12 @@ export interface UnregisterResponse {
  * Instance Operation Enum
  * Operation types for instance management
  */
-export enum InstanceOperationType {
-  PULL_IN = 'pullin',
-  PULL_OUT = 'pullout',
-}
+export const InstanceOperationType = {
+  PULL_IN: 'pullin',
+  PULL_OUT: 'pullout',
+} as const;
+
+export type InstanceOperationType = typeof InstanceOperationType[keyof typeof InstanceOperationType];
 
 /**
  * Instance Operation Record
@@ -405,10 +417,12 @@ export interface IsInstanceDownResponse {
 /**
  * Server Operation Enum
  */
-export enum ServerOperationType {
-  PULL_IN = 'pullin',
-  PULL_OUT = 'pullout',
-}
+export const ServerOperationType = {
+  PULL_IN: 'pullin',
+  PULL_OUT: 'pullout',
+} as const;
+
+export type ServerOperationType = typeof ServerOperationType[keyof typeof ServerOperationType];
 
 /**
  * Server Operation Record
@@ -503,18 +517,22 @@ export interface GetAllServerOperationsResponse {
 /**
  * Route Strategy Enum
  */
-export enum RouteStrategy {
-  WEIGHTED_ROUND_ROBIN = 'weighted-round-robin',
-  CLOSE_BY_VISIT = 'close-by-visit',
-}
+export const RouteStrategy = {
+  WEIGHTED_ROUND_ROBIN: 'weighted-round-robin',
+  CLOSE_BY_VISIT: 'close-by-visit',
+} as const;
+
+export type RouteStrategy = typeof RouteStrategy[keyof typeof RouteStrategy];
 
 /**
  * Route Rule Status Enum
  */
-export enum RouteRuleStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-}
+export const RouteRuleStatus = {
+  ACTIVE: 'active',
+  INACTIVE: 'inactive',
+} as const;
+
+export type RouteRuleStatus = typeof RouteRuleStatus[keyof typeof RouteRuleStatus];
 
 /**
  * Route Rule
@@ -829,10 +847,12 @@ export interface QueryRouteRuleGroupLogsParams {
 /**
  * Zone Operation Enum
  */
-export enum ZoneOperationType {
-  PULL_IN = 'pullin',
-  PULL_OUT = 'pullout',
-}
+export const ZoneOperationType = {
+  PULL_IN: 'pullin',
+  PULL_OUT: 'pullout',
+} as const;
+
+export type ZoneOperationType = typeof ZoneOperationType[keyof typeof ZoneOperationType];
 
 /**
  * Zone Operation Record

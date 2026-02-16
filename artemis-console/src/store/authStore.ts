@@ -9,7 +9,7 @@
  */
 
 import { create } from 'zustand';
-import type { User, Permission, Role } from '../api/types';
+import type { User, Role } from '../api/types';
 
 // ===== Store State Interface =====
 

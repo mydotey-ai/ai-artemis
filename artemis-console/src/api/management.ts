@@ -34,18 +34,22 @@ export interface InstanceKey {
 /**
  * 实例操作类型
  */
-export enum InstanceOperationType {
-  PullIn = 'pullin',
-  PullOut = 'pullout',
-}
+export const InstanceOperationType = {
+  PullIn: 'pullin',
+  PullOut: 'pullout',
+} as const;
+
+export type InstanceOperationType = typeof InstanceOperationType[keyof typeof InstanceOperationType];
 
 /**
  * 服务器操作类型
  */
-export enum ServerOperationType {
-  PullIn = 'pullin',
-  PullOut = 'pullout',
-}
+export const ServerOperationType = {
+  PullIn: 'pullin',
+  PullOut: 'pullout',
+} as const;
+
+export type ServerOperationType = typeof ServerOperationType[keyof typeof ServerOperationType];
 
 /**
  * 实例操作记录

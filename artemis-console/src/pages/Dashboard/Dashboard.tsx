@@ -59,8 +59,8 @@ import {
 } from 'recharts';
 import { getAllServices } from '@/api/discovery';
 import { getClusterStatus } from '@/api/cluster';
-import { listGroups, listRules } from '@/api/routing';
-import type { Service, InstanceStatus } from '@/api/types';
+import { listRules } from '@/api/routing';
+import type { Service } from '@/api/types';
 
 /**
  * Statistic card data type

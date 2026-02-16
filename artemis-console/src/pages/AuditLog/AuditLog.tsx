@@ -59,7 +59,7 @@ import {
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
-import { queryLogs, type AuditLog, type QueryLogsParams } from '@/api/audit';
+import { queryLogs, type AuditLog as AuditLogType, type QueryLogsParams } from '@/api/audit';
 
 /**
  * Event Type constants for filtering
@@ -177,7 +177,7 @@ const getTimeRange = (preset: TimeRangePresetValue): { startTime: string; endTim
  */
 const AuditLog: React.FC = () => {
   // ===== State Management =====
-  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [logs, setLogs] = useState<AuditLogType[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdateTime, setLastUpdateTime] = useState<Date>(new Date());
@@ -199,7 +199,7 @@ const AuditLog: React.FC = () => {
 
   // Detail dialog
   const [detailDialogOpen, setDetailDialogOpen] = useState<boolean>(false);
-  const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
+  const [selectedLog, setSelectedLog] = useState<AuditLogType | null>(null);
 
   // Statistics
   const [statistics, setStatistics] = useState<Statistics>({
@@ -266,7 +266,7 @@ const AuditLog: React.FC = () => {
   /**
    * Calculate statistics from logs
    */
-  const calculateStatistics = (logData: AuditLog[]): void => {
+  const calculateStatistics = (logData: AuditLogType[]): void => {
     // Event type distribution
     const eventTypeCounts: Record<string, number> = {};
     logData.forEach((log) => {
@@ -523,7 +523,7 @@ const AuditLog: React.FC = () => {
   /**
    * Handle log row click to open details dialog
    */
-  const handleLogClick = (log: AuditLog): void => {
+  const handleLogClick = (log: AuditLogType): void => {
     setSelectedLog(log);
     setDetailDialogOpen(true);
   };

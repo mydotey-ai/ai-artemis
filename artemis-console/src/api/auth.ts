@@ -9,9 +9,7 @@
  * - 支持的认证方式: JWT, OAuth2, 会话令牌等
  */
 
-import axios from 'axios';
-
-const API_BASE = '/api/auth';
+// Unused imports removed - API_BASE and axios will be needed when endpoints are implemented
 
 // ===== 请求/响应类型定义 =====
 
