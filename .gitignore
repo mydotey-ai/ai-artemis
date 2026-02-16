@@ -34,3 +34,25 @@ artemis.toml
 
 # Local cluster files
 .cluster/
+
+# Documentation organization - prevent scatter in root directory
+# Test summaries belong in docs/reports/test-summaries/
+/*_TESTS_SUMMARY.md
+/*_SUMMARY.md
+/DAO_*.md
+/PERFORMANCE_*.md
+/STRESS_TEST_*.md
+
+# Test reports and milestones belong in docs/reports/
+/TEST_*.md
+/*_MILESTONE_*.md
+/COMPLETE_SESSION_REPORT.md
+/FINAL_TEST_SUMMARY*.md
+
+# Phase summaries belong in docs/reports/
+/PHASE_*_SUMMARY.md
+
+# Keep essential root docs (explicitly allowed)
+!README.md
+!CLAUDE.md
+!CLUSTER.md
