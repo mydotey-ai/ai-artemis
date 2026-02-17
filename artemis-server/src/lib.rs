@@ -13,6 +13,7 @@ pub mod routing;
 pub mod status;
 pub mod storage;
 pub mod telemetry;
+pub mod utils;
 
 pub use change::InstanceChangeManager;
 pub use registry::RegistryServiceImpl;
