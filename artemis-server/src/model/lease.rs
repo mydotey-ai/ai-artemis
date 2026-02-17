@@ -1,4 +1,4 @@
-use super::instance::InstanceKey;
+use artemis_core::model::InstanceKey;
 use parking_lot::Mutex;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -61,7 +61,6 @@ impl Lease {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::model::instance::InstanceKey;
     use std::thread::sleep;
 
     #[test]

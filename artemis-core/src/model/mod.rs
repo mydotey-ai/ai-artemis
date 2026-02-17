@@ -2,7 +2,6 @@ pub mod canary;
 pub mod change;
 pub mod group;
 pub mod instance;
-pub mod lease;
 pub mod management;
 pub mod replication;
 pub mod request;
@@ -15,7 +14,6 @@ pub use canary::*;
 pub use change::{ChangeType, InstanceChange};
 pub use group::{GroupInstance, GroupOperation, GroupStatus, GroupTag, GroupType, ServiceGroup};
 pub use instance::{Instance, InstanceKey, InstanceStatus};
-pub use lease::Lease;
 pub use management::{
     GetAllInstanceOperationsRequest, GetAllInstanceOperationsResponse,
     GetAllServerOperationsRequest, GetAllServerOperationsResponse, GetInstanceOperationsRequest,

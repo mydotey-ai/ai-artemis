@@ -1,4 +1,5 @@
-use artemis_core::model::{InstanceKey, Lease};
+use artemis_core::model::InstanceKey;
+use crate::model::Lease;
 use dashmap::DashMap;
 use std::sync::Arc;
 use std::time::Duration;

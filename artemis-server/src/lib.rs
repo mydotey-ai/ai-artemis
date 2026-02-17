@@ -6,6 +6,7 @@ pub mod cluster;
 pub mod config;
 pub mod discovery;
 pub mod lease;
+pub mod model;
 pub mod ratelimiter;
 pub mod registry;
 pub mod replication;
