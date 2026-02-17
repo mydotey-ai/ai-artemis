@@ -9,6 +9,7 @@ fn test_create_user() {
     let user = manager.create_user(
         "test_user",
         Some("test@example.com".to_string()),
+        None,
         "password123",
         UserRole::Viewer,
     ).unwrap();
@@ -24,8 +25,8 @@ fn test_create_user() {
 fn test_create_duplicate_user() {
     let manager = AuthManager::new();
 
-    manager.create_user("user1", None, "pass123", UserRole::Viewer).unwrap();
-    let result = manager.create_user("user1", None, "pass456", UserRole::Admin);
+    manager.create_user("user1", None, None, "pass123", UserRole::Viewer).unwrap();
+    let result = manager.create_user("user1", None, None, "pass456", UserRole::Admin);
 
     assert!(result.is_err());
     assert!(result.unwrap_err().contains("already exists"));
@@ -35,9 +36,9 @@ fn test_create_duplicate_user() {
 fn test_create_users_with_different_roles() {
     let manager = AuthManager::new();
 
-    let admin = manager.create_user("admin", None, "pass", UserRole::Admin).unwrap();
-    let operator = manager.create_user("operator", None, "pass", UserRole::Operator).unwrap();
-    let viewer = manager.create_user("viewer", None, "pass", UserRole::Viewer).unwrap();
+    let admin = manager.create_user("admin", None, None, "pass", UserRole::Admin).unwrap();
+    let operator = manager.create_user("operator", None, None, "pass", UserRole::Operator).unwrap();
+    let viewer = manager.create_user("viewer", None, None, "pass", UserRole::Viewer).unwrap();
 
     assert_eq!(admin.role, UserRole::Admin);
     assert_eq!(operator.role, UserRole::Operator);
@@ -49,7 +50,7 @@ fn test_create_users_with_different_roles() {
 #[test]
 fn test_authenticate_success() {
     let manager = AuthManager::new();
-    manager.create_user("user1", None, "password123", UserRole::Viewer).unwrap();
+    manager.create_user("user1", None, None, "password123", UserRole::Viewer).unwrap();
 
     let token = manager.authenticate("user1", "password123", None, None).unwrap();
 
@@ -59,7 +60,7 @@ fn test_authenticate_success() {
 #[test]
 fn test_authenticate_wrong_password() {
     let manager = AuthManager::new();
-    manager.create_user("user1", None, "password123", UserRole::Viewer).unwrap();
+    manager.create_user("user1", None, None, "password123", UserRole::Viewer).unwrap();
 
     let result = manager.authenticate("user1", "wrong_password", None, None);
 
@@ -80,7 +81,7 @@ fn test_authenticate_nonexistent_user() {
 #[test]
 fn test_authenticate_inactive_user() {
     let manager = AuthManager::new();
-    let user = manager.create_user("user1", None, "password123", UserRole::Viewer).unwrap();
+    let user = manager.create_user("user1", None, None, "password123", UserRole::Viewer).unwrap();
 
     // 停用用户
     manager.change_user_status(&user.user_id, UserStatus::Inactive).unwrap();
@@ -94,7 +95,7 @@ fn test_authenticate_inactive_user() {
 #[test]
 fn test_authenticate_with_ip_and_user_agent() {
     let manager = AuthManager::new();
-    manager.create_user("user1", None, "password123", UserRole::Viewer).unwrap();
+    manager.create_user("user1", None, None, "password123", UserRole::Viewer).unwrap();
 
     let token = manager.authenticate(
         "user1",
@@ -111,7 +112,7 @@ fn test_authenticate_with_ip_and_user_agent() {
 #[test]
 fn test_validate_token_success() {
     let manager = AuthManager::new();
-    manager.create_user("user1", None, "password123", UserRole::Viewer).unwrap();
+    manager.create_user("user1", None, None, "password123", UserRole::Viewer).unwrap();
 
     let token = manager.authenticate("user1", "password123", None, None).unwrap();
     let session = manager.validate_token(&token).unwrap();
@@ -132,7 +133,7 @@ fn test_validate_invalid_token() {
 #[test]
 fn test_refresh_token() {
     let manager = AuthManager::new();
-    manager.create_user("user1", None, "password123", UserRole::Viewer).unwrap();
+    manager.create_user("user1", None, None, "password123", UserRole::Viewer).unwrap();
 
     let old_token = manager.authenticate("user1", "password123", None, None).unwrap();
 
@@ -153,7 +154,7 @@ fn test_refresh_token() {
 #[test]
 fn test_logout() {
     let manager = AuthManager::new();
-    manager.create_user("user1", None, "password123", UserRole::Viewer).unwrap();
+    manager.create_user("user1", None, None, "password123", UserRole::Viewer).unwrap();
 
     let token = manager.authenticate("user1", "password123", None, None).unwrap();
     assert!(manager.validate_token(&token).is_ok());
@@ -177,7 +178,7 @@ fn test_logout_invalid_token() {
 #[test]
 fn test_get_user() {
     let manager = AuthManager::new();
-    let created_user = manager.create_user("user1", None, "password123", UserRole::Viewer).unwrap();
+    let created_user = manager.create_user("user1", None, None, "password123", UserRole::Viewer).unwrap();
 
     let user = manager.get_user(&created_user.user_id).unwrap();
 
@@ -188,7 +189,7 @@ fn test_get_user() {
 #[test]
 fn test_get_user_by_username() {
     let manager = AuthManager::new();
-    manager.create_user("user1", None, "password123", UserRole::Viewer).unwrap();
+    manager.create_user("user1", None, None, "password123", UserRole::Viewer).unwrap();
 
     let user = manager.get_user_by_username("user1").unwrap();
 
@@ -199,9 +200,9 @@ fn test_get_user_by_username() {
 fn test_list_users() {
     let manager = AuthManager::new();
 
-    manager.create_user("user1", None, "pass", UserRole::Admin).unwrap();
-    manager.create_user("user2", None, "pass", UserRole::Operator).unwrap();
-    manager.create_user("user3", None, "pass", UserRole::Viewer).unwrap();
+    manager.create_user("user1", None, None, "pass", UserRole::Admin).unwrap();
+    manager.create_user("user2", None, None, "pass", UserRole::Operator).unwrap();
+    manager.create_user("user3", None, None, "pass", UserRole::Viewer).unwrap();
 
     let users = manager.list_users();
 
@@ -211,11 +212,12 @@ fn test_list_users() {
 #[test]
 fn test_update_user() {
     let manager = AuthManager::new();
-    let user = manager.create_user("user1", None, "password123", UserRole::Viewer).unwrap();
+    let user = manager.create_user("user1", None, None, "password123", UserRole::Viewer).unwrap();
 
     let updated = manager.update_user(
         &user.user_id,
         Some("new@example.com".to_string()),
+        None,
         Some(UserRole::Operator),
     ).unwrap();
 
@@ -226,7 +228,7 @@ fn test_update_user() {
 #[test]
 fn test_delete_user() {
     let manager = AuthManager::new();
-    let user = manager.create_user("user1", None, "password123", UserRole::Viewer).unwrap();
+    let user = manager.create_user("user1", None, None, "password123", UserRole::Viewer).unwrap();
 
     manager.delete_user(&user.user_id).unwrap();
 
@@ -237,7 +239,7 @@ fn test_delete_user() {
 #[test]
 fn test_delete_user_revokes_sessions() {
     let manager = AuthManager::new();
-    let user = manager.create_user("user1", None, "password123", UserRole::Viewer).unwrap();
+    let user = manager.create_user("user1", None, None, "password123", UserRole::Viewer).unwrap();
     let token = manager.authenticate("user1", "password123", None, None).unwrap();
 
     assert!(manager.validate_token(&token).is_ok());
@@ -252,7 +254,7 @@ fn test_delete_user_revokes_sessions() {
 #[test]
 fn test_change_password() {
     let manager = AuthManager::new();
-    let user = manager.create_user("user1", None, "old_password", UserRole::Viewer).unwrap();
+    let user = manager.create_user("user1", None, None, "old_password", UserRole::Viewer).unwrap();
 
     manager.change_password(&user.user_id, "old_password", "new_password").unwrap();
 
@@ -266,7 +268,7 @@ fn test_change_password() {
 #[test]
 fn test_change_password_wrong_old_password() {
     let manager = AuthManager::new();
-    let user = manager.create_user("user1", None, "password123", UserRole::Viewer).unwrap();
+    let user = manager.create_user("user1", None, None, "password123", UserRole::Viewer).unwrap();
 
     let result = manager.change_password(&user.user_id, "wrong_old", "new_password");
 
@@ -277,7 +279,7 @@ fn test_change_password_wrong_old_password() {
 #[test]
 fn test_change_password_revokes_sessions() {
     let manager = AuthManager::new();
-    let user = manager.create_user("user1", None, "password123", UserRole::Viewer).unwrap();
+    let user = manager.create_user("user1", None, None, "password123", UserRole::Viewer).unwrap();
     let token = manager.authenticate("user1", "password123", None, None).unwrap();
 
     assert!(manager.validate_token(&token).is_ok());
@@ -290,7 +292,7 @@ fn test_change_password_revokes_sessions() {
 #[test]
 fn test_reset_password() {
     let manager = AuthManager::new();
-    let user = manager.create_user("user1", None, "old_password", UserRole::Viewer).unwrap();
+    let user = manager.create_user("user1", None, None, "old_password", UserRole::Viewer).unwrap();
 
     manager.reset_password(&user.user_id, "new_password").unwrap();
 
@@ -302,7 +304,7 @@ fn test_reset_password() {
 #[test]
 fn test_change_user_status() {
     let manager = AuthManager::new();
-    let user = manager.create_user("user1", None, "password123", UserRole::Viewer).unwrap();
+    let user = manager.create_user("user1", None, None, "password123", UserRole::Viewer).unwrap();
 
     let updated = manager.change_user_status(&user.user_id, UserStatus::Inactive).unwrap();
 
@@ -312,7 +314,7 @@ fn test_change_user_status() {
 #[test]
 fn test_inactive_user_cannot_login() {
     let manager = AuthManager::new();
-    let user = manager.create_user("user1", None, "password123", UserRole::Viewer).unwrap();
+    let user = manager.create_user("user1", None, None, "password123", UserRole::Viewer).unwrap();
 
     manager.change_user_status(&user.user_id, UserStatus::Inactive).unwrap();
 
@@ -323,7 +325,7 @@ fn test_inactive_user_cannot_login() {
 #[test]
 fn test_inactive_user_sessions_revoked() {
     let manager = AuthManager::new();
-    let user = manager.create_user("user1", None, "password123", UserRole::Viewer).unwrap();
+    let user = manager.create_user("user1", None, None, "password123", UserRole::Viewer).unwrap();
     let token = manager.authenticate("user1", "password123", None, None).unwrap();
 
     assert!(manager.validate_token(&token).is_ok());
@@ -338,7 +340,7 @@ fn test_inactive_user_sessions_revoked() {
 #[test]
 fn test_list_user_sessions() {
     let manager = AuthManager::new();
-    let user = manager.create_user("user1", None, "password123", UserRole::Viewer).unwrap();
+    let user = manager.create_user("user1", None, None, "password123", UserRole::Viewer).unwrap();
 
     manager.authenticate("user1", "password123", Some("127.0.0.1".to_string()), None).unwrap();
     manager.authenticate("user1", "password123", Some("127.0.0.2".to_string()), None).unwrap();
@@ -351,7 +353,7 @@ fn test_list_user_sessions() {
 #[test]
 fn test_revoke_session() {
     let manager = AuthManager::new();
-    manager.create_user("user1", None, "password123", UserRole::Viewer).unwrap();
+    manager.create_user("user1", None, None, "password123", UserRole::Viewer).unwrap();
 
     let token = manager.authenticate("user1", "password123", None, None).unwrap();
     let session = manager.validate_token(&token).unwrap();
@@ -364,7 +366,7 @@ fn test_revoke_session() {
 #[test]
 fn test_revoke_all_user_sessions() {
     let manager = AuthManager::new();
-    let user = manager.create_user("user1", None, "password123", UserRole::Viewer).unwrap();
+    let user = manager.create_user("user1", None, None, "password123", UserRole::Viewer).unwrap();
 
     let token1 = manager.authenticate("user1", "password123", None, None).unwrap();
     let token2 = manager.authenticate("user1", "password123", None, None).unwrap();
@@ -381,7 +383,7 @@ fn test_revoke_all_user_sessions() {
 #[test]
 fn test_admin_has_all_permissions() {
     let manager = AuthManager::new();
-    let admin = manager.create_user("admin", None, "pass", UserRole::Admin).unwrap();
+    let admin = manager.create_user("admin", None, None, "pass", UserRole::Admin).unwrap();
 
     assert!(manager.check_permission(&admin.user_id, "services", "read"));
     assert!(manager.check_permission(&admin.user_id, "services", "write"));
@@ -392,7 +394,7 @@ fn test_admin_has_all_permissions() {
 #[test]
 fn test_operator_permissions() {
     let manager = AuthManager::new();
-    let operator = manager.create_user("operator", None, "pass", UserRole::Operator).unwrap();
+    let operator = manager.create_user("operator", None, None, "pass", UserRole::Operator).unwrap();
 
     // 有权限
     assert!(manager.check_permission(&operator.user_id, "services", "read"));
@@ -410,7 +412,7 @@ fn test_operator_permissions() {
 #[test]
 fn test_viewer_permissions() {
     let manager = AuthManager::new();
-    let viewer = manager.create_user("viewer", None, "pass", UserRole::Viewer).unwrap();
+    let viewer = manager.create_user("viewer", None, None, "pass", UserRole::Viewer).unwrap();
 
     // 只有读权限
     assert!(manager.check_permission(&viewer.user_id, "services", "read"));
@@ -426,9 +428,9 @@ fn test_viewer_permissions() {
 #[test]
 fn test_get_user_permissions() {
     let manager = AuthManager::new();
-    let admin = manager.create_user("admin", None, "pass", UserRole::Admin).unwrap();
-    let operator = manager.create_user("operator", None, "pass", UserRole::Operator).unwrap();
-    let viewer = manager.create_user("viewer", None, "pass", UserRole::Viewer).unwrap();
+    let admin = manager.create_user("admin", None, None, "pass", UserRole::Admin).unwrap();
+    let operator = manager.create_user("operator", None, None, "pass", UserRole::Operator).unwrap();
+    let viewer = manager.create_user("viewer", None, None, "pass", UserRole::Viewer).unwrap();
 
     let admin_perms = manager.get_user_permissions(&admin.user_id);
     let operator_perms = manager.get_user_permissions(&operator.user_id);
@@ -444,7 +446,7 @@ fn test_get_user_permissions() {
 #[test]
 fn test_login_history_success() {
     let manager = AuthManager::new();
-    let user = manager.create_user("user1", None, "password123", UserRole::Viewer).unwrap();
+    let user = manager.create_user("user1", None, None, "password123", UserRole::Viewer).unwrap();
 
     manager.authenticate("user1", "password123", Some("127.0.0.1".to_string()), Some("Chrome".to_string())).unwrap();
     manager.authenticate("user1", "password123", Some("192.168.1.1".to_string()), Some("Firefox".to_string())).unwrap();
@@ -457,7 +459,7 @@ fn test_login_history_success() {
 #[test]
 fn test_login_history_failed_attempts() {
     let manager = AuthManager::new();
-    let user = manager.create_user("user1", None, "password123", UserRole::Viewer).unwrap();
+    let user = manager.create_user("user1", None, None, "password123", UserRole::Viewer).unwrap();
 
     // 失败的登录尝试
     let _ = manager.authenticate("user1", "wrong_password", Some("127.0.0.1".to_string()), Some("Chrome".to_string()));
@@ -474,7 +476,7 @@ fn test_login_history_failed_attempts() {
 #[test]
 fn test_login_history_limit() {
     let manager = AuthManager::new();
-    let user = manager.create_user("user1", None, "password123", UserRole::Viewer).unwrap();
+    let user = manager.create_user("user1", None, None, "password123", UserRole::Viewer).unwrap();
 
     // 创建10次登录
     for _ in 0..10 {
