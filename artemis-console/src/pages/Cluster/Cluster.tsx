@@ -502,9 +502,11 @@ const Cluster: React.FC = () => {
         </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Tooltip title="Refresh">
-            <IconButton onClick={handleRefresh} disabled={loading}>
-              <RefreshIcon />
-            </IconButton>
+            <span>
+              <IconButton onClick={handleRefresh} disabled={loading}>
+                <RefreshIcon />
+              </IconButton>
+            </span>
           </Tooltip>
         </Box>
       </Box>

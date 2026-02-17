@@ -191,7 +191,8 @@ export class WebSocketManager {
     }
 
     this.eventHandlers.get(eventType)!.add(handler);
-    console.log(`[WebSocket] Subscribed to event: ${eventType}`);
+    // Debug log (only enabled in development when needed)
+    // console.debug(`[WebSocket] Subscribed to event: ${eventType}`);
   }
 
   /**
@@ -203,10 +204,12 @@ export class WebSocketManager {
   public unsubscribe(eventType: string, handler?: EventHandler): void {
     if (handler) {
       this.eventHandlers.get(eventType)?.delete(handler);
-      console.log(`[WebSocket] Unsubscribed handler from event: ${eventType}`);
+      // Debug log (only enabled in development when needed)
+      // console.debug(`[WebSocket] Unsubscribed handler from event: ${eventType}`);
     } else {
       this.eventHandlers.delete(eventType);
-      console.log(`[WebSocket] Unsubscribed all handlers from event: ${eventType}`);
+      // Debug log (only enabled in development when needed)
+      // console.debug(`[WebSocket] Unsubscribed all handlers from event: ${eventType}`);
     }
   }
 
@@ -237,14 +240,16 @@ export class WebSocketManager {
     if (!this.ws) return;
 
     this.ws.onopen = () => {
-      console.log('[WebSocket] Connected');
+      // Debug log (state change notification already shown via handlers)
+      // console.debug('[WebSocket] Connected');
       this.setState('connected');
       this.reconnectAttempts = 0;
       this.startHeartbeat();
     };
 
     this.ws.onclose = (event) => {
-      console.log('[WebSocket] Disconnected:', event.code, event.reason);
+      // Debug log (state change notification already shown via handlers)
+      // console.debug('[WebSocket] Disconnected:', event.code, event.reason);
       this.clearTimers();
       this.handleConnectionError();
     };
@@ -308,12 +313,14 @@ export class WebSocketManager {
     this.reconnectAttempts += 1;
 
     const delay = this.options.reconnectInterval * this.reconnectAttempts;
-    console.log(
-      `[WebSocket] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts}/${this.options.maxReconnectAttempts})`
-    );
+    // Debug log (reconnection notification already shown via handlers)
+    // console.debug(
+    //   `[WebSocket] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts}/${this.options.maxReconnectAttempts})`
+    // );
 
     this.reconnectTimer = setTimeout(() => {
-      console.log('[WebSocket] Attempting to reconnect...');
+      // Debug log (reconnection notification already shown via handlers)
+      // console.debug('[WebSocket] Attempting to reconnect...');
       this.connect();
     }, delay);
   }
@@ -366,7 +373,8 @@ export class WebSocketManager {
     if (this.state === newState) return;
 
     this.state = newState;
-    console.log(`[WebSocket] State changed: ${newState}`);
+    // Debug log (state changes are already notified via handlers)
+    // console.debug(`[WebSocket] State changed: ${newState}`);
 
     // Notify state change handlers
     this.stateChangeHandlers.forEach((handler) => {
