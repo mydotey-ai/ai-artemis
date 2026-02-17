@@ -2,6 +2,5 @@
 
 pub mod error;
 pub mod model;
-pub mod telemetry;
 pub mod traits;
 pub mod utils;
