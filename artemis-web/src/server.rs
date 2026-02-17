@@ -2,11 +2,37 @@ use crate::state::AppState;
 use axum::{
     Router,
     routing::{get, post},
+    middleware,
 };
 use std::net::SocketAddr;
 use tower_http::cors::CorsLayer;
 
 pub async fn run_server(state: AppState, addr: SocketAddr) -> anyhow::Result<()> {
+    // 受保护的路由（需要 JWT 认证）
+    let protected_routes = Router::new()
+        // Auth endpoints - Protected
+        .route("/api/auth/logout", post(crate::api::auth::logout))
+        .route("/api/auth/refresh", post(crate::api::auth::refresh_token))
+        .route("/api/auth/user", get(crate::api::auth::get_current_user))
+        .route("/api/auth/permissions", get(crate::api::auth::get_user_permissions))
+        .route("/api/auth/password/change", post(crate::api::auth::change_password))
+        .route("/api/auth/password/reset/{user_id}", post(crate::api::auth::reset_password))
+        .route("/api/auth/sessions", get(crate::api::auth::list_sessions))
+        .route("/api/auth/sessions/{session_id}", axum::routing::delete(crate::api::auth::revoke_session))
+        .route("/api/auth/check-permission", post(crate::api::auth::check_permission))
+        .route("/api/auth/users", get(crate::api::auth::list_users).post(crate::api::auth::create_user))
+        .route("/api/auth/users/{user_id}", get(crate::api::auth::get_user))
+        .route("/api/auth/users/{user_id}", axum::routing::put(crate::api::auth::update_user))
+        .route("/api/auth/users/{user_id}", axum::routing::delete(crate::api::auth::delete_user))
+        .route("/api/auth/users/{user_id}/status", axum::routing::patch(crate::api::auth::update_user_status))
+        .route("/api/auth/users/{user_id}/login-history", get(crate::api::auth::get_login_history))
+        // 应用 JWT 认证中间件
+        .route_layer(middleware::from_fn_with_state(
+            state.clone(),
+            crate::middleware::jwt::jwt_auth,
+        ));
+
+    // 公开路由（无需认证）
     let app = Router::new()
         .route("/health", get(|| async { "OK" }))
         .route("/metrics", get(crate::api::metrics::metrics))
@@ -96,22 +122,6 @@ pub async fn run_server(state: AppState, addr: SocketAddr) -> anyhow::Result<()>
         // Auth endpoints - Public (no JWT required)
         .route("/api/auth/login", post(crate::api::auth::login))
         .route("/api/auth/roles", get(crate::api::auth::list_roles))
-        // Auth endpoints - Protected (JWT required)
-        .route("/api/auth/logout", post(crate::api::auth::logout))
-        .route("/api/auth/refresh", post(crate::api::auth::refresh_token))
-        .route("/api/auth/user", get(crate::api::auth::get_current_user))
-        .route("/api/auth/permissions", get(crate::api::auth::get_user_permissions))
-        .route("/api/auth/password/change", post(crate::api::auth::change_password))
-        .route("/api/auth/password/reset/{user_id}", post(crate::api::auth::reset_password))
-        .route("/api/auth/sessions", get(crate::api::auth::list_sessions))
-        .route("/api/auth/sessions/{session_id}", axum::routing::delete(crate::api::auth::revoke_session))
-        .route("/api/auth/check-permission", post(crate::api::auth::check_permission))
-        .route("/api/auth/users", get(crate::api::auth::list_users).post(crate::api::auth::create_user))
-        .route("/api/auth/users/{user_id}", get(crate::api::auth::get_user))
-        .route("/api/auth/users/{user_id}", axum::routing::put(crate::api::auth::update_user))
-        .route("/api/auth/users/{user_id}", axum::routing::delete(crate::api::auth::delete_user))
-        .route("/api/auth/users/{user_id}/status", axum::routing::patch(crate::api::auth::update_user_status))
-        .route("/api/auth/users/{user_id}/login-history", get(crate::api::auth::get_login_history))
         // Status endpoints
         .route("/api/status/node.json", post(crate::api::status::get_cluster_node_status_post))
         .route("/api/status/node.json", get(crate::api::status::get_cluster_node_status_get))
@@ -126,6 +136,9 @@ pub async fn run_server(state: AppState, addr: SocketAddr) -> anyhow::Result<()>
         .route("/api/status/deployment.json", post(crate::api::status::get_deployment_status_post))
         .route("/api/status/deployment.json", get(crate::api::status::get_deployment_status_get))
         .route("/ws", get(crate::websocket::ws_handler))
+        // 合并受保护的路由
+        .merge(protected_routes)
+        // 应用 CORS 和状态
         .layer(CorsLayer::permissive())
         .with_state(state);
 
