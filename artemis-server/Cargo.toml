@@ -19,6 +19,9 @@ reqwest = { workspace = true }
 anyhow = { workspace = true }
 rand = { workspace = true }
 hostname = { workspace = true }
+uuid = { workspace = true }
+humantime-serde = { workspace = true }
+toml = { workspace = true }
 
 [dev-dependencies]
 criterion = { workspace = true }

@@ -1,4 +1,4 @@
-use artemis_core::config::ArtemisConfig;
+use artemis_server::config::ArtemisConfig;
 use artemis_management::auth::UserRole;
 use artemis_management::{
     AuthManager, ConfigLoader, Database, GroupManager, InstanceManager, RouteManager,

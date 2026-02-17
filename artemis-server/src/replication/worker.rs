@@ -1,7 +1,7 @@
 use super::client::ReplicationClient;
 use super::manager::ReplicationEvent;
 use crate::cluster::ClusterManager;
-use artemis_core::config::ReplicationConfig;
+use crate::config::ReplicationConfig;
 use artemis_core::model::{
     BatchRegisterRequest, BatchUnregisterRequest, Instance, InstanceKey, ReplicateHeartbeatRequest,
     ReplicateRegisterRequest, ReplicateUnregisterRequest,

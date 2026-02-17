@@ -1,4 +1,4 @@
-use crate::error::{ArtemisError, Result};
+use artemis_core::error::{ArtemisError, Result};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 

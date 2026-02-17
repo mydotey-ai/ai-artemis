@@ -1,6 +1,6 @@
 use super::worker::ReplicationWorker;
 use crate::cluster::ClusterManager;
-use artemis_core::config::ReplicationConfig;
+use crate::config::ReplicationConfig;
 use artemis_core::model::{Instance, InstanceKey};
 use std::sync::Arc;
 use tokio::sync::mpsc;
