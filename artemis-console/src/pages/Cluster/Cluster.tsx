@@ -53,7 +53,7 @@ import {
   Storage as StorageIcon,
 } from '@mui/icons-material';
 import { getClusterStatus, getClusterNodeStatus } from '@/api/cluster';
-import type { ClusterNodeStatus } from '@/api/cluster';
+import type { ClusterNodeStatus, ServiceNodeStatus } from '@/api/cluster';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { useUIStore } from '@/store/uiStore';
 
@@ -98,6 +98,47 @@ const Cluster: React.FC = () => {
   const showNotification = useUIStore((state) => state.showNotification);
 
   /**
+   * Convert ServiceNodeStatus to ClusterNodeStatus format
+   */
+  const convertToClusterNodeStatus = (serviceNode: ServiceNodeStatus): ClusterNodeStatus => {
+    // Parse URL to extract host and port
+    const url = serviceNode.node.url;
+    let host = 'unknown';
+    let port = 8080;
+
+    try {
+      const urlObj = new URL(url);
+      host = urlObj.hostname;
+      port = parseInt(urlObj.port) || (urlObj.protocol === 'https:' ? 443 : 80);
+    } catch {
+      // Fallback parsing
+      const match = url.match(/^(?:https?:\/\/)?([^:/]+)(?::(\d+))?/);
+      if (match) {
+        host = match[1];
+        port = match[2] ? parseInt(match[2]) : 8080;
+      }
+    }
+
+    // Convert status: backend uses "up", frontend expects "ACTIVE"
+    let status: 'ACTIVE' | 'INACTIVE' | 'SUSPECTED' = 'INACTIVE';
+    if (serviceNode.status === 'up') {
+      status = 'ACTIVE';
+    } else if (serviceNode.status === 'starting') {
+      status = 'SUSPECTED';
+    }
+
+    return {
+      node_id: serviceNode.node.nodeId,
+      host,
+      port,
+      status,
+      last_heartbeat: new Date().toISOString(),
+      region_id: serviceNode.node.regionId,
+      zone_id: serviceNode.node.zoneId,
+    };
+  };
+
+  /**
    * Fetch cluster data
    */
   const fetchClusterData = useCallback(async () => {
@@ -105,28 +146,25 @@ const Cluster: React.FC = () => {
     setError(null);
 
     try {
-      // Fetch cluster node status and overall status
-      const [nodeStatusResponse, clusterStatusResponse] = await Promise.all([
-        getClusterNodeStatus(),
-        getClusterStatus(),
-      ]);
+      // Fetch cluster status (contains all nodes)
+      const clusterStatusResponse = await getClusterStatus();
 
-      // Process node status data
-      const nodeStatusData = nodeStatusResponse.data || [];
-      setNodes(nodeStatusData);
+      // Process node status data from clusterStatusResponse
+      const nodesStatus = clusterStatusResponse.nodesStatus || [];
+      const convertedNodes = nodesStatus.map(convertToClusterNodeStatus);
+      setNodes(convertedNodes);
 
       // Process cluster statistics
-      const clusterData = clusterStatusResponse.data;
-      const totalNodes = nodeStatusData.length;
-      const healthyNodes = nodeStatusData.filter(
+      const totalNodes = convertedNodes.length;
+      const healthyNodes = convertedNodes.filter(
         (node) => node.status === 'ACTIVE'
       ).length;
 
       setStats({
         totalNodes,
         healthyNodes,
-        totalInstances: clusterData?.total_instances || 0,
-        totalServices: clusterData?.total_services || 0,
+        totalInstances: 0,
+        totalServices: 0,
       });
 
       setLastUpdate(new Date());

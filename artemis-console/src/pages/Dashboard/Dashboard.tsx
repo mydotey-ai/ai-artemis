@@ -166,8 +166,7 @@ const Dashboard: React.FC = () => {
       const totalInstances = allInstances.length;
 
       // Process cluster data
-      const clusterData = clusterResponse.data;
-      const totalNodes = clusterData?.total_nodes || 0;
+      const totalNodes = clusterResponse.nodeCount || 0;
 
       // Process routing rules data
       const rulesData = rulesResponse.data;

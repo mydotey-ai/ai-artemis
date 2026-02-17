@@ -10,6 +10,44 @@ const API_BASE = '/api/status';
 
 // ===== 请求/响应类型定义 =====
 
+// 服务节点信息
+export interface ServiceNode {
+  nodeId: string;
+  url: string;
+  regionId: string;
+  zoneId: string;
+}
+
+// 服务节点状态
+export interface ServiceNodeStatus {
+  node: ServiceNode;
+  status: 'starting' | 'up' | 'down' | 'unknown';
+  canServiceDiscovery: boolean;
+  canServiceRegistry: boolean;
+  allowRegistryFromOtherZone: boolean;
+  allowDiscoveryFromOtherZone: boolean;
+}
+
+// 响应状态
+export interface ResponseStatus {
+  error_code: string;
+  message?: string;
+}
+
+// 集群状态响应
+export interface ClusterStatusResponse {
+  nodesStatus: ServiceNodeStatus[];
+  nodeCount: number;
+  responseStatus: ResponseStatus;
+}
+
+// 单节点状态响应
+export interface NodeStatusResponse {
+  nodeStatus?: ServiceNodeStatus;
+  responseStatus: ResponseStatus;
+}
+
+// 兼容旧接口的类型
 export interface ClusterNodeStatus {
   node_id: string;
   host: string;
@@ -63,7 +101,7 @@ export interface ApiResponse<T> {
  * 获取集群节点状态 (POST)
  * POST /api/status/node.json
  */
-export async function getClusterNodeStatusPost(): Promise<ApiResponse<ClusterNodeStatus[]>> {
+export async function getClusterNodeStatusPost(): Promise<NodeStatusResponse> {
   const response = await apiClient.post(`${API_BASE}/node.json`);
   return response.data;
 }
@@ -72,7 +110,7 @@ export async function getClusterNodeStatusPost(): Promise<ApiResponse<ClusterNod
  * 获取集群节点状态 (GET)
  * GET /api/status/node.json
  */
-export async function getClusterNodeStatusGet(): Promise<ApiResponse<ClusterNodeStatus[]>> {
+export async function getClusterNodeStatusGet(): Promise<NodeStatusResponse> {
   const response = await apiClient.get(`${API_BASE}/node.json`);
   return response.data;
 }
@@ -80,7 +118,7 @@ export async function getClusterNodeStatusGet(): Promise<ApiResponse<ClusterNode
 /**
  * 获取集群节点状态 (统一方法)
  */
-export async function getClusterNodeStatus(): Promise<ApiResponse<ClusterNodeStatus[]>> {
+export async function getClusterNodeStatus(): Promise<NodeStatusResponse> {
   return getClusterNodeStatusGet();
 }
 
@@ -90,7 +128,7 @@ export async function getClusterNodeStatus(): Promise<ApiResponse<ClusterNodeSta
  * 获取集群状态 (POST)
  * POST /api/status/cluster.json
  */
-export async function getClusterStatusPost(): Promise<ApiResponse<ClusterStatus>> {
+export async function getClusterStatusPost(): Promise<ClusterStatusResponse> {
   const response = await apiClient.post(`${API_BASE}/cluster.json`);
   return response.data;
 }
@@ -99,7 +137,7 @@ export async function getClusterStatusPost(): Promise<ApiResponse<ClusterStatus>
  * 获取集群状态 (GET)
  * GET /api/status/cluster.json
  */
-export async function getClusterStatusGet(): Promise<ApiResponse<ClusterStatus>> {
+export async function getClusterStatusGet(): Promise<ClusterStatusResponse> {
   const response = await apiClient.get(`${API_BASE}/cluster.json`);
   return response.data;
 }
@@ -107,7 +145,7 @@ export async function getClusterStatusGet(): Promise<ApiResponse<ClusterStatus>>
 /**
  * 获取集群状态 (统一方法)
  */
-export async function getClusterStatus(): Promise<ApiResponse<ClusterStatus>> {
+export async function getClusterStatus(): Promise<ClusterStatusResponse> {
   return getClusterStatusGet();
 }
 
