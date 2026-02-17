@@ -11,6 +11,8 @@ Artemis 服务注册中心 Web 管理控制台的完整文档。
 
 ### 快速开始
 - **[项目 README](../../artemis-console/README.md)** - 快速开始指南、技术栈、配置说明
+- **[测试环境设置](testing-environment-setup.md)** - 测试环境就绪指南
+- **[快速测试指南](quick-start-guide.md)** - 手动测试步骤和命令
 
 ### 项目总结
 - **[project-summary.md](project-summary.md)** - 项目完成总结 ⭐
@@ -56,6 +58,10 @@ Artemis 服务注册中心 Web 管理控制台的完整文档。
   - 最佳实践
   - 监控和分析
 
+### 测试文档
+- **[手动测试清单](manual-testing-checklist.md)** - 详细的功能测试清单
+- **[测试报告](../reports/web-console/)** - Web Console 测试报告 (临时文档)
+
 ### 设计文档
 - **[../plans/web-console-design.md](../plans/web-console-design.md)** - 完整架构设计文档
   - 系统架构设计
@@ -76,7 +82,16 @@ docs/
 │   ├── auth-implementation.md      # 认证系统文档
 │   ├── performance.md              # 性能优化快速指南
 │   ├── performance-optimization.md # 完整性能优化文档
-│   └── cluster-page-implementation.md # Cluster 页面文档
+│   ├── cluster-page-implementation.md # Cluster 页面文档
+│   ├── testing-environment-setup.md # 测试环境设置
+│   ├── quick-start-guide.md        # 快速测试指南
+│   └── manual-testing-checklist.md # 手动测试清单
+│
+├── reports/web-console/            # 测试报告 (不版本化)
+│   ├── web-console-test-report.md  # 详细测试报告
+│   └── web-console-test-summary.md # 测试总结
+│
+├── testing/                        # 测试文档 (版本化)
 │
 └── plans/
     └── web-console-design.md       # 架构设计文档
