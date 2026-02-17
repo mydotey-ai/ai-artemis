@@ -1,6 +1,6 @@
+use super::ResponseStatus;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use super::ResponseStatus;
 
 // ==================== Node Status ====================
 
@@ -19,7 +19,7 @@ pub struct GetClusterNodeStatusResponse {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceNodeStatus {
     pub node: ServiceNode,
-    pub status: String,  // "starting" | "up" | "down" | "unknown"
+    pub status: String, // "starting" | "up" | "down" | "unknown"
 
     #[serde(rename = "canServiceDiscovery")]
     pub can_service_discovery: bool,
@@ -104,7 +104,7 @@ pub struct GetLeasesStatusResponse {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LeaseStatus {
-    pub instance: String,  // instance_id
+    pub instance: String, // instance_id
 
     #[serde(rename = "creationTime")]
     pub creation_time: String,
@@ -162,7 +162,6 @@ pub struct GetDeploymentStatusResponse {
     #[serde(rename = "responseStatus")]
     pub response_status: ResponseStatus,
 }
-
 
 // ==================== Node Status Constants ====================
 

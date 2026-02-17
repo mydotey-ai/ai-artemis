@@ -1,9 +1,8 @@
-pub mod model;
-pub mod manager;
 pub mod dao;
+pub mod manager;
+pub mod model;
 
-pub use model::{
-    User, UserRole, UserStatus, UserResponse,
-    Session, LoginHistory, LoginStatus, JwtClaims,
-};
 pub use manager::AuthManager;
+pub use model::{
+    JwtClaims, LoginHistory, LoginStatus, Session, User, UserResponse, UserRole, UserStatus,
+};

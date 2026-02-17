@@ -10,7 +10,7 @@
 use artemis_core::model::{ChangeType, Instance, InstanceKey, InstanceStatus};
 use artemis_server::change::InstanceChangeManager;
 use std::sync::Arc;
-use tokio::time::{timeout, Duration};
+use tokio::time::{Duration, timeout};
 
 /// 创建测试实例
 fn create_test_instance(service_id: &str, instance_id: &str, status: InstanceStatus) -> Instance {
@@ -242,7 +242,8 @@ async fn test_concurrent_publish() {
     // 并发发布 10 个变更
     let publish_task = tokio::spawn(async move {
         for i in 0..10 {
-            let instance = create_test_instance("my-service", &format!("inst-{}", i), InstanceStatus::Up);
+            let instance =
+                create_test_instance("my-service", &format!("inst-{}", i), InstanceStatus::Up);
             mgr.publish_register(&instance);
             tokio::time::sleep(Duration::from_millis(1)).await;
         }
@@ -285,7 +286,8 @@ async fn test_concurrent_subscribe_and_publish() {
         let mgr = manager.clone();
         let handle = tokio::spawn(async move {
             tokio::time::sleep(Duration::from_millis(10)).await;
-            let instance = create_test_instance(&format!("service-{}", i), "inst-1", InstanceStatus::Up);
+            let instance =
+                create_test_instance(&format!("service-{}", i), "inst-1", InstanceStatus::Up);
             mgr.publish_register(&instance);
         });
         publish_handles.push(handle);
@@ -454,7 +456,8 @@ async fn test_high_throughput_publishing() {
     // 快速发布 100 个变更
     let publish_task = tokio::spawn(async move {
         for i in 0..100 {
-            let instance = create_test_instance("my-service", &format!("inst-{}", i), InstanceStatus::Up);
+            let instance =
+                create_test_instance("my-service", &format!("inst-{}", i), InstanceStatus::Up);
             mgr.publish_register(&instance);
         }
     });

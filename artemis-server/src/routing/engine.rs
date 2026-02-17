@@ -39,10 +39,7 @@ impl RouteEngine {
         }
 
         if rule.groups.is_empty() {
-            warn!(
-                "Route rule {} has no groups, returning all instances",
-                rule.route_id
-            );
+            warn!("Route rule {} has no groups, returning all instances", rule.route_id);
             return instances;
         }
 
@@ -65,29 +62,18 @@ impl RouteEngine {
             return instances;
         };
 
-        debug!(
-            "Selected group {} using strategy {:?}",
-            group_id, rule.strategy
-        );
+        debug!("Selected group {} using strategy {:?}", group_id, rule.strategy);
 
         // 步骤2: 根据分组ID过滤实例 (使用 group_id 字段)
         let filtered: Vec<Instance> = instances
             .iter()
-            .filter(|inst| {
-                inst.group_id
-                    .as_ref()
-                    .map(|gid| gid == &group_id)
-                    .unwrap_or(false)
-            })
+            .filter(|inst| inst.group_id.as_ref().map(|gid| gid == &group_id).unwrap_or(false))
             .cloned()
             .collect();
 
         // 步骤3: 降级处理
         if filtered.is_empty() {
-            warn!(
-                "No instances found for group {}, returning all instances as fallback",
-                group_id
-            );
+            warn!("No instances found for group {}, returning all instances as fallback", group_id);
             instances
         } else {
             filtered
@@ -96,7 +82,10 @@ impl RouteEngine {
 
     /// Convert ServiceGroup to RouteRuleGroup for strategy selection
     /// This is a temporary bridge until we align the data models
-    fn convert_service_groups_to_route_groups(&self, rule: &RouteRule) -> Vec<artemis_core::model::RouteRuleGroup> {
+    fn convert_service_groups_to_route_groups(
+        &self,
+        rule: &RouteRule,
+    ) -> Vec<artemis_core::model::RouteRuleGroup> {
         rule.groups
             .iter()
             .map(|sg| {
@@ -105,8 +94,8 @@ impl RouteEngine {
                     group_id: sg.group_key.clone(),
                     weight: sg.weight.unwrap_or(100),
                     unreleasable: false,
-                    region_id: None,  // ServiceGroup doesn't have region_id directly
-                    zone_id: None,    // ServiceGroup doesn't have zone_id directly
+                    region_id: None, // ServiceGroup doesn't have region_id directly
+                    zone_id: None,   // ServiceGroup doesn't have zone_id directly
                 }
             })
             .collect()
@@ -128,11 +117,7 @@ mod tests {
     // Import ServiceGroup from service module (not group module)
     use artemis_core::model::service::ServiceGroup;
 
-    fn create_test_instance(
-        service_id: &str,
-        instance_id: &str,
-        group_id: &str,
-    ) -> Instance {
+    fn create_test_instance(service_id: &str, instance_id: &str, group_id: &str) -> Instance {
         Instance {
             region_id: "us-east".to_string(),
             zone_id: "zone-1".to_string(),
@@ -196,9 +181,7 @@ mod tests {
         // 验证所有返回的实例属于同一个分组
         if let Some(first_inst) = result.first() {
             let group_id = first_inst.group_id.as_ref().unwrap();
-            assert!(result.iter().all(|inst|
-                inst.group_id.as_ref().unwrap() == group_id
-            ));
+            assert!(result.iter().all(|inst| inst.group_id.as_ref().unwrap() == group_id));
         }
     }
 
@@ -316,15 +299,13 @@ mod tests {
             description: None,
             status: RouteRuleStatus::Active,
             strategy: RouteStrategyEnum::WeightedRoundRobin,
-            groups: vec![
-                ServiceGroup {
-                    group_key: "group-1".to_string(),
-                    weight: Some(100),
-                    instance_ids: None,
-                    instances: None,
-                    metadata: None,
-                },
-            ],
+            groups: vec![ServiceGroup {
+                group_key: "group-1".to_string(),
+                weight: Some(100),
+                instance_ids: None,
+                instances: None,
+                metadata: None,
+            }],
         };
 
         let context = RouteContext::new();

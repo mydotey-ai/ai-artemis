@@ -1,4 +1,4 @@
-use sea_orm::{Database as SeaDatabase, DatabaseConnection, ConnectOptions, DbErr};
+use sea_orm::{ConnectOptions, Database as SeaDatabase, DatabaseConnection, DbErr};
 use std::time::Duration;
 
 /// 数据库连接管理器
@@ -100,7 +100,9 @@ impl Database {
 
         // 对于 SQLite，启用外键约束
         if self.db_type == DatabaseType::SQLite {
-            self.conn.execute_unprepared("PRAGMA foreign_keys = ON").await
+            self.conn
+                .execute_unprepared("PRAGMA foreign_keys = ON")
+                .await
                 .map_err(|e| anyhow::anyhow!("Failed to enable foreign keys: {}", e))?;
         }
 
@@ -135,11 +137,7 @@ impl Database {
                 s.lines()
                     .map(|line| {
                         // 移除行注释
-                        if let Some(pos) = line.find("--") {
-                            &line[..pos]
-                        } else {
-                            line
-                        }
+                        if let Some(pos) = line.find("--") { &line[..pos] } else { line }
                     })
                     .collect::<Vec<_>>()
                     .join("\n")
@@ -151,13 +149,15 @@ impl Database {
         // 逐个执行SQL语句
         for (i, statement) in statements.iter().enumerate() {
             tracing::debug!("Executing statement {} of {}", i + 1, statements.len());
-            self.conn.execute_unprepared(statement).await
-                .map_err(|e| {
-                    anyhow::anyhow!(
-                        "Failed to execute migration {} (statement {}): {}\nSQL: {}",
-                        name, i + 1, e, statement
-                    )
-                })?;
+            self.conn.execute_unprepared(statement).await.map_err(|e| {
+                anyhow::anyhow!(
+                    "Failed to execute migration {} (statement {}): {}\nSQL: {}",
+                    name,
+                    i + 1,
+                    e,
+                    statement
+                )
+            })?;
         }
 
         tracing::debug!("Migration {} completed", name);
@@ -202,14 +202,8 @@ mod tests {
 
     #[test]
     fn test_detect_db_type_sqlite() {
-        assert_eq!(
-            Database::detect_db_type("sqlite://test.db").unwrap(),
-            DatabaseType::SQLite
-        );
-        assert_eq!(
-            Database::detect_db_type("sqlite::memory:").unwrap(),
-            DatabaseType::SQLite
-        );
+        assert_eq!(Database::detect_db_type("sqlite://test.db").unwrap(), DatabaseType::SQLite);
+        assert_eq!(Database::detect_db_type("sqlite::memory:").unwrap(), DatabaseType::SQLite);
     }
 
     #[test]
@@ -248,22 +242,13 @@ mod tests {
 
     #[test]
     fn test_sanitize_url_sqlite_no_password() {
-        assert_eq!(
-            Database::sanitize_url("sqlite://test.db"),
-            "sqlite://test.db"
-        );
-        assert_eq!(
-            Database::sanitize_url("sqlite::memory:"),
-            "sqlite::memory:"
-        );
+        assert_eq!(Database::sanitize_url("sqlite://test.db"), "sqlite://test.db");
+        assert_eq!(Database::sanitize_url("sqlite::memory:"), "sqlite::memory:");
     }
 
     #[test]
     fn test_sanitize_url_no_at_symbol() {
-        assert_eq!(
-            Database::sanitize_url("mysql://localhost/db"),
-            "mysql://localhost/db"
-        );
+        assert_eq!(Database::sanitize_url("mysql://localhost/db"), "mysql://localhost/db");
     }
 
     #[test]

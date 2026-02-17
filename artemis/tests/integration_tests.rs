@@ -39,7 +39,7 @@ async fn start_test_server(port: u16) -> tokio::task::JoinHandle<()> {
         let audit_manager = Arc::new(artemis_management::AuditManager::new());
         let load_balancer = Arc::new(artemis_server::discovery::LoadBalancer::new());
         let status_service = Arc::new(artemis_server::StatusService::new(
-            None,                                  // cluster_manager
+            None, // cluster_manager
             lease_manager.clone(),
             format!("test-node-{}", port),        // node_id
             "test-region".to_string(),            // region_id

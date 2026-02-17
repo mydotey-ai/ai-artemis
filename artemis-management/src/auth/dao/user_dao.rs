@@ -1,6 +1,7 @@
 use crate::auth::model::{User, UserRole, UserStatus};
-use sea_orm::{DatabaseConnection, Statement, ConnectionTrait};
 use sea_orm::sea_query::Value;
+use sea_orm::{ConnectionTrait, DatabaseConnection, Statement};
+use std::str::FromStr;
 
 pub struct UserDao {
     conn: DatabaseConnection,
@@ -82,11 +83,7 @@ impl UserDao {
 
         let result = self.conn.query_one(stmt).await?;
 
-        if let Some(row) = result {
-            Ok(Some(self.row_to_user(row)?))
-        } else {
-            Ok(None)
-        }
+        if let Some(row) = result { Ok(Some(self.row_to_user(row)?)) } else { Ok(None) }
     }
 
     /// 根据 username 获取用户
@@ -99,11 +96,7 @@ impl UserDao {
 
         let result = self.conn.query_one(stmt).await?;
 
-        if let Some(row) = result {
-            Ok(Some(self.row_to_user(row)?))
-        } else {
-            Ok(None)
-        }
+        if let Some(row) = result { Ok(Some(self.row_to_user(row)?)) } else { Ok(None) }
     }
 
     /// 列出所有用户
@@ -174,10 +167,8 @@ impl UserDao {
         let created_at: i64 = row.try_get("", "created_at")?;
         let updated_at: i64 = row.try_get("", "updated_at")?;
 
-        let role = UserRole::from_str(&role_str)
-            .ok_or_else(|| anyhow::anyhow!("Invalid role: {}", role_str))?;
-        let status = UserStatus::from_str(&status_str)
-            .ok_or_else(|| anyhow::anyhow!("Invalid status: {}", status_str))?;
+        let role = UserRole::from_str(&role_str).map_err(|e| anyhow::anyhow!(e))?;
+        let status = UserStatus::from_str(&status_str).map_err(|e| anyhow::anyhow!(e))?;
 
         Ok(User {
             user_id,

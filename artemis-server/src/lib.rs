@@ -9,8 +9,8 @@ pub mod ratelimiter;
 pub mod registry;
 pub mod replication;
 pub mod routing;
-pub mod storage;
 pub mod status;
+pub mod storage;
 
 pub use change::InstanceChangeManager;
 pub use registry::RegistryServiceImpl;

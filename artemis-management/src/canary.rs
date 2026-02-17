@@ -1,11 +1,11 @@
 //! Canary release configuration management
 
+use crate::dao::CanaryConfigDao;
+use crate::db::Database;
 use artemis_core::model::CanaryConfig;
 use dashmap::DashMap;
 use std::sync::Arc;
 use tracing::info;
-use crate::db::Database;
-use crate::dao::CanaryConfigDao;
 
 /// 金丝雀配置管理器
 #[derive(Clone)]
@@ -29,10 +29,7 @@ impl CanaryManager {
     }
 
     pub fn with_database(database: Option<Arc<Database>>) -> Self {
-        Self {
-            configs: Arc::new(DashMap::new()),
-            database,
-        }
+        Self { configs: Arc::new(DashMap::new()), database }
     }
 
     /// 设置金丝雀配置
@@ -67,10 +64,7 @@ impl CanaryManager {
     pub fn set_enabled(&self, service_id: &str, enabled: bool) -> anyhow::Result<()> {
         if let Some(mut config) = self.configs.get_mut(service_id) {
             config.enabled = enabled;
-            info!(
-                "Set canary enabled={} for service: {}",
-                enabled, service_id
-            );
+            info!("Set canary enabled={} for service: {}", enabled, service_id);
 
             // 持久化到数据库
             if let Some(db) = &self.database {
@@ -78,7 +72,10 @@ impl CanaryManager {
                 let service_id_owned = service_id.to_string();
                 tokio::spawn(async move {
                     if let Err(e) = dao.set_enabled(&service_id_owned, enabled).await {
-                        tracing::error!("Failed to update canary enabled status in database: {}", e);
+                        tracing::error!(
+                            "Failed to update canary enabled status in database: {}",
+                            e
+                        );
                     }
                 });
             }

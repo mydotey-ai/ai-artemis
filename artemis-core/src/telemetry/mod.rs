@@ -8,15 +8,15 @@
 //!
 //! Status: Fully implemented with OTLP exporter
 
-use opentelemetry::{global, trace::TracerProvider as _, KeyValue};
+use opentelemetry::{KeyValue, global, trace::TracerProvider as _};
 use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_sdk::{
-    trace::{RandomIdGenerator, Sampler, SdkTracerProvider},
     Resource,
+    trace::{RandomIdGenerator, Sampler, SdkTracerProvider},
 };
 use tracing::Span;
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry};
 use tracing_opentelemetry::OpenTelemetryLayer;
+use tracing_subscriber::{EnvFilter, Registry, layer::SubscriberExt, util::SubscriberInitExt};
 
 /// Telemetry配置
 #[derive(Debug, Clone)]
@@ -79,10 +79,7 @@ pub fn init_telemetry(config: &TelemetryConfig) -> Result<(), Box<dyn std::error
 
     // 1. 创建 OTLP 导出器
     let tracer_provider = if let Some(endpoint) = &config.endpoint {
-        tracing::info!(
-            "Initializing OpenTelemetry with endpoint: {}",
-            endpoint
-        );
+        tracing::info!("Initializing OpenTelemetry with endpoint: {}", endpoint);
 
         // 配置 OTLP 导出器 (使用 HTTP 协议)
         let exporter = opentelemetry_otlp::SpanExporter::builder()
@@ -102,9 +99,7 @@ pub fn init_telemetry(config: &TelemetryConfig) -> Result<(), Box<dyn std::error
         // 3. 配置资源 (使用 builder 方式)
         let resource = Resource::builder_empty()
             .with_service_name(config.service_name.clone())
-            .with_attributes(vec![
-                KeyValue::new("service.version", env!("CARGO_PKG_VERSION")),
-            ])
+            .with_attributes(vec![KeyValue::new("service.version", env!("CARGO_PKG_VERSION"))])
             .build();
 
         // 4. 创建 tracer provider
@@ -118,13 +113,10 @@ pub fn init_telemetry(config: &TelemetryConfig) -> Result<(), Box<dyn std::error
         tracing::info!("No OTLP endpoint configured, using basic tracer");
 
         // 没有配置 endpoint,使用基础 provider
-        let resource = Resource::builder_empty()
-            .with_service_name(config.service_name.clone())
-            .build();
+        let resource =
+            Resource::builder_empty().with_service_name(config.service_name.clone()).build();
 
-        SdkTracerProvider::builder()
-            .with_resource(resource)
-            .build()
+        SdkTracerProvider::builder().with_resource(resource).build()
     };
 
     // 4. 设置全局 tracer provider
@@ -136,8 +128,7 @@ pub fn init_telemetry(config: &TelemetryConfig) -> Result<(), Box<dyn std::error
     // 6. 配置 tracing-subscriber layers
     let telemetry_layer = OpenTelemetryLayer::new(tracer);
 
-    let env_filter = EnvFilter::try_from_default_env()
-        .unwrap_or_else(|_| EnvFilter::new("info"));
+    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
 
     let fmt_layer = tracing_subscriber::fmt::layer()
         .with_target(true)
@@ -145,11 +136,7 @@ pub fn init_telemetry(config: &TelemetryConfig) -> Result<(), Box<dyn std::error
         .with_line_number(true);
 
     // 7. 初始化 subscriber
-    Registry::default()
-        .with(env_filter)
-        .with(fmt_layer)
-        .with(telemetry_layer)
-        .init();
+    Registry::default().with(env_filter).with(fmt_layer).with(telemetry_layer).init();
 
     tracing::info!(
         "OpenTelemetry initialized successfully (service: {}, sample_rate: {})",
@@ -381,8 +368,8 @@ mod tests {
 
     #[test]
     fn test_trace_context_with_empty_parent() {
-        let ctx = TraceContext::new("trace".to_string(), "span".to_string())
-            .with_parent("".to_string());
+        let ctx =
+            TraceContext::new("trace".to_string(), "span".to_string()).with_parent("".to_string());
         assert_eq!(ctx.parent_span_id, Some("".to_string()));
     }
 }

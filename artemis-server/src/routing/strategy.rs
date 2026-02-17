@@ -2,8 +2,8 @@
 
 use artemis_core::model::RouteRuleGroup;
 use dashmap::DashMap;
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 /// 路由策略 trait
 pub trait RouteStrategy: Send + Sync {
@@ -24,9 +24,7 @@ pub struct WeightedRoundRobinStrategy {
 
 impl WeightedRoundRobinStrategy {
     pub fn new() -> Self {
-        Self {
-            counters: Arc::new(DashMap::new()),
-        }
+        Self { counters: Arc::new(DashMap::new()) }
     }
 
     /// 获取或创建计数器
@@ -227,9 +225,7 @@ mod weighted_round_robin_tests {
         let context = super::super::context::RouteContext::new();
 
         // 只有一个分组
-        let groups = vec![
-            RouteRuleGroup::new("rule-1".to_string(), "only-group".to_string(), 100),
-        ];
+        let groups = vec![RouteRuleGroup::new("rule-1".to_string(), "only-group".to_string(), 100)];
 
         // 无论调用多少次,都应该返回同一个分组
         for _ in 0..10 {
@@ -335,8 +331,7 @@ mod close_by_visit_tests {
             ),
         ];
 
-        let context = super::super::context::RouteContext::new()
-            .with_region("us-east".to_string());
+        let context = super::super::context::RouteContext::new().with_region("us-east".to_string());
 
         let selected = strategy.select_group(&groups, &context).unwrap();
         assert_eq!(selected, "group-us-east");
@@ -363,8 +358,7 @@ mod close_by_visit_tests {
             ),
         ];
 
-        let context = super::super::context::RouteContext::new()
-            .with_zone("zone-2".to_string());
+        let context = super::super::context::RouteContext::new().with_zone("zone-2".to_string());
 
         let selected = strategy.select_group(&groups, &context).unwrap();
         assert_eq!(selected, "group-zone2");
@@ -374,19 +368,16 @@ mod close_by_visit_tests {
     fn test_close_by_visit_fallback() {
         let strategy = CloseByVisitStrategy::new();
 
-        let groups = vec![
-            RouteRuleGroup::with_location(
-                "rule-1".to_string(),
-                "group-default".to_string(),
-                100,
-                Some("us-east".to_string()),
-                None,
-            ),
-        ];
+        let groups = vec![RouteRuleGroup::with_location(
+            "rule-1".to_string(),
+            "group-default".to_string(),
+            100,
+            Some("us-east".to_string()),
+            None,
+        )];
 
         // 客户端位置不匹配,降级到第一个分组
-        let context = super::super::context::RouteContext::new()
-            .with_region("eu-west".to_string());
+        let context = super::super::context::RouteContext::new().with_region("eu-west".to_string());
 
         let selected = strategy.select_group(&groups, &context).unwrap();
         assert_eq!(selected, "group-default");
@@ -447,7 +438,10 @@ mod close_by_visit_tests {
 
         // 分组没有位置信息,应该降级到第一个分组
         let selected = strategy.select_group(&groups, &context).unwrap();
-        assert_eq!(selected, "group-a", "Should fallback to first group when groups have no location");
+        assert_eq!(
+            selected, "group-a",
+            "Should fallback to first group when groups have no location"
+        );
     }
 
     #[test]
@@ -485,19 +479,16 @@ mod close_by_visit_tests {
     fn test_close_by_visit_single_group() {
         let strategy = CloseByVisitStrategy::new();
 
-        let groups = vec![
-            RouteRuleGroup::with_location(
-                "rule-1".to_string(),
-                "only-group".to_string(),
-                100,
-                Some("us-east".to_string()),
-                None,
-            ),
-        ];
+        let groups = vec![RouteRuleGroup::with_location(
+            "rule-1".to_string(),
+            "only-group".to_string(),
+            100,
+            Some("us-east".to_string()),
+            None,
+        )];
 
         // 只有一个分组,无论是否匹配都应该返回它
-        let context = super::super::context::RouteContext::new()
-            .with_region("eu-west".to_string());
+        let context = super::super::context::RouteContext::new().with_region("eu-west".to_string());
 
         let selected = strategy.select_group(&groups, &context).unwrap();
         assert_eq!(selected, "only-group");
@@ -530,6 +521,9 @@ mod close_by_visit_tests {
             .with_zone("zone-1".to_string());
 
         let selected = strategy.select_group(&groups, &context).unwrap();
-        assert_eq!(selected, "group-region-only", "Should match by Region even if group has no Zone");
+        assert_eq!(
+            selected, "group-region-only",
+            "Should match by Region even if group has no Zone"
+        );
     }
 }

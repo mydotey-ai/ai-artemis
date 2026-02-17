@@ -24,10 +24,7 @@ pub enum ReplicationErrorKind {
 
 impl ReplicationError {
     pub fn new(kind: ReplicationErrorKind, message: impl Into<String>) -> Self {
-        Self {
-            kind,
-            message: message.into(),
-        }
+        Self { kind, message: message.into() }
     }
 
     /// 判断错误是否可重试
@@ -55,20 +52,14 @@ impl ReplicationError {
     /// 从 reqwest 错误创建
     pub fn from_reqwest(error: reqwest::Error) -> Self {
         if error.is_timeout() {
-            Self::new(
-                ReplicationErrorKind::NetworkTimeout,
-                format!("Request timeout: {}", error),
-            )
+            Self::new(ReplicationErrorKind::NetworkTimeout, format!("Request timeout: {}", error))
         } else if error.is_connect() {
             Self::new(
                 ReplicationErrorKind::ServiceUnavailable,
                 format!("Connection failed: {}", error),
             )
         } else {
-            Self::new(
-                ReplicationErrorKind::PermanentFailure,
-                format!("Request failed: {}", error),
-            )
+            Self::new(ReplicationErrorKind::PermanentFailure, format!("Request failed: {}", error))
         }
     }
 }

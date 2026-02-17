@@ -4,18 +4,32 @@ use crate::change::InstanceChangeManager;
 use crate::lease::LeaseManager;
 use crate::replication::ReplicationManager;
 use artemis_core::model::{
-    ErrorCode, HeartbeatRequest, HeartbeatResponse, RegisterRequest, RegisterResponse,
-    ResponseStatus, UnregisterRequest, UnregisterResponse,
-    ReplicateRegisterRequest, ReplicateRegisterResponse,
-    ReplicateHeartbeatRequest, ReplicateHeartbeatResponse,
-    ReplicateUnregisterRequest, ReplicateUnregisterResponse,
-    GetAllServicesResponse,
+    BatchHeartbeatRequest,
+    BatchHeartbeatResponse,
     // Phase 23: 批量复制 API
-    BatchRegisterRequest, BatchRegisterResponse,
-    BatchHeartbeatRequest, BatchHeartbeatResponse,
-    BatchUnregisterRequest, BatchUnregisterResponse,
-    ServicesDeltaRequest, ServicesDeltaResponse,
-    SyncFullDataRequest, SyncFullDataResponse,
+    BatchRegisterRequest,
+    BatchRegisterResponse,
+    BatchUnregisterRequest,
+    BatchUnregisterResponse,
+    ErrorCode,
+    GetAllServicesResponse,
+    HeartbeatRequest,
+    HeartbeatResponse,
+    RegisterRequest,
+    RegisterResponse,
+    ReplicateHeartbeatRequest,
+    ReplicateHeartbeatResponse,
+    ReplicateRegisterRequest,
+    ReplicateRegisterResponse,
+    ReplicateUnregisterRequest,
+    ReplicateUnregisterResponse,
+    ResponseStatus,
+    ServicesDeltaRequest,
+    ServicesDeltaResponse,
+    SyncFullDataRequest,
+    SyncFullDataResponse,
+    UnregisterRequest,
+    UnregisterResponse,
 };
 use artemis_core::traits::RegistryService;
 use async_trait::async_trait;
@@ -39,13 +53,7 @@ impl RegistryServiceImpl {
         change_manager: Arc<InstanceChangeManager>,
         replication_manager: Option<Arc<ReplicationManager>>,
     ) -> Self {
-        Self {
-            repository,
-            lease_manager,
-            cache,
-            change_manager,
-            replication_manager,
-        }
+        Self { repository, lease_manager, cache, change_manager, replication_manager }
     }
 
     // ===== Phase 23: 批量复制 API (独立方法,不属于 trait) =====
@@ -105,7 +113,10 @@ impl RegistryServiceImpl {
     }
 
     /// 批量注销
-    pub async fn batch_unregister(&self, request: BatchUnregisterRequest) -> BatchUnregisterResponse {
+    pub async fn batch_unregister(
+        &self,
+        request: BatchUnregisterRequest,
+    ) -> BatchUnregisterResponse {
         info!("Batch unregistering {} instances from replication", request.instance_keys.len());
 
         let mut affected_services = std::collections::HashSet::new();
@@ -140,14 +151,16 @@ impl RegistryServiceImpl {
     }
 
     /// 增量同步 - 获取指定时间戳之后的变更
-    pub async fn get_services_delta(&self, _request: ServicesDeltaRequest) -> ServicesDeltaResponse {
+    pub async fn get_services_delta(
+        &self,
+        _request: ServicesDeltaRequest,
+    ) -> ServicesDeltaResponse {
         // 注意:当前实现返回所有服务 (与 Java 版本保持一致)
         // 未来可扩展为基于 version_id 的真正增量同步
         let services = self.repository.get_all_services();
-        let current_timestamp = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_millis() as i64;
+        let current_timestamp =
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis()
+                as i64;
 
         ServicesDeltaResponse {
             response_status: ResponseStatus::success(),
@@ -158,14 +171,15 @@ impl RegistryServiceImpl {
 
     /// 全量同步 - 新节点加入时的完整数据同步
     pub async fn sync_full_data(&self, request: SyncFullDataRequest) -> SyncFullDataResponse {
-        info!("Full data sync requested for region_id={}, zone_id={:?}",
-              request.region_id, request.zone_id);
+        info!(
+            "Full data sync requested for region_id={}, zone_id={:?}",
+            request.region_id, request.zone_id
+        );
 
         let services = self.repository.get_all_services();
-        let sync_timestamp = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_millis() as i64;
+        let sync_timestamp =
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis()
+                as i64;
 
         SyncFullDataResponse {
             response_status: ResponseStatus::success(),
@@ -298,7 +312,10 @@ impl RegistryService for RegistryServiceImpl {
 
     // ===== 复制方法实现(不触发二次复制) =====
 
-    async fn register_from_replication(&self, request: ReplicateRegisterRequest) -> ReplicateRegisterResponse {
+    async fn register_from_replication(
+        &self,
+        request: ReplicateRegisterRequest,
+    ) -> ReplicateRegisterResponse {
         let failed = Vec::new();
 
         for instance in request.instances {
@@ -328,7 +345,10 @@ impl RegistryService for RegistryServiceImpl {
         }
     }
 
-    async fn heartbeat_from_replication(&self, request: ReplicateHeartbeatRequest) -> ReplicateHeartbeatResponse {
+    async fn heartbeat_from_replication(
+        &self,
+        request: ReplicateHeartbeatRequest,
+    ) -> ReplicateHeartbeatResponse {
         let mut failed = Vec::with_capacity(request.instance_keys.len());
 
         for key in request.instance_keys {
@@ -348,7 +368,10 @@ impl RegistryService for RegistryServiceImpl {
         }
     }
 
-    async fn unregister_from_replication(&self, request: ReplicateUnregisterRequest) -> ReplicateUnregisterResponse {
+    async fn unregister_from_replication(
+        &self,
+        request: ReplicateUnregisterRequest,
+    ) -> ReplicateUnregisterResponse {
         for key in request.instance_keys {
             info!("Unregistering instance from replication: {:?}", key);
 
@@ -370,10 +393,7 @@ impl RegistryService for RegistryServiceImpl {
     async fn get_all_services(&self) -> GetAllServicesResponse {
         let services = self.repository.get_all_services();
 
-        GetAllServicesResponse {
-            response_status: ResponseStatus::success(),
-            services,
-        }
+        GetAllServicesResponse { response_status: ResponseStatus::success(), services }
     }
 }
 

@@ -248,9 +248,10 @@ impl InstanceManager {
 
                 // 按 region_id 过滤
                 if let Some(rid) = region_id
-                    && region != rid {
-                        return None;
-                    }
+                    && region != rid
+                {
+                    return None;
+                }
 
                 Some((server_id, region, *entry.value()))
             })
@@ -289,15 +290,11 @@ mod tests {
         assert!(!manager.is_instance_down(&key));
 
         // 拉出实例
-        manager
-            .pull_out_instance(&key, "admin".to_string(), true)
-            .unwrap();
+        manager.pull_out_instance(&key, "admin".to_string(), true).unwrap();
         assert!(manager.is_instance_down(&key));
 
         // 拉入实例
-        manager
-            .pull_in_instance(&key, "admin".to_string(), true)
-            .unwrap();
+        manager.pull_in_instance(&key, "admin".to_string(), true).unwrap();
         assert!(!manager.is_instance_down(&key));
     }
 
@@ -307,17 +304,13 @@ mod tests {
         let key = create_test_instance_key();
 
         // 拉出实例 (incomplete)
-        manager
-            .pull_out_instance(&key, "admin".to_string(), false)
-            .unwrap();
+        manager.pull_out_instance(&key, "admin".to_string(), false).unwrap();
 
         // incomplete 的拉出操作不算真正下线
         assert!(!manager.is_instance_down(&key));
 
         // 完成拉出操作
-        manager
-            .pull_out_instance(&key, "admin".to_string(), true)
-            .unwrap();
+        manager.pull_out_instance(&key, "admin".to_string(), true).unwrap();
         assert!(manager.is_instance_down(&key));
     }
 
@@ -330,9 +323,7 @@ mod tests {
         assert_eq!(manager.get_instance_operations(&key).len(), 0);
 
         // 拉出后有操作记录
-        manager
-            .pull_out_instance(&key, "admin".to_string(), true)
-            .unwrap();
+        manager.pull_out_instance(&key, "admin".to_string(), true).unwrap();
         let ops = manager.get_instance_operations(&key);
         assert_eq!(ops.len(), 1);
         assert_eq!(ops[0], InstanceOperation::PullOut);
@@ -348,15 +339,11 @@ mod tests {
         assert!(!manager.is_server_down(server_id, region_id));
 
         // 拉出服务器
-        manager
-            .pull_out_server(server_id, region_id, "admin".to_string(), true)
-            .unwrap();
+        manager.pull_out_server(server_id, region_id, "admin".to_string(), true).unwrap();
         assert!(manager.is_server_down(server_id, region_id));
 
         // 拉入服务器
-        manager
-            .pull_in_server(server_id, region_id, "admin".to_string(), true)
-            .unwrap();
+        manager.pull_in_server(server_id, region_id, "admin".to_string(), true).unwrap();
         assert!(!manager.is_server_down(server_id, region_id));
     }
 
@@ -380,19 +367,13 @@ mod tests {
         };
 
         // 拉出两个实例
-        manager
-            .pull_out_instance(&key1, "admin".to_string(), true)
-            .unwrap();
-        manager
-            .pull_out_instance(&key2, "admin".to_string(), true)
-            .unwrap();
+        manager.pull_out_instance(&key1, "admin".to_string(), true).unwrap();
+        manager.pull_out_instance(&key2, "admin".to_string(), true).unwrap();
 
         assert_eq!(manager.down_instance_count(), 2);
 
         // 拉出一台服务器
-        manager
-            .pull_out_server("192.168.1.100", "us-east", "admin".to_string(), true)
-            .unwrap();
+        manager.pull_out_server("192.168.1.100", "us-east", "admin".to_string(), true).unwrap();
         assert_eq!(manager.down_server_count(), 1);
     }
 }

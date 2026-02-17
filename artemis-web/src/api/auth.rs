@@ -1,13 +1,13 @@
 use crate::state::AppState;
-use artemis_management::auth::{UserRole, UserStatus, UserResponse, Session};
+use artemis_management::auth::{Session, UserResponse, UserRole, UserStatus};
 use axum::{
-    Extension,
+    Extension, Json,
     extract::{Path, Request, State},
     http::StatusCode,
     response::IntoResponse,
-    Json,
 };
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 
 // ===== 请求/响应模型 =====
 
@@ -83,19 +83,11 @@ pub struct ApiResponse<T> {
 
 impl<T> ApiResponse<T> {
     pub fn success(data: T) -> Self {
-        Self {
-            success: true,
-            data: Some(data),
-            message: None,
-        }
+        Self { success: true, data: Some(data), message: None }
     }
 
     pub fn error(message: String) -> Self {
-        Self {
-            success: false,
-            data: None,
-            message: Some(message),
-        }
+        Self { success: false, data: None, message: Some(message) }
     }
 }
 
@@ -133,10 +125,7 @@ pub async fn login(
 }
 
 /// POST /api/auth/logout - 用户登出
-pub async fn logout(
-    State(state): State<AppState>,
-    req: Request,
-) -> impl IntoResponse {
+pub async fn logout(State(state): State<AppState>, req: Request) -> impl IntoResponse {
     // 从 header 中提取 token
     let token = req
         .headers()
@@ -146,14 +135,13 @@ pub async fn logout(
 
     if let Some(token) = token {
         match state.auth_manager.logout(token) {
-            Ok(_) => (StatusCode::OK, Json(ApiResponse::success("Logged out successfully".to_string()))),
+            Ok(_) => {
+                (StatusCode::OK, Json(ApiResponse::success("Logged out successfully".to_string())))
+            }
             Err(e) => (StatusCode::BAD_REQUEST, Json(ApiResponse::<String>::error(e))),
         }
     } else {
-        (
-            StatusCode::UNAUTHORIZED,
-            Json(ApiResponse::<String>::error("Missing token".to_string())),
-        )
+        (StatusCode::UNAUTHORIZED, Json(ApiResponse::<String>::error("Missing token".to_string())))
     }
 }
 
@@ -179,20 +167,15 @@ pub async fn refresh_token(
 }
 
 /// GET /api/auth/user - 获取当前用户信息
-pub async fn get_current_user(
-    State(state): State<AppState>,
-    req: Request,
-) -> impl IntoResponse {
+pub async fn get_current_user(State(state): State<AppState>, req: Request) -> impl IntoResponse {
     match extract_user_id(&req) {
-        Ok(user_id) => {
-            match state.auth_manager.get_user(&user_id) {
-                Some(user) => (StatusCode::OK, Json(ApiResponse::success(user.to_response()))),
-                None => (
-                    StatusCode::NOT_FOUND,
-                    Json(ApiResponse::<UserResponse>::error("User not found".to_string())),
-                ),
-            }
-        }
+        Ok(user_id) => match state.auth_manager.get_user(&user_id) {
+            Some(user) => (StatusCode::OK, Json(ApiResponse::success(user.to_response()))),
+            None => (
+                StatusCode::NOT_FOUND,
+                Json(ApiResponse::<UserResponse>::error("User not found".to_string())),
+            ),
+        },
         Err((status, msg)) => (status, Json(ApiResponse::<UserResponse>::error(msg))),
     }
 }
@@ -218,7 +201,10 @@ pub async fn change_password(
     Json(body): Json<ChangePasswordRequest>,
 ) -> impl IntoResponse {
     match state.auth_manager.change_password(&user_id, &body.old_password, &body.new_password) {
-        Ok(_) => (StatusCode::OK, Json(ApiResponse::success("Password changed successfully".to_string()))),
+        Ok(_) => (
+            StatusCode::OK,
+            Json(ApiResponse::success("Password changed successfully".to_string())),
+        ),
         Err(e) => (StatusCode::BAD_REQUEST, Json(ApiResponse::<String>::error(e))),
     }
 }
@@ -230,16 +216,15 @@ pub async fn reset_password(
     Json(req): Json<ResetPasswordRequest>,
 ) -> impl IntoResponse {
     match state.auth_manager.reset_password(&user_id, &req.new_password) {
-        Ok(_) => (StatusCode::OK, Json(ApiResponse::success("Password reset successfully".to_string()))),
+        Ok(_) => {
+            (StatusCode::OK, Json(ApiResponse::success("Password reset successfully".to_string())))
+        }
         Err(e) => (StatusCode::BAD_REQUEST, Json(ApiResponse::<String>::error(e))),
     }
 }
 
 /// GET /api/auth/sessions - 列出用户会话
-pub async fn list_sessions(
-    State(state): State<AppState>,
-    req: Request,
-) -> impl IntoResponse {
+pub async fn list_sessions(State(state): State<AppState>, req: Request) -> impl IntoResponse {
     match extract_user_id(&req) {
         Ok(user_id) => {
             let sessions = state.auth_manager.list_user_sessions(&user_id);
@@ -255,7 +240,9 @@ pub async fn revoke_session(
     Path(session_id): Path<String>,
 ) -> impl IntoResponse {
     match state.auth_manager.revoke_session(&session_id) {
-        Ok(_) => (StatusCode::OK, Json(ApiResponse::success("Session revoked successfully".to_string()))),
+        Ok(_) => {
+            (StatusCode::OK, Json(ApiResponse::success("Session revoked successfully".to_string())))
+        }
         Err(e) => (StatusCode::NOT_FOUND, Json(ApiResponse::<String>::error(e))),
     }
 }
@@ -273,22 +260,15 @@ pub async fn check_permission(
     Json(body): Json<CheckPermissionRequest>,
 ) -> impl IntoResponse {
     let allowed = state.auth_manager.check_permission(&user_id, &body.resource, &body.action);
-    (
-        StatusCode::OK,
-        Json(ApiResponse::success(CheckPermissionResponse { allowed })),
-    )
+    (StatusCode::OK, Json(ApiResponse::success(CheckPermissionResponse { allowed })))
 }
 
 // ===== 用户管理 API =====
 
 /// GET /api/auth/users - 列出所有用户
 pub async fn list_users(State(state): State<AppState>) -> impl IntoResponse {
-    let users: Vec<UserResponse> = state
-        .auth_manager
-        .list_users()
-        .into_iter()
-        .map(|u| u.to_response())
-        .collect();
+    let users: Vec<UserResponse> =
+        state.auth_manager.list_users().into_iter().map(|u| u.to_response()).collect();
     (StatusCode::OK, Json(ApiResponse::success(users)))
 }
 
@@ -298,16 +278,19 @@ pub async fn create_user(
     Json(req): Json<CreateUserRequest>,
 ) -> impl IntoResponse {
     let role = match UserRole::from_str(&req.role) {
-        Some(r) => r,
-        None => {
-            return (
-                StatusCode::BAD_REQUEST,
-                Json(ApiResponse::<UserResponse>::error(format!("Invalid role: {}", req.role))),
-            );
+        Ok(r) => r,
+        Err(e) => {
+            return (StatusCode::BAD_REQUEST, Json(ApiResponse::<UserResponse>::error(e)));
         }
     };
 
-    match state.auth_manager.create_user(&req.username, req.email, req.description, &req.password, role) {
+    match state.auth_manager.create_user(
+        &req.username,
+        req.email,
+        req.description,
+        &req.password,
+        role,
+    ) {
         Ok(user) => (StatusCode::CREATED, Json(ApiResponse::success(user.to_response()))),
         Err(e) => (StatusCode::BAD_REQUEST, Json(ApiResponse::<UserResponse>::error(e))),
     }
@@ -335,12 +318,9 @@ pub async fn update_user(
 ) -> impl IntoResponse {
     let role = if let Some(role_str) = req.role {
         match UserRole::from_str(&role_str) {
-            Some(r) => Some(r),
-            None => {
-                return (
-                    StatusCode::BAD_REQUEST,
-                    Json(ApiResponse::<UserResponse>::error(format!("Invalid role: {}", role_str))),
-                );
+            Ok(r) => Some(r),
+            Err(e) => {
+                return (StatusCode::BAD_REQUEST, Json(ApiResponse::<UserResponse>::error(e)));
             }
         }
     } else {
@@ -359,7 +339,9 @@ pub async fn delete_user(
     Path(user_id): Path<String>,
 ) -> impl IntoResponse {
     match state.auth_manager.delete_user(&user_id) {
-        Ok(_) => (StatusCode::OK, Json(ApiResponse::success("User deleted successfully".to_string()))),
+        Ok(_) => {
+            (StatusCode::OK, Json(ApiResponse::success("User deleted successfully".to_string())))
+        }
         Err(e) => (StatusCode::NOT_FOUND, Json(ApiResponse::<String>::error(e))),
     }
 }
@@ -371,12 +353,9 @@ pub async fn update_user_status(
     Json(req): Json<UpdateUserStatusRequest>,
 ) -> impl IntoResponse {
     let status = match UserStatus::from_str(&req.status) {
-        Some(s) => s,
-        None => {
-            return (
-                StatusCode::BAD_REQUEST,
-                Json(ApiResponse::<UserResponse>::error(format!("Invalid status: {}", req.status))),
-            );
+        Ok(s) => s,
+        Err(e) => {
+            return (StatusCode::BAD_REQUEST, Json(ApiResponse::<UserResponse>::error(e)));
         }
     };
 

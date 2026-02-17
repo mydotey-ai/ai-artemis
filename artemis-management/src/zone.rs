@@ -1,12 +1,12 @@
 //! Zone management operations
 
+use crate::dao::ZoneOperationDao;
+use crate::db::Database;
 use artemis_core::model::{ZoneOperation, ZoneOperationRecord};
 use chrono::Utc;
 use dashmap::DashMap;
 use std::sync::Arc;
 use tracing::info;
-use crate::db::Database;
-use crate::dao::ZoneOperationDao;
 
 /// Zone 管理器
 #[derive(Clone)]
@@ -30,10 +30,7 @@ impl ZoneManager {
     }
 
     pub fn with_database(database: Option<Arc<Database>>) -> Self {
-        Self {
-            operations: Arc::new(DashMap::new()),
-            database,
-        }
+        Self { operations: Arc::new(DashMap::new()), database }
     }
 
     /// 拉出整个 Zone (批量下线)
@@ -45,10 +42,7 @@ impl ZoneManager {
     ) -> anyhow::Result<()> {
         let zone_key = Self::zone_key(zone_id, region_id);
 
-        info!(
-            "Pull-out zone: {} by operator: {}",
-            zone_key, operator_id
-        );
+        info!("Pull-out zone: {} by operator: {}", zone_key, operator_id);
 
         let record = ZoneOperationRecord {
             zone_id: zone_id.to_string(),
@@ -83,10 +77,7 @@ impl ZoneManager {
     ) -> anyhow::Result<()> {
         let zone_key = Self::zone_key(zone_id, region_id);
 
-        info!(
-            "Pull-in zone: {} by operator: {}",
-            zone_key, operator_id
-        );
+        info!("Pull-in zone: {} by operator: {}", zone_key, operator_id);
 
         // 移除拉出记录
         self.operations.remove(&zone_key);
@@ -122,13 +113,11 @@ impl ZoneManager {
     pub fn list_operations(&self, region_id: Option<&str>) -> Vec<ZoneOperationRecord> {
         self.operations
             .iter()
-            .filter(|entry| {
-                if let Some(rid) = region_id {
-                    entry.value().region_id == rid
-                } else {
-                    true
-                }
-            })
+            .filter(
+                |entry| {
+                    if let Some(rid) = region_id { entry.value().region_id == rid } else { true }
+                },
+            )
             .map(|entry| entry.value().clone())
             .collect()
     }
@@ -148,15 +137,11 @@ mod tests {
         let manager = ZoneManager::new();
 
         // Pull out
-        manager
-            .pull_out_zone("zone-1", "us-east", "operator-1".to_string())
-            .unwrap();
+        manager.pull_out_zone("zone-1", "us-east", "operator-1".to_string()).unwrap();
         assert!(manager.is_zone_down("zone-1", "us-east"));
 
         // Pull in
-        manager
-            .pull_in_zone("zone-1", "us-east", "operator-1".to_string())
-            .unwrap();
+        manager.pull_in_zone("zone-1", "us-east", "operator-1".to_string()).unwrap();
         assert!(!manager.is_zone_down("zone-1", "us-east"));
     }
 
@@ -164,12 +149,8 @@ mod tests {
     fn test_list_operations() {
         let manager = ZoneManager::new();
 
-        manager
-            .pull_out_zone("zone-1", "us-east", "operator-1".to_string())
-            .unwrap();
-        manager
-            .pull_out_zone("zone-2", "us-west", "operator-2".to_string())
-            .unwrap();
+        manager.pull_out_zone("zone-1", "us-east", "operator-1".to_string()).unwrap();
+        manager.pull_out_zone("zone-2", "us-west", "operator-2".to_string()).unwrap();
 
         let all_ops = manager.list_operations(None);
         assert_eq!(all_ops.len(), 2);

@@ -28,7 +28,7 @@ impl GroupInstanceDao {
                 binding.service_id.clone().into(),
                 binding.instance_id.clone().into(),
                 binding.binding_type.as_ref().map(|_| "").into(), // ip optional
-                binding.binding_type.as_ref().map(|_| 0).into(), // port optional
+                binding.binding_type.as_ref().map(|_| 0).into(),  // port optional
                 binding
                     .binding_type
                     .map(|t| match t {
@@ -60,12 +60,7 @@ impl GroupInstanceDao {
                 DELETE FROM service_group_instance
                 WHERE group_id = ? AND instance_id = ? AND region_id = ? AND zone_id = ?
             "#,
-            vec![
-                group_id.to_string().into(),
-                instance_id.into(),
-                region_id.into(),
-                zone_id.into(),
-            ],
+            vec![group_id.to_string().into(), instance_id.into(), region_id.into(), zone_id.into()],
         );
 
         let result = self.db.execute(stmt).await?;
@@ -89,7 +84,8 @@ impl GroupInstanceDao {
         let bindings = result
             .iter()
             .map(|row| {
-                let binding_type_str: String = row.try_get("", "binding_type").unwrap_or_else(|_| "auto".to_string());
+                let binding_type_str: String =
+                    row.try_get("", "binding_type").unwrap_or_else(|_| "auto".to_string());
                 let binding_type = match binding_type_str.as_str() {
                     "manual" => Some(BindingType::Manual),
                     "auto" => Some(BindingType::Auto),
@@ -98,7 +94,11 @@ impl GroupInstanceDao {
 
                 GroupInstance {
                     id: row.try_get("", "id").ok(),
-                    group_id: row.try_get::<String>("", "group_id").ok().and_then(|s| s.parse().ok()).unwrap_or(0),
+                    group_id: row
+                        .try_get::<String>("", "group_id")
+                        .ok()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or(0),
                     region_id: row.try_get("", "region_id").unwrap_or_default(),
                     zone_id: row.try_get("", "zone_id").unwrap_or_default(),
                     service_id: row.try_get("", "service_id").unwrap_or_default(),
@@ -135,7 +135,8 @@ impl GroupInstanceDao {
         let bindings = result
             .iter()
             .map(|row| {
-                let binding_type_str: String = row.try_get("", "binding_type").unwrap_or_else(|_| "auto".to_string());
+                let binding_type_str: String =
+                    row.try_get("", "binding_type").unwrap_or_else(|_| "auto".to_string());
                 let binding_type = match binding_type_str.as_str() {
                     "manual" => Some(BindingType::Manual),
                     "auto" => Some(BindingType::Auto),
@@ -144,7 +145,11 @@ impl GroupInstanceDao {
 
                 GroupInstance {
                     id: row.try_get("", "id").ok(),
-                    group_id: row.try_get::<String>("", "group_id").ok().and_then(|s| s.parse().ok()).unwrap_or(0),
+                    group_id: row
+                        .try_get::<String>("", "group_id")
+                        .ok()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or(0),
                     region_id: row.try_get("", "region_id").unwrap_or_default(),
                     zone_id: row.try_get("", "zone_id").unwrap_or_default(),
                     service_id: row.try_get("", "service_id").unwrap_or_default(),

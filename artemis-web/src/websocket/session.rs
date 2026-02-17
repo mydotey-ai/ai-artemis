@@ -401,7 +401,12 @@ mod tests {
             let service_id = format!("service-{}", i);
             if let Some(subs) = manager.subscriptions.get(&service_id) {
                 // 每个服务应该有 3-4 个订阅 (10个会话分配到3个服务)
-                assert!(subs.len() >= 3 && subs.len() <= 4, "Service {} should have 3-4 subscriptions, got {}", i, subs.len());
+                assert!(
+                    subs.len() >= 3 && subs.len() <= 4,
+                    "Service {} should have 3-4 subscriptions, got {}",
+                    i,
+                    subs.len()
+                );
             }
         }
     }

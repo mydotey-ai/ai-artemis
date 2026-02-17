@@ -1,6 +1,6 @@
+use crate::error::{ArtemisError, Result};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
-use crate::error::{ArtemisError, Result};
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ArtemisConfig {
@@ -129,34 +129,76 @@ pub struct DatabaseConfig {
     pub max_connections: u32,
 }
 
-fn default_db_type() -> String { "sqlite".to_string() }
-fn default_max_connections() -> u32 { 10 }
+fn default_db_type() -> String {
+    "sqlite".to_string()
+}
+fn default_max_connections() -> u32 {
+    10
+}
 
 // Default functions
-fn default_node_id() -> String { uuid::Uuid::new_v4().to_string() }
-fn default_listen_addr() -> String { "0.0.0.0:8080".to_string() }
-fn default_peer_port() -> u16 { 9090 }
-fn default_region() -> String { "default".to_string() }
-fn default_zone() -> String { "default".to_string() }
+fn default_node_id() -> String {
+    uuid::Uuid::new_v4().to_string()
+}
+fn default_listen_addr() -> String {
+    "0.0.0.0:8080".to_string()
+}
+fn default_peer_port() -> u16 {
+    9090
+}
+fn default_region() -> String {
+    "default".to_string()
+}
+fn default_zone() -> String {
+    "default".to_string()
+}
 
-fn default_replication_enabled() -> bool { true }
-fn default_timeout_secs() -> u64 { 5 }
-fn default_batch_size() -> usize { 100 }
-fn default_batch_interval_ms() -> u64 { 100 }
-fn default_max_retries() -> u32 { 3 }
+fn default_replication_enabled() -> bool {
+    true
+}
+fn default_timeout_secs() -> u64 {
+    5
+}
+fn default_batch_size() -> usize {
+    100
+}
+fn default_batch_interval_ms() -> u64 {
+    100
+}
+fn default_max_retries() -> u32 {
+    3
+}
 
-fn default_ttl_secs() -> u64 { 30 }
-fn default_cleanup_interval_secs() -> u64 { 60 }
+fn default_ttl_secs() -> u64 {
+    30
+}
+fn default_cleanup_interval_secs() -> u64 {
+    60
+}
 
-fn default_cache_enabled() -> bool { true }
-fn default_expiry_secs() -> u64 { 300 }
+fn default_cache_enabled() -> bool {
+    true
+}
+fn default_expiry_secs() -> u64 {
+    300
+}
 
-fn default_ratelimit_enabled() -> bool { true }
-fn default_requests_per_second() -> u32 { 10000 }
-fn default_burst_size() -> u32 { 5000 }
+fn default_ratelimit_enabled() -> bool {
+    true
+}
+fn default_requests_per_second() -> u32 {
+    10000
+}
+fn default_burst_size() -> u32 {
+    5000
+}
 
-fn default_log_level() -> String { "info".to_string() }
-fn default_log_format() -> String { "pretty".to_string() }
+fn default_log_level() -> String {
+    "info".to_string()
+}
+fn default_log_format() -> String {
+    "pretty".to_string()
+}
 
 impl Default for ServerConfig {
     fn default() -> Self {
@@ -173,7 +215,6 @@ impl Default for ServerConfig {
         }
     }
 }
-
 
 impl Default for ReplicationConfig {
     fn default() -> Self {
@@ -198,10 +239,7 @@ impl Default for LeaseConfig {
 
 impl Default for CacheConfig {
     fn default() -> Self {
-        Self {
-            enabled: default_cache_enabled(),
-            expiry_secs: default_expiry_secs(),
-        }
+        Self { enabled: default_cache_enabled(), expiry_secs: default_expiry_secs() }
     }
 }
 
@@ -217,26 +255,28 @@ impl Default for RateLimitConfig {
 
 impl Default for LoggingConfig {
     fn default() -> Self {
-        Self {
-            level: default_log_level(),
-            format: default_log_format(),
-        }
+        Self { level: default_log_level(), format: default_log_format() }
     }
 }
-
 
 impl ArtemisConfig {
     /// Load configuration from a TOML file
     pub fn from_file(path: &str) -> Result<Self> {
-        let content = std::fs::read_to_string(path)
-            .map_err(|e| ArtemisError::Configuration(format!("Failed to read config file {}: {}", path, e)))?;
+        let content = std::fs::read_to_string(path).map_err(|e| {
+            ArtemisError::Configuration(format!("Failed to read config file {}: {}", path, e))
+        })?;
 
         let mut config: ArtemisConfig = toml::from_str(&content)
             .map_err(|e| ArtemisError::Configuration(format!("Failed to parse TOML: {}", e)))?;
 
         // 填充兼容字段
-        config.server.host = config.server.listen_addr.split(':').next().unwrap_or("0.0.0.0").to_string();
-        config.server.port = config.server.listen_addr.split(':').nth(1)
+        config.server.host =
+            config.server.listen_addr.split(':').next().unwrap_or("0.0.0.0").to_string();
+        config.server.port = config
+            .server
+            .listen_addr
+            .split(':')
+            .nth(1)
             .and_then(|p| p.parse().ok())
             .unwrap_or(8080);
         config.server.region_id = config.server.region.clone();
@@ -247,7 +287,6 @@ impl ArtemisConfig {
 
     /// Get listen socket address
     pub fn listen_addr(&self) -> std::net::SocketAddr {
-        self.server.listen_addr.parse()
-            .unwrap_or_else(|_| "0.0.0.0:8080".parse().unwrap())
+        self.server.listen_addr.parse().unwrap_or_else(|_| "0.0.0.0:8080".parse().unwrap())
     }
 }

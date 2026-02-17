@@ -6,13 +6,15 @@ use artemis_management::auth::{AuthManager, UserRole, UserStatus};
 fn test_create_user() {
     let manager = AuthManager::new();
 
-    let user = manager.create_user(
-        "test_user",
-        Some("test@example.com".to_string()),
-        None,
-        "password123",
-        UserRole::Viewer,
-    ).unwrap();
+    let user = manager
+        .create_user(
+            "test_user",
+            Some("test@example.com".to_string()),
+            None,
+            "password123",
+            UserRole::Viewer,
+        )
+        .unwrap();
 
     assert_eq!(user.username, "test_user");
     assert_eq!(user.email, Some("test@example.com".to_string()));
@@ -97,12 +99,14 @@ fn test_authenticate_with_ip_and_user_agent() {
     let manager = AuthManager::new();
     manager.create_user("user1", None, None, "password123", UserRole::Viewer).unwrap();
 
-    let token = manager.authenticate(
-        "user1",
-        "password123",
-        Some("127.0.0.1".to_string()),
-        Some("Mozilla/5.0".to_string()),
-    ).unwrap();
+    let token = manager
+        .authenticate(
+            "user1",
+            "password123",
+            Some("127.0.0.1".to_string()),
+            Some("Mozilla/5.0".to_string()),
+        )
+        .unwrap();
 
     assert!(!token.is_empty());
 }
@@ -178,7 +182,8 @@ fn test_logout_invalid_token() {
 #[test]
 fn test_get_user() {
     let manager = AuthManager::new();
-    let created_user = manager.create_user("user1", None, None, "password123", UserRole::Viewer).unwrap();
+    let created_user =
+        manager.create_user("user1", None, None, "password123", UserRole::Viewer).unwrap();
 
     let user = manager.get_user(&created_user.user_id).unwrap();
 
@@ -214,12 +219,14 @@ fn test_update_user() {
     let manager = AuthManager::new();
     let user = manager.create_user("user1", None, None, "password123", UserRole::Viewer).unwrap();
 
-    let updated = manager.update_user(
-        &user.user_id,
-        Some("new@example.com".to_string()),
-        None,
-        Some(UserRole::Operator),
-    ).unwrap();
+    let updated = manager
+        .update_user(
+            &user.user_id,
+            Some("new@example.com".to_string()),
+            None,
+            Some(UserRole::Operator),
+        )
+        .unwrap();
 
     assert_eq!(updated.email, Some("new@example.com".to_string()));
     assert_eq!(updated.role, UserRole::Operator);
@@ -448,8 +455,22 @@ fn test_login_history_success() {
     let manager = AuthManager::new();
     let user = manager.create_user("user1", None, None, "password123", UserRole::Viewer).unwrap();
 
-    manager.authenticate("user1", "password123", Some("127.0.0.1".to_string()), Some("Chrome".to_string())).unwrap();
-    manager.authenticate("user1", "password123", Some("192.168.1.1".to_string()), Some("Firefox".to_string())).unwrap();
+    manager
+        .authenticate(
+            "user1",
+            "password123",
+            Some("127.0.0.1".to_string()),
+            Some("Chrome".to_string()),
+        )
+        .unwrap();
+    manager
+        .authenticate(
+            "user1",
+            "password123",
+            Some("192.168.1.1".to_string()),
+            Some("Firefox".to_string()),
+        )
+        .unwrap();
 
     let history = manager.get_login_history(&user.user_id, 10);
 
@@ -462,11 +483,28 @@ fn test_login_history_failed_attempts() {
     let user = manager.create_user("user1", None, None, "password123", UserRole::Viewer).unwrap();
 
     // 失败的登录尝试
-    let _ = manager.authenticate("user1", "wrong_password", Some("127.0.0.1".to_string()), Some("Chrome".to_string()));
-    let _ = manager.authenticate("user1", "wrong_password", Some("127.0.0.1".to_string()), Some("Chrome".to_string()));
+    let _ = manager.authenticate(
+        "user1",
+        "wrong_password",
+        Some("127.0.0.1".to_string()),
+        Some("Chrome".to_string()),
+    );
+    let _ = manager.authenticate(
+        "user1",
+        "wrong_password",
+        Some("127.0.0.1".to_string()),
+        Some("Chrome".to_string()),
+    );
 
     // 成功的登录
-    manager.authenticate("user1", "password123", Some("127.0.0.1".to_string()), Some("Chrome".to_string())).unwrap();
+    manager
+        .authenticate(
+            "user1",
+            "password123",
+            Some("127.0.0.1".to_string()),
+            Some("Chrome".to_string()),
+        )
+        .unwrap();
 
     let history = manager.get_login_history(&user.user_id, 10);
 

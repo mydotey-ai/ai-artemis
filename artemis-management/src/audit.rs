@@ -4,14 +4,14 @@ use artemis_core::model::{InstanceOperationRecord, ServerOperationRecord};
 use chrono::Utc;
 use dashmap::DashMap;
 use serde::{Deserialize, Serialize};
-use std::sync::atomic::{AtomicI64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicI64, Ordering};
 
 /// 审计日志记录
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuditLog {
     pub log_id: i64,
-    pub operation_type: String,  // "instance" | "server" | "zone" | "group" | "route"
+    pub operation_type: String, // "instance" | "server" | "zone" | "group" | "route"
     pub target_id: String,
     pub operation: String,
     pub operator_id: String,
@@ -36,10 +36,7 @@ impl Default for AuditManager {
 
 impl AuditManager {
     pub fn new() -> Self {
-        Self {
-            logs: Arc::new(DashMap::new()),
-            next_log_id: Arc::new(AtomicI64::new(1)),
-        }
+        Self { logs: Arc::new(DashMap::new()), next_log_id: Arc::new(AtomicI64::new(1)) }
     }
 
     /// 记录实例操作日志
@@ -118,14 +115,16 @@ impl AuditManager {
                 let log = entry.value();
 
                 if let Some(op_type) = operation_type
-                    && log.operation_type != op_type {
-                        return false;
-                    }
+                    && log.operation_type != op_type
+                {
+                    return false;
+                }
 
                 if let Some(op_id) = operator_id
-                    && log.operator_id != op_id {
-                        return false;
-                    }
+                    && log.operator_id != op_id
+                {
+                    return false;
+                }
 
                 true
             })
@@ -161,14 +160,16 @@ impl AuditManager {
                 }
 
                 if let Some(sid) = service_id
-                    && !log.target_id.starts_with(&format!("{}:", sid)) {
-                        return false;
-                    }
+                    && !log.target_id.starts_with(&format!("{}:", sid))
+                {
+                    return false;
+                }
 
                 if let Some(op_id) = operator_id
-                    && log.operator_id != op_id {
-                        return false;
-                    }
+                    && log.operator_id != op_id
+                {
+                    return false;
+                }
 
                 true
             })
@@ -202,14 +203,16 @@ impl AuditManager {
                 }
 
                 if let Some(sid) = server_id
-                    && !log.target_id.starts_with(&format!("{}:", sid)) {
-                        return false;
-                    }
+                    && !log.target_id.starts_with(&format!("{}:", sid))
+                {
+                    return false;
+                }
 
                 if let Some(op_id) = operator_id
-                    && log.operator_id != op_id {
-                        return false;
-                    }
+                    && log.operator_id != op_id
+                {
+                    return false;
+                }
 
                 true
             })
@@ -252,14 +255,16 @@ impl AuditManager {
                 }
 
                 if let Some(gid) = group_id
-                    && !log.target_id.contains(gid) {
-                        return false;
-                    }
+                    && !log.target_id.contains(gid)
+                {
+                    return false;
+                }
 
                 if let Some(op_id) = operator_id
-                    && log.operator_id != op_id {
-                        return false;
-                    }
+                    && log.operator_id != op_id
+                {
+                    return false;
+                }
 
                 true
             })
@@ -293,14 +298,16 @@ impl AuditManager {
                 }
 
                 if let Some(rid) = rule_id
-                    && !log.target_id.contains(rid) {
-                        return false;
-                    }
+                    && !log.target_id.contains(rid)
+                {
+                    return false;
+                }
 
                 if let Some(op_id) = operator_id
-                    && log.operator_id != op_id {
-                        return false;
-                    }
+                    && log.operator_id != op_id
+                {
+                    return false;
+                }
 
                 true
             })
@@ -335,19 +342,22 @@ impl AuditManager {
                 }
 
                 if let Some(rid) = rule_id
-                    && !log.target_id.contains(&format!("rule:{}", rid)) {
-                        return false;
-                    }
+                    && !log.target_id.contains(&format!("rule:{}", rid))
+                {
+                    return false;
+                }
 
                 if let Some(gid) = group_id
-                    && !log.target_id.contains(&format!("group:{}", gid)) {
-                        return false;
-                    }
+                    && !log.target_id.contains(&format!("group:{}", gid))
+                {
+                    return false;
+                }
 
                 if let Some(op_id) = operator_id
-                    && log.operator_id != op_id {
-                        return false;
-                    }
+                    && log.operator_id != op_id
+                {
+                    return false;
+                }
 
                 true
             })
@@ -382,19 +392,22 @@ impl AuditManager {
                 }
 
                 if let Some(zid) = zone_id
-                    && !log.target_id.contains(&format!("zone:{}", zid)) {
-                        return false;
-                    }
+                    && !log.target_id.contains(&format!("zone:{}", zid))
+                {
+                    return false;
+                }
 
                 if let Some(rid) = region_id
-                    && !log.target_id.contains(&format!("region:{}", rid)) {
-                        return false;
-                    }
+                    && !log.target_id.contains(&format!("region:{}", rid))
+                {
+                    return false;
+                }
 
                 if let Some(op_id) = operator_id
-                    && log.operator_id != op_id {
-                        return false;
-                    }
+                    && log.operator_id != op_id
+                {
+                    return false;
+                }
 
                 true
             })
@@ -429,19 +442,22 @@ impl AuditManager {
                 }
 
                 if let Some(gid) = group_id
-                    && !log.target_id.contains(&format!("group:{}", gid)) {
-                        return false;
-                    }
+                    && !log.target_id.contains(&format!("group:{}", gid))
+                {
+                    return false;
+                }
 
                 if let Some(iid) = instance_id
-                    && !log.target_id.contains(&format!("instance:{}", iid)) {
-                        return false;
-                    }
+                    && !log.target_id.contains(&format!("instance:{}", iid))
+                {
+                    return false;
+                }
 
                 if let Some(op_id) = operator_id
-                    && log.operator_id != op_id {
-                        return false;
-                    }
+                    && log.operator_id != op_id
+                {
+                    return false;
+                }
 
                 true
             })
@@ -478,19 +494,22 @@ impl AuditManager {
 
                 if let Some(sid) = service_id
                     && !log.target_id.contains(&format!("service:{}", sid))
-                    && !log.target_id.starts_with(&format!("{}:", sid)) {
-                        return false;
-                    }
+                    && !log.target_id.starts_with(&format!("{}:", sid))
+                {
+                    return false;
+                }
 
                 if let Some(rid) = region_id
-                    && !log.target_id.contains(&format!("region:{}", rid)) {
-                        return false;
-                    }
+                    && !log.target_id.contains(&format!("region:{}", rid))
+                {
+                    return false;
+                }
 
                 if let Some(op_id) = operator_id
-                    && log.operator_id != op_id {
-                        return false;
-                    }
+                    && log.operator_id != op_id
+                {
+                    return false;
+                }
 
                 true
             })
@@ -664,8 +683,18 @@ mod tests {
     fn test_query_logs_no_filter() {
         let manager = AuditManager::new();
 
-        manager.log_operation("type1".to_string(), "target1".to_string(), "op1".to_string(), "user1".to_string());
-        manager.log_operation("type2".to_string(), "target2".to_string(), "op2".to_string(), "user2".to_string());
+        manager.log_operation(
+            "type1".to_string(),
+            "target1".to_string(),
+            "op1".to_string(),
+            "user1".to_string(),
+        );
+        manager.log_operation(
+            "type2".to_string(),
+            "target2".to_string(),
+            "op2".to_string(),
+            "user2".to_string(),
+        );
 
         let logs = manager.query_logs(None, None, None);
         assert_eq!(logs.len(), 2);
@@ -675,8 +704,18 @@ mod tests {
     fn test_query_logs_with_operation_type_filter() {
         let manager = AuditManager::new();
 
-        manager.log_operation("instance".to_string(), "service-1:us-east:inst-1".to_string(), "pullout".to_string(), "operator-1".to_string());
-        manager.log_operation("server".to_string(), "192.168.1.100:us-east".to_string(), "pullout".to_string(), "operator-2".to_string());
+        manager.log_operation(
+            "instance".to_string(),
+            "service-1:us-east:inst-1".to_string(),
+            "pullout".to_string(),
+            "operator-1".to_string(),
+        );
+        manager.log_operation(
+            "server".to_string(),
+            "192.168.1.100:us-east".to_string(),
+            "pullout".to_string(),
+            "operator-2".to_string(),
+        );
 
         let instance_logs = manager.query_logs(Some("instance"), None, None);
         assert_eq!(instance_logs.len(), 1);
@@ -689,8 +728,18 @@ mod tests {
     fn test_query_logs_with_operator_filter() {
         let manager = AuditManager::new();
 
-        manager.log_operation("type1".to_string(), "target1".to_string(), "op1".to_string(), "operator-1".to_string());
-        manager.log_operation("type2".to_string(), "target2".to_string(), "op2".to_string(), "operator-2".to_string());
+        manager.log_operation(
+            "type1".to_string(),
+            "target1".to_string(),
+            "op1".to_string(),
+            "operator-1".to_string(),
+        );
+        manager.log_operation(
+            "type2".to_string(),
+            "target2".to_string(),
+            "op2".to_string(),
+            "operator-2".to_string(),
+        );
 
         let operator1_logs = manager.query_logs(None, Some("operator-1"), None);
         assert_eq!(operator1_logs.len(), 1);
@@ -718,9 +767,19 @@ mod tests {
     fn test_query_logs_sorting() {
         let manager = AuditManager::new();
 
-        manager.log_operation("type1".to_string(), "target1".to_string(), "op1".to_string(), "user1".to_string());
+        manager.log_operation(
+            "type1".to_string(),
+            "target1".to_string(),
+            "op1".to_string(),
+            "user1".to_string(),
+        );
         std::thread::sleep(std::time::Duration::from_secs(1));
-        manager.log_operation("type2".to_string(), "target2".to_string(), "op2".to_string(), "user2".to_string());
+        manager.log_operation(
+            "type2".to_string(),
+            "target2".to_string(),
+            "op2".to_string(),
+            "user2".to_string(),
+        );
 
         let logs = manager.query_logs(None, None, None);
         assert_eq!(logs.len(), 2);
@@ -735,8 +794,18 @@ mod tests {
     fn test_query_instance_logs_by_service() {
         let manager = AuditManager::new();
 
-        manager.log_operation("instance".to_string(), "service-1:region:inst-1".to_string(), "register".to_string(), "admin".to_string());
-        manager.log_operation("instance".to_string(), "service-2:region:inst-2".to_string(), "register".to_string(), "admin".to_string());
+        manager.log_operation(
+            "instance".to_string(),
+            "service-1:region:inst-1".to_string(),
+            "register".to_string(),
+            "admin".to_string(),
+        );
+        manager.log_operation(
+            "instance".to_string(),
+            "service-2:region:inst-2".to_string(),
+            "register".to_string(),
+            "admin".to_string(),
+        );
 
         let logs = manager.query_instance_logs(Some("service-1"), None, None);
         assert_eq!(logs.len(), 1);
@@ -747,8 +816,18 @@ mod tests {
     fn test_query_instance_logs_by_operator() {
         let manager = AuditManager::new();
 
-        manager.log_operation("instance".to_string(), "service-1:region:inst-1".to_string(), "register".to_string(), "operator-1".to_string());
-        manager.log_operation("instance".to_string(), "service-1:region:inst-2".to_string(), "register".to_string(), "operator-2".to_string());
+        manager.log_operation(
+            "instance".to_string(),
+            "service-1:region:inst-1".to_string(),
+            "register".to_string(),
+            "operator-1".to_string(),
+        );
+        manager.log_operation(
+            "instance".to_string(),
+            "service-1:region:inst-2".to_string(),
+            "register".to_string(),
+            "operator-2".to_string(),
+        );
 
         let logs = manager.query_instance_logs(None, Some("operator-1"), None);
         assert_eq!(logs.len(), 1);
@@ -760,7 +839,12 @@ mod tests {
         let manager = AuditManager::new();
 
         for i in 1..=5 {
-            manager.log_operation("instance".to_string(), format!("service-{}:region:inst-{}", i, i), "register".to_string(), "admin".to_string());
+            manager.log_operation(
+                "instance".to_string(),
+                format!("service-{}:region:inst-{}", i, i),
+                "register".to_string(),
+                "admin".to_string(),
+            );
         }
 
         let logs = manager.query_instance_logs(None, None, Some(2));
@@ -773,8 +857,18 @@ mod tests {
     fn test_query_server_logs_by_server_id() {
         let manager = AuditManager::new();
 
-        manager.log_operation("server".to_string(), "server-1:region-1".to_string(), "pullout".to_string(), "admin".to_string());
-        manager.log_operation("server".to_string(), "server-2:region-1".to_string(), "pullout".to_string(), "admin".to_string());
+        manager.log_operation(
+            "server".to_string(),
+            "server-1:region-1".to_string(),
+            "pullout".to_string(),
+            "admin".to_string(),
+        );
+        manager.log_operation(
+            "server".to_string(),
+            "server-2:region-1".to_string(),
+            "pullout".to_string(),
+            "admin".to_string(),
+        );
 
         let logs = manager.query_server_logs(Some("server-1"), None, None);
         assert_eq!(logs.len(), 1);
@@ -786,7 +880,12 @@ mod tests {
         let manager = AuditManager::new();
 
         for i in 1..=5 {
-            manager.log_operation("server".to_string(), format!("server-{}:region", i), "pullout".to_string(), "admin".to_string());
+            manager.log_operation(
+                "server".to_string(),
+                format!("server-{}:region", i),
+                "pullout".to_string(),
+                "admin".to_string(),
+            );
         }
 
         let logs = manager.query_server_logs(None, None, Some(3));
@@ -800,8 +899,18 @@ mod tests {
         let manager = AuditManager::new();
 
         // 添加一些日志
-        manager.log_operation("test".to_string(), "target-1".to_string(), "create".to_string(), "admin".to_string());
-        manager.log_operation("test".to_string(), "target-2".to_string(), "create".to_string(), "admin".to_string());
+        manager.log_operation(
+            "test".to_string(),
+            "target-1".to_string(),
+            "create".to_string(),
+            "admin".to_string(),
+        );
+        manager.log_operation(
+            "test".to_string(),
+            "target-2".to_string(),
+            "create".to_string(),
+            "admin".to_string(),
+        );
 
         // 验证日志存在
         let logs_before = manager.query_logs(None, None, None);
@@ -819,7 +928,12 @@ mod tests {
     fn test_cleanup_old_logs_retention() {
         let manager = AuditManager::new();
 
-        manager.log_operation("test".to_string(), "target-1".to_string(), "create".to_string(), "admin".to_string());
+        manager.log_operation(
+            "test".to_string(),
+            "target-1".to_string(),
+            "create".to_string(),
+            "admin".to_string(),
+        );
 
         // 保留 30 天的日志(不应该清理刚创建的日志)
         manager.cleanup_old_logs(30);
@@ -834,9 +948,24 @@ mod tests {
     fn test_query_group_logs() {
         let manager = AuditManager::new();
 
-        manager.log_operation("group".to_string(), "group-1".to_string(), "create".to_string(), "admin".to_string());
-        manager.log_operation("group".to_string(), "group-2".to_string(), "update".to_string(), "admin".to_string());
-        manager.log_operation("route_rule".to_string(), "rule-1".to_string(), "create".to_string(), "admin".to_string());
+        manager.log_operation(
+            "group".to_string(),
+            "group-1".to_string(),
+            "create".to_string(),
+            "admin".to_string(),
+        );
+        manager.log_operation(
+            "group".to_string(),
+            "group-2".to_string(),
+            "update".to_string(),
+            "admin".to_string(),
+        );
+        manager.log_operation(
+            "route_rule".to_string(),
+            "rule-1".to_string(),
+            "create".to_string(),
+            "admin".to_string(),
+        );
 
         let logs = manager.query_group_logs(None, None, None);
         assert_eq!(logs.len(), 2);
@@ -849,8 +978,18 @@ mod tests {
     fn test_query_route_rule_logs() {
         let manager = AuditManager::new();
 
-        manager.log_operation("route_rule".to_string(), "rule-1".to_string(), "create".to_string(), "admin".to_string());
-        manager.log_operation("route_rule".to_string(), "rule-2".to_string(), "update".to_string(), "operator-1".to_string());
+        manager.log_operation(
+            "route_rule".to_string(),
+            "rule-1".to_string(),
+            "create".to_string(),
+            "admin".to_string(),
+        );
+        manager.log_operation(
+            "route_rule".to_string(),
+            "rule-2".to_string(),
+            "update".to_string(),
+            "operator-1".to_string(),
+        );
 
         let logs = manager.query_route_rule_logs(None, None, None);
         assert_eq!(logs.len(), 2);
@@ -863,8 +1002,18 @@ mod tests {
     fn test_query_route_rule_group_logs() {
         let manager = AuditManager::new();
 
-        manager.log_operation("route_rule_group".to_string(), "rule:rule-1,group:group-1".to_string(), "add".to_string(), "admin".to_string());
-        manager.log_operation("route_rule_group".to_string(), "rule:rule-1,group:group-2".to_string(), "add".to_string(), "admin".to_string());
+        manager.log_operation(
+            "route_rule_group".to_string(),
+            "rule:rule-1,group:group-1".to_string(),
+            "add".to_string(),
+            "admin".to_string(),
+        );
+        manager.log_operation(
+            "route_rule_group".to_string(),
+            "rule:rule-1,group:group-2".to_string(),
+            "add".to_string(),
+            "admin".to_string(),
+        );
 
         let logs = manager.query_route_rule_group_logs(None, None, None, None);
         assert_eq!(logs.len(), 2);
@@ -880,8 +1029,18 @@ mod tests {
     fn test_query_zone_logs() {
         let manager = AuditManager::new();
 
-        manager.log_operation("zone".to_string(), "region:us-east,zone:zone-1".to_string(), "pullout".to_string(), "admin".to_string());
-        manager.log_operation("zone".to_string(), "region:eu-west,zone:zone-2".to_string(), "pullin".to_string(), "admin".to_string());
+        manager.log_operation(
+            "zone".to_string(),
+            "region:us-east,zone:zone-1".to_string(),
+            "pullout".to_string(),
+            "admin".to_string(),
+        );
+        manager.log_operation(
+            "zone".to_string(),
+            "region:eu-west,zone:zone-2".to_string(),
+            "pullin".to_string(),
+            "admin".to_string(),
+        );
 
         let logs = manager.query_zone_logs(None, None, None, None);
         assert_eq!(logs.len(), 2);
@@ -897,8 +1056,18 @@ mod tests {
     fn test_query_group_instance_logs() {
         let manager = AuditManager::new();
 
-        manager.log_operation("group_instance".to_string(), "group:group-1,instance:inst-1".to_string(), "bind".to_string(), "admin".to_string());
-        manager.log_operation("group_instance".to_string(), "group:group-1,instance:inst-2".to_string(), "bind".to_string(), "admin".to_string());
+        manager.log_operation(
+            "group_instance".to_string(),
+            "group:group-1,instance:inst-1".to_string(),
+            "bind".to_string(),
+            "admin".to_string(),
+        );
+        manager.log_operation(
+            "group_instance".to_string(),
+            "group:group-1,instance:inst-2".to_string(),
+            "bind".to_string(),
+            "admin".to_string(),
+        );
 
         let logs = manager.query_group_instance_logs(None, None, None, None);
         assert_eq!(logs.len(), 2);
@@ -914,8 +1083,18 @@ mod tests {
     fn test_query_service_instance_logs() {
         let manager = AuditManager::new();
 
-        manager.log_operation("service_instance".to_string(), "service:svc-1,region:us-east,instance:inst-1".to_string(), "register".to_string(), "admin".to_string());
-        manager.log_operation("instance".to_string(), "svc-2:us-west:inst-2".to_string(), "unregister".to_string(), "admin".to_string());
+        manager.log_operation(
+            "service_instance".to_string(),
+            "service:svc-1,region:us-east,instance:inst-1".to_string(),
+            "register".to_string(),
+            "admin".to_string(),
+        );
+        manager.log_operation(
+            "instance".to_string(),
+            "svc-2:us-west:inst-2".to_string(),
+            "unregister".to_string(),
+            "admin".to_string(),
+        );
 
         let logs = manager.query_service_instance_logs(None, None, None, None);
         assert_eq!(logs.len(), 2);
@@ -940,7 +1119,12 @@ mod tests {
             );
         }
 
-        manager.log_operation("group".to_string(), "group-6".to_string(), "create".to_string(), "operator-2".to_string());
+        manager.log_operation(
+            "group".to_string(),
+            "group-6".to_string(),
+            "create".to_string(),
+            "operator-2".to_string(),
+        );
 
         let logs = manager.query_group_logs(None, Some("operator-1"), Some(3));
         assert_eq!(logs.len(), 3);

@@ -1,6 +1,6 @@
 use artemis_core::model::{ZoneOperation, ZoneOperationRecord};
-use sea_orm::{DatabaseConnection, Statement, ConnectionTrait};
 use sea_orm::sea_query::Value;
+use sea_orm::{ConnectionTrait, DatabaseConnection, Statement};
 
 pub struct ZoneOperationDao {
     conn: DatabaseConnection,
@@ -50,7 +50,11 @@ impl ZoneOperationDao {
     }
 
     /// 获取 Zone 操作
-    pub async fn get_operation(&self, zone_id: &str, region_id: &str) -> anyhow::Result<Option<ZoneOperationRecord>> {
+    pub async fn get_operation(
+        &self,
+        zone_id: &str,
+        region_id: &str,
+    ) -> anyhow::Result<Option<ZoneOperationRecord>> {
         let stmt = Statement::from_sql_and_values(
             self.conn.get_database_backend(),
             r#"

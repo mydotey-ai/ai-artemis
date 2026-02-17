@@ -8,7 +8,9 @@
 //! - 错误率统计
 //! - 实时进度显示
 
-use artemis_core::model::{HeartbeatRequest, Instance, InstanceKey, InstanceStatus, RegisterRequest};
+use artemis_core::model::{
+    HeartbeatRequest, Instance, InstanceKey, InstanceStatus, RegisterRequest,
+};
 use clap::Parser;
 use hdrhistogram::Histogram;
 use indicatif::{ProgressBar, ProgressStyle};
@@ -76,11 +78,13 @@ impl StressTestStats {
     fn print_summary(&self, duration_secs: u64) {
         println!("\n=== 压力测试结果 ===");
         println!("总请求数: {}", self.total_requests);
-        println!("成功请求: {} ({:.2}%)",
+        println!(
+            "成功请求: {} ({:.2}%)",
             self.successful_requests,
             self.successful_requests as f64 / self.total_requests as f64 * 100.0
         );
-        println!("失败请求: {} ({:.2}%)",
+        println!(
+            "失败请求: {} ({:.2}%)",
             self.failed_requests,
             self.failed_requests as f64 / self.total_requests as f64 * 100.0
         );
@@ -167,16 +171,15 @@ async fn run_stress_test(args: Args) {
     println!();
 
     let stats = Arc::new(Mutex::new(StressTestStats::new()));
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(10))
-        .build()
-        .unwrap();
+    let client = reqwest::Client::builder().timeout(Duration::from_secs(10)).build().unwrap();
 
     // 进度条
     let pb = ProgressBar::new(args.duration);
     pb.set_style(
         ProgressStyle::default_bar()
-            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len}s ({msg})")
+            .template(
+                "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len}s ({msg})",
+            )
             .unwrap()
             .progress_chars("#>-"),
     );
@@ -221,7 +224,9 @@ async fn run_stress_test(args: Args) {
                 // 根据模式执行不同的操作
                 let result = match mode.as_str() {
                     "register" => register_instances(&client, &base_url, instances.clone()).await,
-                    "heartbeat" => heartbeat_instances(&client, &base_url, instance_keys.clone()).await,
+                    "heartbeat" => {
+                        heartbeat_instances(&client, &base_url, instance_keys.clone()).await
+                    }
                     "mixed" => {
                         if request_count.is_multiple_of(10) {
                             register_instances(&client, &base_url, instances.clone()).await

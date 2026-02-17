@@ -16,16 +16,11 @@ pub async fn jwt_auth(
     next: Next,
 ) -> Result<Response, (StatusCode, &'static str)> {
     // 从 header 中提取 token
-    let auth_header = headers
-        .get("Authorization")
-        .and_then(|h| h.to_str().ok());
+    let auth_header = headers.get("Authorization").and_then(|h| h.to_str().ok());
 
     let token = auth_header
         .and_then(|h| h.strip_prefix("Bearer "))
-        .ok_or((
-            StatusCode::UNAUTHORIZED,
-            "Missing or invalid Authorization header",
-        ))?;
+        .ok_or((StatusCode::UNAUTHORIZED, "Missing or invalid Authorization header"))?;
 
     // 验证 token
     let session = state

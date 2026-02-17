@@ -31,11 +31,7 @@ impl ClusterManager {
             nodes.insert(node.node_id.clone(), node);
         }
 
-        Self {
-            node_id,
-            nodes,
-            heartbeat_timeout: Duration::from_secs(30),
-        }
+        Self { node_id, nodes, heartbeat_timeout: Duration::from_secs(30) }
     }
 
     /// 注册新节点
@@ -68,9 +64,7 @@ impl ClusterManager {
     pub fn get_healthy_peers(&self) -> Vec<ClusterNode> {
         self.nodes
             .iter()
-            .filter(|entry| {
-                entry.key() != &self.node_id && entry.value().is_healthy()
-            })
+            .filter(|entry| entry.key() != &self.node_id && entry.value().is_healthy())
             .map(|entry| entry.value().clone())
             .collect()
     }
@@ -216,10 +210,8 @@ mod tests {
 
     #[test]
     fn test_cluster_manager_new_with_peers() {
-        let peers = vec![
-            "http://192.168.1.101:8080".to_string(),
-            "http://192.168.1.102:8080".to_string(),
-        ];
+        let peers =
+            vec!["http://192.168.1.101:8080".to_string(), "http://192.168.1.102:8080".to_string()];
         let manager = ClusterManager::new("node-0".to_string(), peers);
 
         assert_eq!(manager.node_count(), 2);
@@ -302,17 +294,29 @@ mod tests {
 
         assert_eq!(manager.node_count(), 0);
 
-        manager.register_node(ClusterNode::new("node-1".to_string(), "127.0.0.1".to_string(), 8080));
+        manager.register_node(ClusterNode::new(
+            "node-1".to_string(),
+            "127.0.0.1".to_string(),
+            8080,
+        ));
         assert_eq!(manager.node_count(), 1);
 
-        manager.register_node(ClusterNode::new("node-2".to_string(), "127.0.0.2".to_string(), 8080));
+        manager.register_node(ClusterNode::new(
+            "node-2".to_string(),
+            "127.0.0.2".to_string(),
+            8080,
+        ));
         assert_eq!(manager.node_count(), 2);
     }
 
     #[test]
     fn test_cluster_manager_clone() {
         let manager1 = ClusterManager::default();
-        manager1.register_node(ClusterNode::new("node-1".to_string(), "127.0.0.1".to_string(), 8080));
+        manager1.register_node(ClusterNode::new(
+            "node-1".to_string(),
+            "127.0.0.1".to_string(),
+            8080,
+        ));
 
         let manager2 = manager1.clone();
         assert_eq!(manager2.node_count(), 1);
@@ -324,11 +328,8 @@ mod tests {
         let manager = ClusterManager::default();
 
         for i in 1..=5 {
-            let node = ClusterNode::new(
-                format!("node-{}", i),
-                format!("192.168.1.{}", 100 + i),
-                8080,
-            );
+            let node =
+                ClusterNode::new(format!("node-{}", i), format!("192.168.1.{}", 100 + i), 8080);
             manager.register_node(node);
         }
 

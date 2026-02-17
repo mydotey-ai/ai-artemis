@@ -68,9 +68,7 @@ async fn test_get_service_success() {
     repo.register(instance);
 
     // 查询服务
-    let request = GetServiceRequest {
-        discovery_config: create_discovery_config("my-service"),
-    };
+    let request = GetServiceRequest { discovery_config: create_discovery_config("my-service") };
 
     let response = service.get_service(request).await;
 
@@ -87,9 +85,7 @@ async fn test_get_service_not_found() {
     let (service, _repo) = create_test_discovery_service();
 
     // 查询不存在的服务
-    let request = GetServiceRequest {
-        discovery_config: create_discovery_config("non-existent"),
-    };
+    let request = GetServiceRequest { discovery_config: create_discovery_config("non-existent") };
 
     let response = service.get_service(request).await;
 
@@ -106,9 +102,7 @@ async fn test_get_service_case_insensitive() {
     repo.register(instance);
 
     // 用大写查询
-    let request = GetServiceRequest {
-        discovery_config: create_discovery_config("MY-SERVICE"),
-    };
+    let request = GetServiceRequest { discovery_config: create_discovery_config("MY-SERVICE") };
 
     let response = service.get_service(request).await;
 
@@ -126,9 +120,7 @@ async fn test_get_service_multiple_instances() {
     repo.register(create_test_instance("my-service", "inst-2", InstanceStatus::Up));
     repo.register(create_test_instance("my-service", "inst-3", InstanceStatus::Up));
 
-    let request = GetServiceRequest {
-        discovery_config: create_discovery_config("my-service"),
-    };
+    let request = GetServiceRequest { discovery_config: create_discovery_config("my-service") };
 
     let response = service.get_service(request).await;
 
@@ -146,9 +138,7 @@ async fn test_get_service_filters_down_instances() {
     repo.register(create_test_instance("my-service", "inst-2", InstanceStatus::Down));
     repo.register(create_test_instance("my-service", "inst-3", InstanceStatus::Up));
 
-    let request = GetServiceRequest {
-        discovery_config: create_discovery_config("my-service"),
-    };
+    let request = GetServiceRequest { discovery_config: create_discovery_config("my-service") };
 
     let response = service.get_service(request).await;
 
@@ -379,16 +369,12 @@ async fn test_cache_hit_after_first_query() {
     let config = create_discovery_config("my-service");
 
     // 第一次查询 (缓存未命中)
-    let request1 = GetServiceRequest {
-        discovery_config: config.clone(),
-    };
+    let request1 = GetServiceRequest { discovery_config: config.clone() };
     let response1 = service.get_service(request1).await;
     assert!(response1.service.is_some());
 
     // 第二次查询 (应该从缓存获取)
-    let request2 = GetServiceRequest {
-        discovery_config: config,
-    };
+    let request2 = GetServiceRequest { discovery_config: config };
     let response2 = service.get_service(request2).await;
     assert!(response2.service.is_some());
 }
@@ -401,9 +387,7 @@ async fn test_cache_returns_stale_data_until_refresh() {
     repo.register(create_test_instance("my-service", "inst-1", InstanceStatus::Up));
 
     let config = create_discovery_config("my-service");
-    let request1 = GetServiceRequest {
-        discovery_config: config.clone(),
-    };
+    let request1 = GetServiceRequest { discovery_config: config.clone() };
     let response1 = service.get_service(request1).await;
     assert_eq!(response1.service.unwrap().instances.len(), 1);
 
@@ -411,9 +395,7 @@ async fn test_cache_returns_stale_data_until_refresh() {
     repo.register(create_test_instance("my-service", "inst-2", InstanceStatus::Up));
 
     // 再次查询,因为缓存已存在,会返回缓存数据 (仍然是 1 个实例)
-    let request2 = GetServiceRequest {
-        discovery_config: config.clone(),
-    };
+    let request2 = GetServiceRequest { discovery_config: config.clone() };
     let response2 = service.get_service(request2).await;
 
     // 缓存未更新,仍然是 1 个实例
@@ -421,9 +403,7 @@ async fn test_cache_returns_stale_data_until_refresh() {
 
     // 刷新缓存后,应该看到 2 个实例
     service.refresh_cache();
-    let request3 = GetServiceRequest {
-        discovery_config: config,
-    };
+    let request3 = GetServiceRequest { discovery_config: config };
     let response3 = service.get_service(request3).await;
     assert_eq!(response3.service.unwrap().instances.len(), 2);
 }
@@ -435,9 +415,7 @@ async fn test_get_service_empty_instances() {
     let (service, _repo) = create_test_discovery_service();
 
     // 查询没有实例的服务
-    let request = GetServiceRequest {
-        discovery_config: create_discovery_config("empty-service"),
-    };
+    let request = GetServiceRequest { discovery_config: create_discovery_config("empty-service") };
 
     let response = service.get_service(request).await;
 
@@ -453,9 +431,7 @@ async fn test_get_service_all_instances_down() {
     repo.register(create_test_instance("my-service", "inst-1", InstanceStatus::Down));
     repo.register(create_test_instance("my-service", "inst-2", InstanceStatus::Down));
 
-    let request = GetServiceRequest {
-        discovery_config: create_discovery_config("my-service"),
-    };
+    let request = GetServiceRequest { discovery_config: create_discovery_config("my-service") };
 
     let response = service.get_service(request).await;
 
@@ -491,17 +467,12 @@ async fn test_get_service_performance_with_many_instances() {
 
     // 注册 100 个实例
     for i in 0..100 {
-        let instance = create_test_instance(
-            "my-service",
-            &format!("inst-{}", i),
-            InstanceStatus::Up,
-        );
+        let instance =
+            create_test_instance("my-service", &format!("inst-{}", i), InstanceStatus::Up);
         repo.register(instance);
     }
 
-    let request = GetServiceRequest {
-        discovery_config: create_discovery_config("my-service"),
-    };
+    let request = GetServiceRequest { discovery_config: create_discovery_config("my-service") };
 
     // 查询应该成功
     let response = service.get_service(request).await;
@@ -548,16 +519,12 @@ async fn test_concurrent_get_service() {
     let service_clone2 = service.clone();
 
     let handle1 = tokio::spawn(async move {
-        let request = GetServiceRequest {
-            discovery_config: create_discovery_config("my-service"),
-        };
+        let request = GetServiceRequest { discovery_config: create_discovery_config("my-service") };
         service_clone1.get_service(request).await
     });
 
     let handle2 = tokio::spawn(async move {
-        let request = GetServiceRequest {
-            discovery_config: create_discovery_config("my-service"),
-        };
+        let request = GetServiceRequest { discovery_config: create_discovery_config("my-service") };
         service_clone2.get_service(request).await
     });
 

@@ -1,8 +1,14 @@
 use crate::websocket::SessionManager;
-use artemis_management::{AuditManager, AuthManager, CanaryManager, GroupManager, InstanceManager, RouteManager, ZoneManager};
+use artemis_management::{
+    AuditManager, AuthManager, CanaryManager, GroupManager, InstanceManager, RouteManager,
+    ZoneManager,
+};
 use artemis_server::{
-    cache::VersionedCacheManager, cluster::ClusterManager, discovery::{DiscoveryServiceImpl, LoadBalancer},
-    replication::ReplicationManager, RegistryServiceImpl, StatusService,
+    RegistryServiceImpl, StatusService,
+    cache::VersionedCacheManager,
+    cluster::ClusterManager,
+    discovery::{DiscoveryServiceImpl, LoadBalancer},
+    replication::ReplicationManager,
 };
 use std::sync::Arc;
 

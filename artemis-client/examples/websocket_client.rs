@@ -4,9 +4,7 @@ use std::sync::Arc;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     // Use DEBUG level to observe ping/pong health check messages
-    tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::DEBUG)
-        .init();
+    tracing_subscriber::fmt().with_max_level(tracing::Level::DEBUG).init();
 
     let config = ClientConfig {
         server_urls: vec!["http://localhost:8080".to_string()],

@@ -6,9 +6,7 @@
 //! - GroupRoutingFilter: 根据路由规则过滤实例
 //! - DiscoveryFilterChain: 过滤器链组合测试
 
-use artemis_core::model::{
-    DiscoveryConfig, Instance, InstanceStatus, Service,
-};
+use artemis_core::model::{DiscoveryConfig, Instance, InstanceStatus, Service};
 use artemis_management::{InstanceManager, RouteManager};
 use artemis_server::discovery::filter::{
     DiscoveryFilter, DiscoveryFilterChain, GroupRoutingFilter, ManagementDiscoveryFilter,
@@ -18,11 +16,7 @@ use artemis_server::routing::RouteEngine;
 use std::sync::Arc;
 
 /// 创建测试实例
-fn create_test_instance(
-    service_id: &str,
-    instance_id: &str,
-    status: InstanceStatus,
-) -> Instance {
+fn create_test_instance(service_id: &str, instance_id: &str, status: InstanceStatus) -> Instance {
     Instance {
         region_id: "test-region".to_string(),
         zone_id: "test-zone".to_string(),
@@ -162,7 +156,12 @@ async fn test_management_filter_removes_server_pulled_out() {
     let instance_manager = Arc::new(InstanceManager::new());
 
     // 拉出服务器
-    let _ = instance_manager.pull_out_server("192.168.1.100", "test-region", "test-operator".to_string(), true);
+    let _ = instance_manager.pull_out_server(
+        "192.168.1.100",
+        "test-region",
+        "test-operator".to_string(),
+        true,
+    );
 
     let filter = ManagementDiscoveryFilter::new(instance_manager);
     let config = create_discovery_config("my-service");
@@ -413,9 +412,7 @@ async fn test_filter_chain_default_constructor() {
     let chain = DiscoveryFilterChain::default();
     let config = create_discovery_config("my-service");
 
-    let instances = vec![
-        create_test_instance("my-service", "inst-1", InstanceStatus::Up),
-    ];
+    let instances = vec![create_test_instance("my-service", "inst-1", InstanceStatus::Up)];
 
     let mut service = create_test_service("my-service", instances);
     chain.apply(&mut service, &config).await.unwrap();

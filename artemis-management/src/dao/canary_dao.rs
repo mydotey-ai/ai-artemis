@@ -1,6 +1,6 @@
 use artemis_core::model::CanaryConfig;
-use sea_orm::{DatabaseConnection, Statement, ConnectionTrait};
 use sea_orm::sea_query::Value;
+use sea_orm::{ConnectionTrait, DatabaseConnection, Statement};
 
 pub struct CanaryConfigDao {
     conn: DatabaseConnection,

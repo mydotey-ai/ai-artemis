@@ -10,17 +10,13 @@
 //! Run with: cargo run --example enterprise_client
 //! Run with metrics: cargo run --example enterprise_client --features metrics
 
-use artemis_client::{
-    AddressManager, ClientConfig, FilterChain, RegistryClient, StatusFilter,
-};
+use artemis_client::{AddressManager, ClientConfig, FilterChain, RegistryClient, StatusFilter};
 use artemis_core::model::{Instance, InstanceStatus};
 use std::sync::Arc;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::INFO)
-        .init();
+    tracing_subscriber::fmt().with_max_level(tracing::Level::INFO).init();
 
     println!("=== Artemis Enterprise Client Example ===\n");
 
@@ -61,9 +57,7 @@ async fn main() -> anyhow::Result<()> {
     println!("   Random address: {:?}", random_addr);
 
     // Simulate failover
-    addr_manager
-        .mark_unavailable("http://localhost:8080")
-        .await;
+    addr_manager.mark_unavailable("http://localhost:8080").await;
     let failover_addr = addr_manager.get_random_address().await;
     println!("   After marking 8080 down: {:?}", failover_addr);
 
@@ -114,10 +108,7 @@ async fn main() -> anyhow::Result<()> {
         CLIENT_METRICS.record_http_status(200);
 
         println!("   Heartbeat total: {}", CLIENT_METRICS.heartbeat_total.get());
-        println!(
-            "   Discovery total: {}",
-            CLIENT_METRICS.discovery_total.get()
-        );
+        println!("   Discovery total: {}", CLIENT_METRICS.discovery_total.get());
         println!();
     }
 

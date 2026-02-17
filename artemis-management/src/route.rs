@@ -5,13 +5,13 @@
 //! - Rule-group associations
 //! - Rule publishing/unpublishing
 
+use crate::dao::RouteRuleDao;
+use crate::db::Database;
 use artemis_core::model::{RouteRule, RouteRuleGroup, RouteRuleStatus};
 use dashmap::DashMap;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicI64, Ordering};
 use tracing::info;
-use crate::db::Database;
-use crate::dao::RouteRuleDao;
 
 /// 路由规则管理器
 #[derive(Clone)]
@@ -196,8 +196,8 @@ impl RouteManager {
     // === 规则发布管理 ===
 
     pub fn publish_rule(&self, rule_id: &str) -> Result<(), String> {
-        let mut rule = self.get_rule(rule_id)
-            .ok_or_else(|| format!("Route rule {} not found", rule_id))?;
+        let mut rule =
+            self.get_rule(rule_id).ok_or_else(|| format!("Route rule {} not found", rule_id))?;
 
         rule.status = RouteRuleStatus::Active;
         self.rules.insert(rule_id.to_string(), rule);
@@ -207,8 +207,8 @@ impl RouteManager {
     }
 
     pub fn unpublish_rule(&self, rule_id: &str) -> Result<(), String> {
-        let mut rule = self.get_rule(rule_id)
-            .ok_or_else(|| format!("Route rule {} not found", rule_id))?;
+        let mut rule =
+            self.get_rule(rule_id).ok_or_else(|| format!("Route rule {} not found", rule_id))?;
 
         rule.status = RouteRuleStatus::Inactive;
         self.rules.insert(rule_id.to_string(), rule);

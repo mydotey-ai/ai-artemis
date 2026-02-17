@@ -205,10 +205,7 @@ mod tests {
 
     #[test]
     fn test_heartbeat_interval_calculation() {
-        let config = ClientConfig {
-            heartbeat_interval_secs: 20,
-            ..Default::default()
-        };
+        let config = ClientConfig { heartbeat_interval_secs: 20, ..Default::default() };
 
         let interval = config.heartbeat_interval();
         assert_eq!(interval, Duration::from_secs(20));
@@ -216,10 +213,7 @@ mod tests {
 
     #[test]
     fn test_heartbeat_ttl_calculation() {
-        let config = ClientConfig {
-            heartbeat_ttl_secs: 60,
-            ..Default::default()
-        };
+        let config = ClientConfig { heartbeat_ttl_secs: 60, ..Default::default() };
 
         let ttl = config.heartbeat_ttl();
         assert_eq!(ttl, Duration::from_secs(60));
@@ -227,10 +221,7 @@ mod tests {
 
     #[test]
     fn test_http_retry_interval_calculation() {
-        let config = ClientConfig {
-            http_retry_interval_ms: 150,
-            ..Default::default()
-        };
+        let config = ClientConfig { http_retry_interval_ms: 150, ..Default::default() };
 
         let interval = config.http_retry_interval();
         assert_eq!(interval, Duration::from_millis(150));

@@ -22,7 +22,11 @@ use artemis_server::{
     lease::LeaseManager, registry::RegistryRepository,
 };
 use artemis_web::{api::replication, state::AppState};
-use axum::{Json, extract::State, http::{HeaderMap, StatusCode}};
+use axum::{
+    Json,
+    extract::State,
+    http::{HeaderMap, StatusCode},
+};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -41,10 +45,8 @@ fn create_test_app_state() -> AppState {
         None,
     ));
 
-    let discovery_service = Arc::new(artemis_server::discovery::DiscoveryServiceImpl::new(
-        repository,
-        cache.clone(),
-    ));
+    let discovery_service =
+        Arc::new(artemis_server::discovery::DiscoveryServiceImpl::new(repository, cache.clone()));
 
     let session_manager = Arc::new(artemis_web::websocket::SessionManager::new());
     let instance_manager = Arc::new(artemis_management::InstanceManager::new());
@@ -167,20 +169,13 @@ async fn test_replicate_heartbeat_success() {
 
     // 先注册实例
     let instance = create_test_instance("inst-1");
-    let reg_request = ReplicateRegisterRequest {
-        instances: vec![instance.clone()],
-    };
-    let _ = replication::replicate_register(
-        State(state.clone()),
-        headers.clone(),
-        Json(reg_request),
-    )
-    .await;
+    let reg_request = ReplicateRegisterRequest { instances: vec![instance.clone()] };
+    let _ =
+        replication::replicate_register(State(state.clone()), headers.clone(), Json(reg_request))
+            .await;
 
     // 心跳测试
-    let hb_request = ReplicateHeartbeatRequest {
-        instance_keys: vec![instance.key()],
-    };
+    let hb_request = ReplicateHeartbeatRequest { instance_keys: vec![instance.key()] };
     let result = replication::replicate_heartbeat(State(state), headers, Json(hb_request)).await;
 
     assert!(result.is_ok());
@@ -193,9 +188,7 @@ async fn test_replicate_heartbeat_without_header() {
     let state = create_test_app_state();
     let headers = HeaderMap::new();
     let instance = create_test_instance("inst-1");
-    let request = ReplicateHeartbeatRequest {
-        instance_keys: vec![instance.key()],
-    };
+    let request = ReplicateHeartbeatRequest { instance_keys: vec![instance.key()] };
 
     let result = replication::replicate_heartbeat(State(state), headers, Json(request)).await;
 
@@ -212,20 +205,13 @@ async fn test_replicate_unregister_success() {
 
     // 先注册实例
     let instance = create_test_instance("inst-1");
-    let reg_request = ReplicateRegisterRequest {
-        instances: vec![instance.clone()],
-    };
-    let _ = replication::replicate_register(
-        State(state.clone()),
-        headers.clone(),
-        Json(reg_request),
-    )
-    .await;
+    let reg_request = ReplicateRegisterRequest { instances: vec![instance.clone()] };
+    let _ =
+        replication::replicate_register(State(state.clone()), headers.clone(), Json(reg_request))
+            .await;
 
     // 注销测试
-    let unreg_request = ReplicateUnregisterRequest {
-        instance_keys: vec![instance.key()],
-    };
+    let unreg_request = ReplicateUnregisterRequest { instance_keys: vec![instance.key()] };
     let result =
         replication::replicate_unregister(State(state), headers, Json(unreg_request)).await;
 
@@ -239,9 +225,7 @@ async fn test_replicate_unregister_without_header() {
     let state = create_test_app_state();
     let headers = HeaderMap::new();
     let instance = create_test_instance("inst-1");
-    let request = ReplicateUnregisterRequest {
-        instance_keys: vec![instance.key()],
-    };
+    let request = ReplicateUnregisterRequest { instance_keys: vec![instance.key()] };
 
     let result = replication::replicate_unregister(State(state), headers, Json(request)).await;
 
@@ -268,10 +252,7 @@ async fn test_get_all_services_with_instances() {
     let headers = create_replication_headers();
 
     // 注册一些实例
-    let instances = vec![
-        create_test_instance("inst-1"),
-        create_test_instance("inst-2"),
-    ];
+    let instances = vec![create_test_instance("inst-1"), create_test_instance("inst-2")];
     let reg_request = ReplicateRegisterRequest { instances };
     let _ = replication::replicate_register(State(state.clone()), headers, Json(reg_request)).await;
 
@@ -302,7 +283,10 @@ async fn test_batch_register_success() {
     assert!(result.is_ok());
     let response = result.unwrap().0;
     assert_eq!(response.response_status.error_code, ErrorCode::Success);
-    assert!(response.failed_instances.is_none() || response.failed_instances.as_ref().unwrap().is_empty());
+    assert!(
+        response.failed_instances.is_none()
+            || response.failed_instances.as_ref().unwrap().is_empty()
+    );
 }
 
 #[tokio::test]
@@ -326,15 +310,10 @@ async fn test_batch_heartbeat_success() {
     let headers = create_replication_headers();
 
     // 先批量注册
-    let instances = vec![
-        create_test_instance("inst-1"),
-        create_test_instance("inst-2"),
-    ];
-    let reg_request = BatchRegisterRequest {
-        instances: instances.clone(),
-    };
-    let _ = replication::batch_register(State(state.clone()), headers.clone(), Json(reg_request))
-        .await;
+    let instances = vec![create_test_instance("inst-1"), create_test_instance("inst-2")];
+    let reg_request = BatchRegisterRequest { instances: instances.clone() };
+    let _ =
+        replication::batch_register(State(state.clone()), headers.clone(), Json(reg_request)).await;
 
     // 批量心跳
     let keys: Vec<InstanceKey> = instances.iter().map(|i| i.key()).collect();
@@ -344,7 +323,10 @@ async fn test_batch_heartbeat_success() {
     assert!(result.is_ok());
     let response = result.unwrap().0;
     assert_eq!(response.response_status.error_code, ErrorCode::Success);
-    assert!(response.failed_instance_keys.is_none() || response.failed_instance_keys.as_ref().unwrap().is_empty());
+    assert!(
+        response.failed_instance_keys.is_none()
+            || response.failed_instance_keys.as_ref().unwrap().is_empty()
+    );
 }
 
 #[tokio::test]
@@ -352,9 +334,7 @@ async fn test_batch_heartbeat_without_header() {
     let state = create_test_app_state();
     let headers = HeaderMap::new();
     let instance = create_test_instance("inst-1");
-    let request = BatchHeartbeatRequest {
-        instance_keys: vec![instance.key()],
-    };
+    let request = BatchHeartbeatRequest { instance_keys: vec![instance.key()] };
 
     let result = replication::batch_heartbeat(State(state), headers, Json(request)).await;
 
@@ -370,15 +350,10 @@ async fn test_batch_unregister_success() {
     let headers = create_replication_headers();
 
     // 先批量注册
-    let instances = vec![
-        create_test_instance("inst-1"),
-        create_test_instance("inst-2"),
-    ];
-    let reg_request = BatchRegisterRequest {
-        instances: instances.clone(),
-    };
-    let _ = replication::batch_register(State(state.clone()), headers.clone(), Json(reg_request))
-        .await;
+    let instances = vec![create_test_instance("inst-1"), create_test_instance("inst-2")];
+    let reg_request = BatchRegisterRequest { instances: instances.clone() };
+    let _ =
+        replication::batch_register(State(state.clone()), headers.clone(), Json(reg_request)).await;
 
     // 批量注销
     let keys: Vec<InstanceKey> = instances.iter().map(|i| i.key()).collect();
@@ -388,7 +363,10 @@ async fn test_batch_unregister_success() {
     assert!(result.is_ok());
     let response = result.unwrap().0;
     assert_eq!(response.response_status.error_code, ErrorCode::Success);
-    assert!(response.failed_instance_keys.is_none() || response.failed_instance_keys.as_ref().unwrap().is_empty());
+    assert!(
+        response.failed_instance_keys.is_none()
+            || response.failed_instance_keys.as_ref().unwrap().is_empty()
+    );
 }
 
 #[tokio::test]
@@ -396,9 +374,7 @@ async fn test_batch_unregister_without_header() {
     let state = create_test_app_state();
     let headers = HeaderMap::new();
     let instance = create_test_instance("inst-1");
-    let request = BatchUnregisterRequest {
-        instance_keys: vec![instance.key()],
-    };
+    let request = BatchUnregisterRequest { instance_keys: vec![instance.key()] };
 
     let result = replication::batch_unregister(State(state), headers, Json(request)).await;
 
@@ -440,10 +416,7 @@ async fn test_sync_full_data() {
     let headers = create_replication_headers();
 
     // 先注册一些实例
-    let instances = vec![
-        create_test_instance("inst-1"),
-        create_test_instance("inst-2"),
-    ];
+    let instances = vec![create_test_instance("inst-1"), create_test_instance("inst-2")];
     let reg_request = ReplicateRegisterRequest { instances };
     let _ = replication::replicate_register(State(state.clone()), headers, Json(reg_request)).await;
 
@@ -468,34 +441,19 @@ async fn test_batch_operations_empty_list() {
     let headers = create_replication_headers();
 
     // 空列表批量注册
-    let reg_request = BatchRegisterRequest {
-        instances: vec![],
-    };
-    let result = replication::batch_register(
-        State(state.clone()),
-        headers.clone(),
-        Json(reg_request),
-    )
-    .await;
+    let reg_request = BatchRegisterRequest { instances: vec![] };
+    let result =
+        replication::batch_register(State(state.clone()), headers.clone(), Json(reg_request)).await;
     assert!(result.is_ok());
 
     // 空列表批量心跳
-    let hb_request = BatchHeartbeatRequest {
-        instance_keys: vec![],
-    };
-    let result = replication::batch_heartbeat(
-        State(state.clone()),
-        headers.clone(),
-        Json(hb_request),
-    )
-    .await;
+    let hb_request = BatchHeartbeatRequest { instance_keys: vec![] };
+    let result =
+        replication::batch_heartbeat(State(state.clone()), headers.clone(), Json(hb_request)).await;
     assert!(result.is_ok());
 
     // 空列表批量注销
-    let unreg_request = BatchUnregisterRequest {
-        instance_keys: vec![],
-    };
-    let result =
-        replication::batch_unregister(State(state), headers, Json(unreg_request)).await;
+    let unreg_request = BatchUnregisterRequest { instance_keys: vec![] };
+    let result = replication::batch_unregister(State(state), headers, Json(unreg_request)).await;
     assert!(result.is_ok());
 }

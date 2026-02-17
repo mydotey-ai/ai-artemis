@@ -33,10 +33,8 @@ fn create_test_app_state() -> AppState {
         None,
     ));
 
-    let discovery_service = Arc::new(artemis_server::discovery::DiscoveryServiceImpl::new(
-        repository,
-        cache.clone(),
-    ));
+    let discovery_service =
+        Arc::new(artemis_server::discovery::DiscoveryServiceImpl::new(repository, cache.clone()));
 
     let session_manager = Arc::new(artemis_web::websocket::SessionManager::new());
     let instance_manager = Arc::new(artemis_management::InstanceManager::new());
@@ -49,11 +47,11 @@ fn create_test_app_state() -> AppState {
     let status_service = Arc::new(artemis_server::StatusService::new(
         None, // cluster_manager
         lease_manager.clone(),
-        "test-node".to_string(), // node_id
-        "test-region".to_string(), // region_id
-        "test-zone".to_string(), // zone_id
+        "test-node".to_string(),             // node_id
+        "test-region".to_string(),           // region_id
+        "test-zone".to_string(),             // zone_id
         "http://localhost:8080".to_string(), // server_url
-        "test-app".to_string(), // app_id
+        "test-app".to_string(),              // app_id
     ));
 
     let auth_manager = Arc::new(artemis_management::auth::AuthManager::new());
@@ -109,9 +107,7 @@ async fn test_get_service_success() {
         create_test_instance("my-service", "inst-1"),
         create_test_instance("my-service", "inst-2"),
     ];
-    let reg_request = RegisterRequest {
-        instances: instances.clone(),
-    };
+    let reg_request = RegisterRequest { instances: instances.clone() };
     let _ = artemis_web::api::registry::register(State(state.clone()), Json(reg_request)).await;
 
     // 等待缓存更新
@@ -165,9 +161,7 @@ async fn test_get_service_filters_down_instances() {
     let mut inst2 = create_test_instance("my-service", "inst-down");
     inst2.status = InstanceStatus::Down;
 
-    let reg_request = RegisterRequest {
-        instances: vec![inst1, inst2],
-    };
+    let reg_request = RegisterRequest { instances: vec![inst1, inst2] };
     let _ = artemis_web::api::registry::register(State(state.clone()), Json(reg_request)).await;
 
     tokio::time::sleep(Duration::from_millis(100)).await;
@@ -222,7 +216,6 @@ async fn test_get_service_cache_version() {
         },
     };
     let _response2 = discovery::get_service(State(state), Json(request2)).await;
-
 }
 
 // ============================================================================

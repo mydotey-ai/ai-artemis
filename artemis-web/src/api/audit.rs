@@ -2,10 +2,10 @@
 
 use crate::state::AppState;
 use axum::{
+    Json,
     extract::{Query, State},
     http::StatusCode,
     response::IntoResponse,
-    Json,
 };
 use serde::{Deserialize, Serialize};
 
@@ -20,11 +20,7 @@ pub struct ApiResponse<T> {
 
 impl<T> ApiResponse<T> {
     pub fn success(data: T) -> Self {
-        Self {
-            success: true,
-            data: Some(data),
-            message: None,
-        }
+        Self { success: true, data: Some(data), message: None }
     }
 }
 
@@ -346,11 +342,7 @@ mod tests {
 
     #[test]
     fn test_query_logs_params_all_none() {
-        let params = QueryLogsParams {
-            operation_type: None,
-            operator_id: None,
-            limit: None,
-        };
+        let params = QueryLogsParams { operation_type: None, operator_id: None, limit: None };
         assert!(params.operation_type.is_none());
         assert!(params.operator_id.is_none());
         assert!(params.limit.is_none());

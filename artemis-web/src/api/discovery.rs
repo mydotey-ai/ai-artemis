@@ -1,7 +1,12 @@
 use crate::state::AppState;
 use artemis_core::{model::*, traits::DiscoveryService};
 use artemis_server::discovery::LoadBalanceStrategy;
-use axum::{http::StatusCode, response::IntoResponse, Json, extract::{State, Query}};
+use axum::{
+    Json,
+    extract::{Query, State},
+    http::StatusCode,
+    response::IntoResponse,
+};
 use serde::{Deserialize, Serialize};
 
 // ===== GET Service API (POST 版本) =====
@@ -96,9 +101,8 @@ pub async fn lookup_instance(
     Json(request): Json<LookupRequest>,
 ) -> impl IntoResponse {
     // 1. 先获取服务的所有实例
-    let get_service_request = GetServiceRequest {
-        discovery_config: request.discovery_config.clone(),
-    };
+    let get_service_request =
+        GetServiceRequest { discovery_config: request.discovery_config.clone() };
 
     let response = state.discovery_service.get_service(get_service_request).await;
 
@@ -140,18 +144,12 @@ pub async fn lookup_instance(
         _ => LoadBalanceStrategy::Random, // 默认随机
     };
 
-    let selected_instance = state
-        .load_balancer
-        .select_instance(&service.instances, strategy);
+    let selected_instance = state.load_balancer.select_instance(&service.instances, strategy);
 
     match selected_instance {
         Some(instance) => (
             StatusCode::OK,
-            Json(LookupResponse {
-                success: true,
-                instance: Some(instance),
-                message: None,
-            }),
+            Json(LookupResponse { success: true, instance: Some(instance), message: None }),
         ),
         None => (
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -163,7 +161,6 @@ pub async fn lookup_instance(
         ),
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -177,19 +174,15 @@ mod tests {
             zone_id: "zone1".to_string(),
             discovery_data: None,
         };
-        let req = GetServiceRequest {
-            discovery_config: config.clone(),
-        };
+        let req = GetServiceRequest { discovery_config: config.clone() };
         assert_eq!(req.discovery_config.service_id, "test-service");
         assert_eq!(req.discovery_config.region_id, "us-east");
     }
 
     #[test]
     fn test_get_services_request() {
-        let req = GetServicesRequest {
-            region_id: "us-west".to_string(),
-            zone_id: "zone2".to_string(),
-        };
+        let req =
+            GetServicesRequest { region_id: "us-west".to_string(), zone_id: "zone2".to_string() };
         assert_eq!(req.region_id, "us-west");
         assert_eq!(req.zone_id, "zone2");
     }
@@ -199,7 +192,7 @@ mod tests {
         use std::collections::HashMap;
         let mut data = HashMap::new();
         data.insert("key1".to_string(), "value1".to_string());
-        
+
         let config = DiscoveryConfig {
             service_id: "service1".to_string(),
             region_id: "us-east".to_string(),

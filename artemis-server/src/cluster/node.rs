@@ -44,17 +44,13 @@ impl ClusterNode {
     /// 从 URL 创建节点(格式: "host:port" 或 "http://host:port")
     pub fn new_from_url(url: String) -> Self {
         // 移除协议前缀
-        let url_clean = url
-            .strip_prefix("http://")
-            .or_else(|| url.strip_prefix("https://"))
-            .unwrap_or(&url);
+        let url_clean =
+            url.strip_prefix("http://").or_else(|| url.strip_prefix("https://")).unwrap_or(&url);
 
         // 解析 host:port
         let parts: Vec<&str> = url_clean.split(':').collect();
         let address = parts.first().unwrap_or(&"127.0.0.1").to_string();
-        let port = parts.get(1)
-            .and_then(|p| p.parse().ok())
-            .unwrap_or(8080);
+        let port = parts.get(1).and_then(|p| p.parse().ok()).unwrap_or(8080);
 
         // 生成节点 ID (使用地址:端口作为 ID)
         let node_id = format!("{}:{}", address, port);

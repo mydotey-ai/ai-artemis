@@ -126,10 +126,7 @@ pub struct GroupOperation {
 impl ServiceGroup {
     /// 生成分组唯一键: service_id:region_id:zone_id:name
     pub fn group_key(&self) -> String {
-        format!(
-            "{}:{}:{}:{}",
-            self.service_id, self.region_id, self.zone_id, self.name
-        )
+        format!("{}:{}:{}:{}", self.service_id, self.region_id, self.zone_id, self.name)
     }
 }
 
@@ -190,10 +187,7 @@ mod tests {
             group_type: GroupType::Physical,
             status: GroupStatus::Active,
             description: Some("Test group".to_string()),
-            tags: Some(vec![GroupTag {
-                key: "env".to_string(),
-                value: "prod".to_string(),
-            }]),
+            tags: Some(vec![GroupTag { key: "env".to_string(), value: "prod".to_string() }]),
             metadata: None,
             created_at: Some(1234567890),
             updated_at: Some(1234567890),

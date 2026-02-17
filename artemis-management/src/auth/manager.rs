@@ -1,18 +1,20 @@
-use crate::auth::model::{User, UserRole, UserStatus, Session, LoginHistory, LoginStatus, JwtClaims};
-use crate::auth::dao::{UserDao, SessionDao};
+use crate::auth::dao::{SessionDao, UserDao};
+use crate::auth::model::{
+    JwtClaims, LoginHistory, LoginStatus, Session, User, UserRole, UserStatus,
+};
 use crate::db::Database;
 use dashmap::DashMap;
+use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicI64, Ordering};
-use jsonwebtoken::{encode, decode, Header, Validation, EncodingKey, DecodingKey};
 
 pub struct AuthManager {
     // 内存存储
-    users: Arc<DashMap<String, User>>,                    // user_id -> User
-    username_map: Arc<DashMap<String, String>>,           // username -> user_id
-    sessions: Arc<DashMap<String, Session>>,              // session_id -> Session
-    token_map: Arc<DashMap<String, String>>,              // token -> session_id
-    login_history: Arc<DashMap<i64, LoginHistory>>,      // history_id -> LoginHistory
+    users: Arc<DashMap<String, User>>,          // user_id -> User
+    username_map: Arc<DashMap<String, String>>, // username -> user_id
+    sessions: Arc<DashMap<String, Session>>,    // session_id -> Session
+    token_map: Arc<DashMap<String, String>>,    // token -> session_id
+    login_history: Arc<DashMap<i64, LoginHistory>>, // history_id -> LoginHistory
 
     // ID 生成
     next_history_id: Arc<AtomicI64>,
@@ -77,8 +79,11 @@ impl AuthManager {
                 }
             }
 
-            tracing::info!("Loaded {} users and {} active sessions from database",
-                self.users.len(), self.sessions.len());
+            tracing::info!(
+                "Loaded {} users and {} active sessions from database",
+                self.users.len(),
+                self.sessions.len()
+            );
         }
 
         Ok(())
@@ -93,23 +98,35 @@ impl AuthManager {
         user_agent: Option<String>,
     ) -> Result<String, String> {
         // 获取用户
-        let user_id = self.username_map.get(username)
+        let user_id = self
+            .username_map
+            .get(username)
             .ok_or_else(|| "Invalid username or password".to_string())?;
 
-        let user = self.users.get(user_id.value())
+        let user = self
+            .users
+            .get(user_id.value())
             .ok_or_else(|| "Invalid username or password".to_string())?;
 
         // 检查用户状态
         if user.status != UserStatus::Active {
-            self.record_login_history(&user.user_id, ip.clone().unwrap_or_default(),
-                user_agent.clone().unwrap_or_default(), LoginStatus::Failed);
+            self.record_login_history(
+                &user.user_id,
+                ip.clone().unwrap_or_default(),
+                user_agent.clone().unwrap_or_default(),
+                LoginStatus::Failed,
+            );
             return Err("User account is inactive".to_string());
         }
 
         // 验证密码
         if !self.verify_password(password, &user.password_hash) {
-            self.record_login_history(&user.user_id, ip.clone().unwrap_or_default(),
-                user_agent.clone().unwrap_or_default(), LoginStatus::Failed);
+            self.record_login_history(
+                &user.user_id,
+                ip.clone().unwrap_or_default(),
+                user_agent.clone().unwrap_or_default(),
+                LoginStatus::Failed,
+            );
             return Err("Invalid username or password".to_string());
         }
 
@@ -129,8 +146,12 @@ impl AuthManager {
         self.sessions.insert(session.session_id.clone(), session.clone());
 
         // 记录登录历史
-        self.record_login_history(&user.user_id, ip.unwrap_or_default(),
-            user_agent.unwrap_or_default(), LoginStatus::Success);
+        self.record_login_history(
+            &user.user_id,
+            ip.unwrap_or_default(),
+            user_agent.unwrap_or_default(),
+            LoginStatus::Success,
+        );
 
         // 持久化会话
         if let Some(db) = &self.database {
@@ -149,10 +170,12 @@ impl AuthManager {
     /// 验证 token
     pub fn validate_token(&self, token: &str) -> Result<Session, String> {
         // 从 token 获取会话
-        let session_id = self.token_map.get(token)
-            .ok_or_else(|| "Invalid or expired token".to_string())?;
+        let session_id =
+            self.token_map.get(token).ok_or_else(|| "Invalid or expired token".to_string())?;
 
-        let session = self.sessions.get(session_id.value())
+        let session = self
+            .sessions
+            .get(session_id.value())
             .ok_or_else(|| "Invalid or expired token".to_string())?;
 
         // 检查过期
@@ -170,8 +193,7 @@ impl AuthManager {
 
     /// 登出
     pub fn logout(&self, token: &str) -> Result<(), String> {
-        let session_id = self.token_map.get(token)
-            .ok_or_else(|| "Invalid token".to_string())?;
+        let session_id = self.token_map.get(token).ok_or_else(|| "Invalid token".to_string())?;
 
         let session_id_value = session_id.value().clone();
         drop(session_id);
@@ -199,14 +221,15 @@ impl AuthManager {
         let session = self.validate_token(old_token)?;
 
         // 获取用户
-        let user = self.users.get(&session.user_id)
-            .ok_or_else(|| "User not found".to_string())?;
+        let user = self.users.get(&session.user_id).ok_or_else(|| "User not found".to_string())?;
 
         // 生成新 token
         let new_token = self.generate_jwt_token(&user)?;
 
         // 更新会话
-        let mut session_mut = self.sessions.get_mut(&session.session_id)
+        let mut session_mut = self
+            .sessions
+            .get_mut(&session.session_id)
             .ok_or_else(|| "Session not found".to_string())?;
 
         session_mut.token = Some(new_token.clone());
@@ -265,8 +288,7 @@ impl AuthManager {
         description: Option<String>,
         role: Option<UserRole>,
     ) -> Result<User, String> {
-        let mut user = self.users.get_mut(user_id)
-            .ok_or_else(|| "User not found".to_string())?;
+        let mut user = self.users.get_mut(user_id).ok_or_else(|| "User not found".to_string())?;
 
         if let Some(e) = email {
             user.email = Some(e);
@@ -298,8 +320,7 @@ impl AuthManager {
 
     /// 删除用户
     pub fn delete_user(&self, user_id: &str) -> Result<(), String> {
-        let user = self.users.get(user_id)
-            .ok_or_else(|| "User not found".to_string())?;
+        let user = self.users.get(user_id).ok_or_else(|| "User not found".to_string())?;
 
         let username = user.username.clone();
         drop(user);
@@ -308,16 +329,18 @@ impl AuthManager {
         self.users.remove(user_id);
 
         // 删除用户的所有会话
-        let session_ids: Vec<String> = self.sessions.iter()
+        let session_ids: Vec<String> = self
+            .sessions
+            .iter()
             .filter(|s| s.user_id == user_id)
             .map(|s| s.session_id.clone())
             .collect();
 
         for session_id in session_ids {
-            if let Some(session) = self.sessions.remove(&session_id) {
-                if let Some(token) = &session.1.token {
-                    self.token_map.remove(token);
-                }
+            if let Some(session) = self.sessions.remove(&session_id)
+                && let Some(token) = &session.1.token
+            {
+                self.token_map.remove(token);
             }
         }
 
@@ -362,8 +385,7 @@ impl AuthManager {
         old_password: &str,
         new_password: &str,
     ) -> Result<(), String> {
-        let mut user = self.users.get_mut(user_id)
-            .ok_or_else(|| "User not found".to_string())?;
+        let mut user = self.users.get_mut(user_id).ok_or_else(|| "User not found".to_string())?;
 
         // 验证旧密码
         if !self.verify_password(old_password, &user.password_hash) {
@@ -395,8 +417,7 @@ impl AuthManager {
 
     /// 重置密码 (管理员操作)
     pub fn reset_password(&self, user_id: &str, new_password: &str) -> Result<(), String> {
-        let mut user = self.users.get_mut(user_id)
-            .ok_or_else(|| "User not found".to_string())?;
+        let mut user = self.users.get_mut(user_id).ok_or_else(|| "User not found".to_string())?;
 
         user.password_hash = self.hash_password(new_password)?;
         user.updated_at = chrono::Utc::now().timestamp();
@@ -422,8 +443,7 @@ impl AuthManager {
 
     /// 修改用户状态
     pub fn change_user_status(&self, user_id: &str, status: UserStatus) -> Result<User, String> {
-        let mut user = self.users.get_mut(user_id)
-            .ok_or_else(|| "User not found".to_string())?;
+        let mut user = self.users.get_mut(user_id).ok_or_else(|| "User not found".to_string())?;
 
         user.status = status.clone();
         user.updated_at = chrono::Utc::now().timestamp();
@@ -452,7 +472,8 @@ impl AuthManager {
 
     /// 列出用户的会话
     pub fn list_user_sessions(&self, user_id: &str) -> Vec<Session> {
-        self.sessions.iter()
+        self.sessions
+            .iter()
             .filter(|s| s.user_id == user_id)
             .map(|s| {
                 let mut session = s.value().clone();
@@ -464,8 +485,8 @@ impl AuthManager {
 
     /// 撤销会话
     pub fn revoke_session(&self, session_id: &str) -> Result<(), String> {
-        let session = self.sessions.remove(session_id)
-            .ok_or_else(|| "Session not found".to_string())?;
+        let session =
+            self.sessions.remove(session_id).ok_or_else(|| "Session not found".to_string())?;
 
         if let Some(token) = &session.1.token {
             self.token_map.remove(token);
@@ -487,7 +508,9 @@ impl AuthManager {
 
     /// 撤销用户的所有会话
     pub fn revoke_all_user_sessions(&self, user_id: &str) -> Result<usize, String> {
-        let session_ids: Vec<String> = self.sessions.iter()
+        let session_ids: Vec<String> = self
+            .sessions
+            .iter()
             .filter(|s| s.user_id == user_id)
             .map(|s| s.session_id.clone())
             .collect();
@@ -495,10 +518,10 @@ impl AuthManager {
         let count = session_ids.len();
 
         for session_id in session_ids {
-            if let Some(session) = self.sessions.remove(&session_id) {
-                if let Some(token) = &session.1.token {
-                    self.token_map.remove(token);
-                }
+            if let Some(session) = self.sessions.remove(&session_id)
+                && let Some(token) = &session.1.token
+            {
+                self.token_map.remove(token);
             }
         }
 
@@ -524,14 +547,14 @@ impl AuthManager {
         };
 
         match user.role {
-            UserRole::Admin => true,  // Admin 有全部权限
+            UserRole::Admin => true, // Admin 有全部权限
             UserRole::Operator => match (resource, action) {
                 ("services", _) | ("instances", _) | ("routing", _) => true,
                 ("cluster", "read") | ("audit", "read") => true,
                 ("auth", "read") => true, // 可以查看自己的信息
                 _ => false,
             },
-            UserRole::Viewer => action == "read",  // Viewer 只有读权限
+            UserRole::Viewer => action == "read", // Viewer 只有读权限
         }
     }
 
@@ -558,7 +581,9 @@ impl AuthManager {
 
     /// 获取登录历史
     pub fn get_login_history(&self, user_id: &str, limit: usize) -> Vec<LoginHistory> {
-        let mut history: Vec<LoginHistory> = self.login_history.iter()
+        let mut history: Vec<LoginHistory> = self
+            .login_history
+            .iter()
             .filter(|h| h.user_id == user_id)
             .map(|h| h.value().clone())
             .collect();
@@ -569,7 +594,13 @@ impl AuthManager {
     }
 
     /// 记录登录历史
-    fn record_login_history(&self, user_id: &str, ip: String, user_agent: String, status: LoginStatus) {
+    fn record_login_history(
+        &self,
+        user_id: &str,
+        ip: String,
+        user_agent: String,
+        status: LoginStatus,
+    ) {
         let id = self.next_history_id.fetch_add(1, Ordering::SeqCst);
         let history = LoginHistory::new(id, user_id.to_string(), ip, user_agent, status);
 
@@ -597,12 +628,8 @@ impl AuthManager {
             iat: now,
         };
 
-        encode(
-            &Header::default(),
-            &claims,
-            &EncodingKey::from_secret(self.jwt_secret.as_bytes()),
-        )
-        .map_err(|e| format!("Failed to generate JWT token: {}", e))
+        encode(&Header::default(), &claims, &EncodingKey::from_secret(self.jwt_secret.as_bytes()))
+            .map_err(|e| format!("Failed to generate JWT token: {}", e))
     }
 
     /// 验证 JWT token

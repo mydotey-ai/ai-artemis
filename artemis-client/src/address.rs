@@ -21,12 +21,7 @@ pub struct AddressContext {
 impl AddressContext {
     /// Create a new address context
     pub fn new(url: String, ttl: Duration) -> Self {
-        Self {
-            url,
-            available: Arc::new(RwLock::new(true)),
-            ttl,
-            created_at: Instant::now(),
-        }
+        Self { url, available: Arc::new(RwLock::new(true)), ttl, created_at: Instant::now() }
     }
 
     /// Get the HTTP URL
@@ -82,9 +77,7 @@ impl AddressManager {
             })
             .collect();
 
-        Self {
-            addresses: Arc::new(RwLock::new(addresses)),
-        }
+        Self { addresses: Arc::new(RwLock::new(addresses)) }
     }
 
     /// Create a new address manager with dynamic address list
@@ -95,9 +88,7 @@ impl AddressManager {
             .map(|url| Arc::new(AddressContext::new(url, address_ttl)))
             .collect();
 
-        Self {
-            addresses: Arc::new(RwLock::new(addresses)),
-        }
+        Self { addresses: Arc::new(RwLock::new(addresses)) }
     }
 
     /// Get the number of addresses
@@ -116,10 +107,8 @@ impl AddressManager {
         }
 
         // Filter available and non-expired addresses
-        let available: Vec<_> = addresses
-            .iter()
-            .filter(|ctx| ctx.is_available() && !ctx.is_expired())
-            .collect();
+        let available: Vec<_> =
+            addresses.iter().filter(|ctx| ctx.is_available() && !ctx.is_expired()).collect();
 
         if available.is_empty() {
             // Fallback to first address if all are unavailable
@@ -134,11 +123,7 @@ impl AddressManager {
 
     /// Get all addresses as a Vec<String>
     pub async fn get_all_addresses(&self) -> Vec<String> {
-        self.addresses
-            .read()
-            .iter()
-            .map(|ctx| ctx.http_url().to_string())
-            .collect()
+        self.addresses.read().iter().map(|ctx| ctx.http_url().to_string()).collect()
     }
 
     /// Mark an address as unavailable
@@ -169,15 +154,11 @@ impl AddressManager {
     /// Useful for dynamic address discovery
     pub async fn update_addresses(&self, new_urls: Vec<String>) {
         // Get TTL from existing addresses, or use default
-        let ttl = self.addresses.read()
-            .first()
-            .map(|ctx| ctx.ttl)
-            .unwrap_or(Duration::from_secs(3600));
+        let ttl =
+            self.addresses.read().first().map(|ctx| ctx.ttl).unwrap_or(Duration::from_secs(3600));
 
-        let new_addresses: Vec<Arc<AddressContext>> = new_urls
-            .into_iter()
-            .map(|url| Arc::new(AddressContext::new(url, ttl)))
-            .collect();
+        let new_addresses: Vec<Arc<AddressContext>> =
+            new_urls.into_iter().map(|url| Arc::new(AddressContext::new(url, ttl))).collect();
 
         *self.addresses.write() = new_addresses;
         tracing::debug!("Updated address list with {} addresses", self.addresses.read().len());
@@ -233,10 +214,7 @@ mod tests {
         assert_eq!(manager.address_count(), 1);
 
         // Update to 2 addresses
-        let new_urls = vec![
-            "http://node1:8080".to_string(),
-            "http://node2:8080".to_string(),
-        ];
+        let new_urls = vec!["http://node1:8080".to_string(), "http://node2:8080".to_string()];
         manager.update_addresses(new_urls).await;
 
         // Now has 2 addresses
@@ -274,10 +252,11 @@ mod tests {
         let mut found_node2 = false;
         for _ in 0..30 {
             if let Some(addr) = manager.get_random_address().await
-                && addr == "http://node2:8080" {
-                    found_node2 = true;
-                    break;
-                }
+                && addr == "http://node2:8080"
+            {
+                found_node2 = true;
+                break;
+            }
         }
         assert!(found_node2, "node2 should be available again");
     }
@@ -297,7 +276,8 @@ mod tests {
         assert_eq!(context.ws_url("/subscribe"), "ws://test:8080/subscribe");
 
         // Test HTTPS to WSS conversion
-        let https_context = AddressContext::new("https://test:8080".to_string(), Duration::from_secs(10));
+        let https_context =
+            AddressContext::new("https://test:8080".to_string(), Duration::from_secs(10));
         assert_eq!(https_context.ws_url("/subscribe"), "wss://test:8080/subscribe");
 
         // Mark as unavailable
@@ -312,7 +292,8 @@ mod tests {
         assert!(!context.is_expired(), "Should not be expired immediately");
 
         // Create expired context (0 second TTL)
-        let expired_context = AddressContext::new("http://test:8080".to_string(), Duration::from_secs(0));
+        let expired_context =
+            AddressContext::new("http://test:8080".to_string(), Duration::from_secs(0));
         std::thread::sleep(Duration::from_millis(10));
         assert!(expired_context.is_expired(), "Should be expired after 10ms with 0s TTL");
     }
@@ -320,10 +301,7 @@ mod tests {
     #[tokio::test]
     async fn test_all_addresses_unavailable() {
         // Create manager with 2 addresses
-        let addresses = vec![
-            "http://node1:8080".to_string(),
-            "http://node2:8080".to_string(),
-        ];
+        let addresses = vec!["http://node1:8080".to_string(), "http://node2:8080".to_string()];
         let manager = AddressManager::new_static(addresses);
 
         // Mark all as unavailable

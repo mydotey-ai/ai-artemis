@@ -25,18 +25,12 @@ pub struct RetryQueue<T: Clone + Eq + Hash> {
 impl<T: Clone + Eq + Hash> RetryQueue<T> {
     /// Create a new retry queue with the given retry interval
     pub fn new(retry_interval: Duration) -> Self {
-        Self {
-            items: Arc::new(Mutex::new(HashMap::new())),
-            retry_interval,
-        }
+        Self { items: Arc::new(Mutex::new(HashMap::new())), retry_interval }
     }
 
     /// Add a failed item to the queue
     pub async fn add(&self, item: T) {
-        let retry_item = RetryItem {
-            data: item.clone(),
-            last_attempt: Instant::now(),
-        };
+        let retry_item = RetryItem { data: item.clone(), last_attempt: Instant::now() };
         self.items.lock().insert(item, retry_item);
         debug!("Added item to retry queue");
     }
@@ -73,10 +67,8 @@ impl<T: Clone + Eq + Hash> RetryQueue<T> {
     /// The `retry_fn` is called for each item ready to retry.
     /// If it returns `true`, the item is removed from the queue.
     /// If it returns `false`, the item's last attempt time is updated.
-    pub fn start_retry_loop<F, Fut>(
-        self: Arc<Self>,
-        retry_fn: F,
-    ) where
+    pub fn start_retry_loop<F, Fut>(self: Arc<Self>, retry_fn: F)
+    where
         F: Fn(T) -> Fut + Send + Sync + 'static,
         Fut: std::future::Future<Output = bool> + Send,
         T: Send + Sync + 'static,
@@ -101,10 +93,8 @@ impl<T: Clone + Eq + Hash> RetryQueue<T> {
                         info!("Retry succeeded, removed from queue");
                     } else {
                         // Update last attempt time
-                        let retry_item = RetryItem {
-                            data: item.clone(),
-                            last_attempt: Instant::now(),
-                        };
+                        let retry_item =
+                            RetryItem { data: item.clone(), last_attempt: Instant::now() };
                         self.items.lock().insert(item, retry_item);
                         debug!("Retry failed, updated last attempt time");
                     }
@@ -236,10 +226,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_retry_item_clone() {
-        let item = RetryItem {
-            data: "test".to_string(),
-            last_attempt: Instant::now(),
-        };
+        let item = RetryItem { data: "test".to_string(), last_attempt: Instant::now() };
 
         let cloned = item.clone();
         assert_eq!(item.data, cloned.data);
@@ -247,10 +234,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_retry_item_debug() {
-        let item = RetryItem {
-            data: "test".to_string(),
-            last_attempt: Instant::now(),
-        };
+        let item = RetryItem { data: "test".to_string(), last_attempt: Instant::now() };
 
         let debug_str = format!("{:?}", item);
         assert!(debug_str.contains("RetryItem"));
