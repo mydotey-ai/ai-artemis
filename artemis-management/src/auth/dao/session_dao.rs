@@ -1,6 +1,7 @@
-use crate::auth::model::{Session, LoginHistory, LoginStatus};
-use sea_orm::{DatabaseConnection, Statement, ConnectionTrait};
+use crate::auth::model::{LoginHistory, LoginStatus, Session};
 use sea_orm::sea_query::Value;
+use sea_orm::{ConnectionTrait, DatabaseConnection, Statement};
+use std::str::FromStr;
 
 pub struct SessionDao {
     conn: DatabaseConnection,
@@ -38,7 +39,11 @@ impl SessionDao {
     }
 
     /// 更新最后活动时间
-    pub async fn update_last_activity(&self, session_id: &str, timestamp: i64) -> anyhow::Result<()> {
+    pub async fn update_last_activity(
+        &self,
+        session_id: &str,
+        timestamp: i64,
+    ) -> anyhow::Result<()> {
         let stmt = Statement::from_sql_and_values(
             self.conn.get_database_backend(),
             "UPDATE auth_sessions SET last_activity = ? WHERE session_id = ?",
@@ -71,11 +76,7 @@ impl SessionDao {
 
         let result = self.conn.query_one(stmt).await?;
 
-        if let Some(row) = result {
-            Ok(Some(self.row_to_session(row)?))
-        } else {
-            Ok(None)
-        }
+        if let Some(row) = result { Ok(Some(self.row_to_session(row)?)) } else { Ok(None) }
     }
 
     /// 根据 token 获取会话
@@ -88,11 +89,7 @@ impl SessionDao {
 
         let result = self.conn.query_one(stmt).await?;
 
-        if let Some(row) = result {
-            Ok(Some(self.row_to_session(row)?))
-        } else {
-            Ok(None)
-        }
+        if let Some(row) = result { Ok(Some(self.row_to_session(row)?)) } else { Ok(None) }
     }
 
     /// 列出用户的所有会话
@@ -159,7 +156,11 @@ impl SessionDao {
     }
 
     /// 列出用户的登录历史
-    pub async fn list_login_history(&self, user_id: &str, limit: u32) -> anyhow::Result<Vec<LoginHistory>> {
+    pub async fn list_login_history(
+        &self,
+        user_id: &str,
+        limit: u32,
+    ) -> anyhow::Result<Vec<LoginHistory>> {
         let stmt = Statement::from_sql_and_values(
             self.conn.get_database_backend(),
             "SELECT id, user_id, login_time, ip_address, user_agent, status FROM auth_login_history WHERE user_id = ? ORDER BY login_time DESC LIMIT ?",
@@ -211,16 +212,8 @@ impl SessionDao {
         let user_agent: String = row.try_get("", "user_agent")?;
         let status_str: String = row.try_get("", "status")?;
 
-        let status = LoginStatus::from_str(&status_str)
-            .ok_or_else(|| anyhow::anyhow!("Invalid login status: {}", status_str))?;
+        let status = LoginStatus::from_str(&status_str).map_err(|e| anyhow::anyhow!(e))?;
 
-        Ok(LoginHistory {
-            id,
-            user_id,
-            login_time,
-            ip_address,
-            user_agent,
-            status,
-        })
+        Ok(LoginHistory { id, user_id, login_time, ip_address, user_agent, status })
     }
 }

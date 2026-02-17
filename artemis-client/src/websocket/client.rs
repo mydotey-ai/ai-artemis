@@ -32,10 +32,7 @@ enum ServerMessage {
     Unsubscribed { service_id: String },
 
     #[serde(rename = "service_change")]
-    ServiceChange {
-        service_id: String,
-        changes: Vec<InstanceChange>,
-    },
+    ServiceChange { service_id: String, changes: Vec<InstanceChange> },
 
     #[serde(rename = "pong")]
     Pong,
@@ -64,9 +61,7 @@ impl WebSocketClient {
     ///
     /// Returns a JSON string that can be sent through the WebSocket connection.
     pub fn create_subscribe_message(service_id: &str) -> String {
-        let msg = ClientMessage::Subscribe {
-            service_id: service_id.to_string(),
-        };
+        let msg = ClientMessage::Subscribe { service_id: service_id.to_string() };
         serde_json::to_string(&msg).unwrap()
     }
 
@@ -75,9 +70,7 @@ impl WebSocketClient {
     /// Returns a JSON string that can be sent through the WebSocket connection
     /// to cancel an active subscription.
     pub fn create_unsubscribe_message(service_id: &str) -> String {
-        let msg = ClientMessage::Unsubscribe {
-            service_id: service_id.to_string(),
-        };
+        let msg = ClientMessage::Unsubscribe { service_id: service_id.to_string() };
         serde_json::to_string(&msg).unwrap()
     }
 
@@ -87,9 +80,8 @@ impl WebSocketClient {
     /// Ping messages are sent at the interval configured in `websocket_ping_interval_secs`.
     /// The connection loop breaks on ping failure, server close, or stream errors.
     pub async fn connect_and_subscribe(self: Arc<Self>, service_id: String) -> Result<()> {
-        let ws_url = self.config.server_urls[0]
-            .replace("http://", "ws://")
-            .replace("https://", "wss://");
+        let ws_url =
+            self.config.server_urls[0].replace("http://", "ws://").replace("https://", "wss://");
         let url = format!("{}/ws", ws_url);
 
         info!("Connecting to WebSocket: {}", url);

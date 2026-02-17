@@ -1,9 +1,9 @@
 //! Service routing engine and strategies
 
 pub mod context;
-pub mod strategy;
 pub mod engine;
+pub mod strategy;
 
 pub use context::RouteContext;
-pub use strategy::{RouteStrategy, WeightedRoundRobinStrategy, CloseByVisitStrategy};
 pub use engine::RouteEngine;
+pub use strategy::{CloseByVisitStrategy, RouteStrategy, WeightedRoundRobinStrategy};

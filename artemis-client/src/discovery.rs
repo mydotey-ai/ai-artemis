@@ -16,11 +16,7 @@ struct CachedService {
 
 impl CachedService {
     fn new(service: Service, ttl: Duration) -> Self {
-        Self {
-            service,
-            cached_at: Instant::now(),
-            ttl,
-        }
+        Self { service, cached_at: Instant::now(), ttl }
     }
 
     fn is_expired(&self) -> bool {
@@ -46,11 +42,7 @@ pub struct DiscoveryClient {
 
 impl DiscoveryClient {
     pub fn new(config: ClientConfig) -> Self {
-        Self {
-            config,
-            client: Client::new(),
-            cache: Arc::new(RwLock::new(HashMap::new())),
-        }
+        Self { config, client: Client::new(), cache: Arc::new(RwLock::new(HashMap::new())) }
     }
 
     pub async fn get_service(&self, request: GetServiceRequest) -> Result<Option<Service>> {
@@ -100,18 +92,13 @@ impl DiscoveryClient {
     ///
     /// Sends a single request with multiple discovery configs and returns
     /// all matching services. Results are cached with the configured TTL.
-    pub async fn get_services_batch(
-        &self,
-        configs: Vec<DiscoveryConfig>,
-    ) -> Result<Vec<Service>> {
+    pub async fn get_services_batch(&self, configs: Vec<DiscoveryConfig>) -> Result<Vec<Service>> {
         if configs.is_empty() {
             return Ok(Vec::new());
         }
 
         let url = format!("{}/api/discovery/lookup", self.config.server_urls[0]);
-        let request = LookupServicesRequest {
-            discovery_configs: configs,
-        };
+        let request = LookupServicesRequest { discovery_configs: configs };
 
         let resp = self.client.post(&url).json(&request).send().await?;
         let response: LookupServicesResponse = resp.json().await?;
@@ -148,7 +135,6 @@ mod tests {
             instances: vec![],
             metadata: None,
             logic_instances: None,
-            route_rules: None,
         }
     }
 
@@ -169,9 +155,7 @@ mod tests {
             },
         ];
 
-        let request = LookupServicesRequest {
-            discovery_configs: configs,
-        };
+        let request = LookupServicesRequest { discovery_configs: configs };
 
         assert_eq!(request.discovery_configs.len(), 2);
         assert_eq!(request.discovery_configs[0].service_id, "service1");

@@ -1,6 +1,6 @@
+use crate::dao::{CanaryConfigDao, GroupDao, RouteRuleDao, ZoneOperationDao};
 use crate::db::Database;
-use crate::dao::{GroupDao, RouteRuleDao, ZoneOperationDao, CanaryConfigDao};
-use crate::{GroupManager, RouteManager, ZoneManager, CanaryManager};
+use crate::{CanaryManager, GroupManager, RouteManager, ZoneManager};
 use std::sync::Arc;
 
 /// 配置加载器 - 从数据库加载所有持久化配置到内存
@@ -20,13 +20,7 @@ impl ConfigLoader {
         zone_manager: Arc<ZoneManager>,
         canary_manager: Arc<CanaryManager>,
     ) -> Self {
-        Self {
-            database,
-            group_manager,
-            route_manager,
-            zone_manager,
-            canary_manager,
-        }
+        Self { database, group_manager, route_manager, zone_manager, canary_manager }
     }
 
     /// 加载所有配置
@@ -111,16 +105,21 @@ impl ConfigLoader {
         for op in operations {
             // 恢复Zone操作到内存
             match op.operation {
-                artemis_core::model::ZoneOperation::PullOut => {
+                crate::model::ZoneOperation::PullOut => {
                     if let Err(e) = self.zone_manager.pull_out_zone(
                         &op.zone_id,
                         &op.region_id,
                         op.operator_id.clone(),
                     ) {
-                        tracing::warn!("Failed to load zone pullout {}/{}: {}", op.zone_id, op.region_id, e);
+                        tracing::warn!(
+                            "Failed to load zone pullout {}/{}: {}",
+                            op.zone_id,
+                            op.region_id,
+                            e
+                        );
                     }
                 }
-                artemis_core::model::ZoneOperation::PullIn => {
+                crate::model::ZoneOperation::PullIn => {
                     // PullIn不需要恢复,因为默认状态就是PullIn
                 }
             }

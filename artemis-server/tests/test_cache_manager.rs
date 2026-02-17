@@ -22,7 +22,6 @@ fn create_test_service(service_id: &str, instance_count: usize) -> Service {
         metadata: None,
         instances,
         logic_instances: None,
-        route_rules: None,
     }
 }
 
@@ -408,10 +407,8 @@ fn test_compute_delta_no_changes() {
 
 #[test]
 fn test_compute_delta_multiple_services() {
-    let old_services = vec![
-        create_test_service("service-1", 2),
-        create_test_service("service-2", 1),
-    ];
+    let old_services =
+        vec![create_test_service("service-1", 2), create_test_service("service-2", 1)];
 
     let new_services = vec![
         create_test_service("service-1", 3), // 新增 1 个实例
@@ -484,7 +481,6 @@ fn test_empty_service_list() {
         metadata: None,
         instances: vec![],
         logic_instances: None,
-        route_rules: None,
     };
 
     manager.update_service(empty_service);

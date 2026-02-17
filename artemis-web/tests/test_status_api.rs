@@ -8,7 +8,7 @@
 //! - get_config_status: 获取配置状态 (POST/GET)
 //! - get_deployment_status: 获取部署状态 (POST/GET)
 
-use artemis_core::model::{
+use artemis_management::model::{
     GetClusterNodeStatusRequest, GetClusterStatusRequest, GetConfigStatusRequest,
     GetDeploymentStatusRequest, GetLeasesStatusRequest,
 };
@@ -17,7 +17,11 @@ use artemis_server::{
     lease::LeaseManager, registry::RegistryRepository,
 };
 use artemis_web::{api::status, state::AppState};
-use axum::{Json, extract::{Query, State}, response::IntoResponse};
+use axum::{
+    Json,
+    extract::{Query, State},
+    response::IntoResponse,
+};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -36,10 +40,8 @@ fn create_test_app_state() -> AppState {
         None,
     ));
 
-    let discovery_service = Arc::new(artemis_server::discovery::DiscoveryServiceImpl::new(
-        repository,
-        cache.clone(),
-    ));
+    let discovery_service =
+        Arc::new(artemis_server::discovery::DiscoveryServiceImpl::new(repository, cache.clone()));
 
     let session_manager = Arc::new(artemis_web::websocket::SessionManager::new());
     let instance_manager = Arc::new(artemis_management::InstanceManager::new());
@@ -132,9 +134,7 @@ async fn test_get_cluster_status_get() {
 #[tokio::test]
 async fn test_get_leases_status_post_no_filter() {
     let state = create_test_app_state();
-    let request = GetLeasesStatusRequest {
-        service_ids: None,
-    };
+    let request = GetLeasesStatusRequest { service_ids: None };
 
     let response = status::get_leases_status_post(State(state), Json(request)).await;
     let json_response = response.into_response();
@@ -145,9 +145,7 @@ async fn test_get_leases_status_post_no_filter() {
 #[tokio::test]
 async fn test_get_leases_status_post_with_filter() {
     let state = create_test_app_state();
-    let request = GetLeasesStatusRequest {
-        service_ids: Some(vec!["test-service".to_string()]),
-    };
+    let request = GetLeasesStatusRequest { service_ids: Some(vec!["test-service".to_string()]) };
 
     let response = status::get_leases_status_post(State(state), Json(request)).await;
     let json_response = response.into_response();
@@ -169,9 +167,7 @@ async fn test_get_leases_status_get_no_filter() {
 #[tokio::test]
 async fn test_get_leases_status_get_with_filter() {
     let state = create_test_app_state();
-    let query = status::GetLeasesQuery {
-        app_ids: Some(vec!["test-service".to_string()]),
-    };
+    let query = status::GetLeasesQuery { app_ids: Some(vec!["test-service".to_string()]) };
 
     let response = status::get_leases_status_get(State(state), Query(query)).await;
     let json_response = response.into_response();
@@ -184,9 +180,7 @@ async fn test_get_leases_status_get_with_filter() {
 #[tokio::test]
 async fn test_get_legacy_leases_status_post() {
     let state = create_test_app_state();
-    let request = GetLeasesStatusRequest {
-        service_ids: None,
-    };
+    let request = GetLeasesStatusRequest { service_ids: None };
 
     let response = status::get_legacy_leases_status_post(State(state), Json(request)).await;
     let json_response = response.into_response();
@@ -256,9 +250,7 @@ async fn test_get_deployment_status_get() {
 #[tokio::test]
 async fn test_get_leases_status_empty_service_ids() {
     let state = create_test_app_state();
-    let request = GetLeasesStatusRequest {
-        service_ids: Some(vec![]),
-    };
+    let request = GetLeasesStatusRequest { service_ids: Some(vec![]) };
 
     let response = status::get_leases_status_post(State(state), Json(request)).await;
     let json_response = response.into_response();
@@ -296,9 +288,7 @@ async fn test_cluster_node_status_post_get_consistency() {
         .into_response();
 
     // GET
-    let get_response = status::get_cluster_node_status_get(State(state))
-        .await
-        .into_response();
+    let get_response = status::get_cluster_node_status_get(State(state)).await.into_response();
 
     // 两者都应该成功
     assert_eq!(post_response.status(), 200);
@@ -311,14 +301,11 @@ async fn test_cluster_status_post_get_consistency() {
 
     // POST
     let request = GetClusterStatusRequest {};
-    let post_response = status::get_cluster_status_post(State(state.clone()), Json(request))
-        .await
-        .into_response();
+    let post_response =
+        status::get_cluster_status_post(State(state.clone()), Json(request)).await.into_response();
 
     // GET
-    let get_response = status::get_cluster_status_get(State(state))
-        .await
-        .into_response();
+    let get_response = status::get_cluster_status_get(State(state)).await.into_response();
 
     assert_eq!(post_response.status(), 200);
     assert_eq!(get_response.status(), 200);
@@ -330,14 +317,11 @@ async fn test_config_status_post_get_consistency() {
 
     // POST
     let request = GetConfigStatusRequest {};
-    let post_response = status::get_config_status_post(State(state.clone()), Json(request))
-        .await
-        .into_response();
+    let post_response =
+        status::get_config_status_post(State(state.clone()), Json(request)).await.into_response();
 
     // GET
-    let get_response = status::get_config_status_get(State(state))
-        .await
-        .into_response();
+    let get_response = status::get_config_status_get(State(state)).await.into_response();
 
     assert_eq!(post_response.status(), 200);
     assert_eq!(get_response.status(), 200);
@@ -354,9 +338,7 @@ async fn test_deployment_status_post_get_consistency() {
         .into_response();
 
     // GET
-    let get_response = status::get_deployment_status_get(State(state))
-        .await
-        .into_response();
+    let get_response = status::get_deployment_status_get(State(state)).await.into_response();
 
     assert_eq!(post_response.status(), 200);
     assert_eq!(get_response.status(), 200);

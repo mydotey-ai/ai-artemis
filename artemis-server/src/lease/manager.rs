@@ -1,4 +1,5 @@
-use artemis_core::model::{InstanceKey, Lease};
+use crate::model::Lease;
+use artemis_core::model::InstanceKey;
 use dashmap::DashMap;
 use std::sync::Arc;
 use std::time::Duration;
@@ -85,10 +86,7 @@ impl LeaseManager {
 
     /// 获取所有租约 (用于状态查询)
     pub fn get_all_leases(&self) -> Vec<(InstanceKey, Arc<Lease>)> {
-        self.leases
-            .iter()
-            .map(|entry| (entry.key().clone(), entry.value().clone()))
-            .collect()
+        self.leases.iter().map(|entry| (entry.key().clone(), entry.value().clone())).collect()
     }
 }
 

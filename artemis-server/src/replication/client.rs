@@ -1,11 +1,9 @@
 use super::error::{ReplicationError, ReplicationErrorKind};
 use artemis_core::model::{
-    ReplicateRegisterRequest, ReplicateRegisterResponse,
-    ReplicateHeartbeatRequest, ReplicateHeartbeatResponse,
-    ReplicateUnregisterRequest, ReplicateUnregisterResponse,
-    BatchRegisterRequest, BatchRegisterResponse,
-    BatchUnregisterRequest, BatchUnregisterResponse,
-    GetAllServicesResponse,
+    BatchRegisterRequest, BatchRegisterResponse, BatchUnregisterRequest, BatchUnregisterResponse,
+    GetAllServicesResponse, ReplicateHeartbeatRequest, ReplicateHeartbeatResponse,
+    ReplicateRegisterRequest, ReplicateRegisterResponse, ReplicateUnregisterRequest,
+    ReplicateUnregisterResponse,
 };
 use std::time::Duration;
 use tracing::debug;
@@ -50,15 +48,12 @@ impl ReplicationClient {
             .map_err(ReplicationError::from_reqwest)?;
 
         if response.status().is_success() {
-            response
-                .json()
-                .await
-                .map_err(|e| {
-                    ReplicationError::new(
-                        ReplicationErrorKind::PermanentFailure,
-                        format!("Failed to parse response: {}", e),
-                    )
-                })
+            response.json().await.map_err(|e| {
+                ReplicationError::new(
+                    ReplicationErrorKind::PermanentFailure,
+                    format!("Failed to parse response: {}", e),
+                )
+            })
         } else {
             Err(ReplicationError::from_status(response.status()))
         }
@@ -72,11 +67,7 @@ impl ReplicationClient {
     ) -> Result<ReplicateHeartbeatResponse, ReplicationError> {
         let url = format!("{}/api/replication/registry/heartbeat.json", peer_url);
 
-        debug!(
-            "Replicating {} heartbeats to {}",
-            request.instance_keys.len(),
-            peer_url
-        );
+        debug!("Replicating {} heartbeats to {}", request.instance_keys.len(), peer_url);
 
         let response = self
             .client
@@ -139,12 +130,8 @@ impl ReplicationClient {
 
         debug!("Fetching all services from {}", peer_url);
 
-        let response = self
-            .client
-            .get(&url)
-            .send()
-            .await
-            .map_err(ReplicationError::from_reqwest)?;
+        let response =
+            self.client.get(&url).send().await.map_err(ReplicationError::from_reqwest)?;
 
         if response.status().is_success() {
             response.json().await.map_err(|e| {
@@ -178,15 +165,12 @@ impl ReplicationClient {
             .map_err(ReplicationError::from_reqwest)?;
 
         if response.status().is_success() {
-            response
-                .json()
-                .await
-                .map_err(|e| {
-                    ReplicationError::new(
-                        ReplicationErrorKind::PermanentFailure,
-                        format!("Failed to parse response: {}", e),
-                    )
-                })
+            response.json().await.map_err(|e| {
+                ReplicationError::new(
+                    ReplicationErrorKind::PermanentFailure,
+                    format!("Failed to parse response: {}", e),
+                )
+            })
         } else {
             Err(ReplicationError::from_status(response.status()))
         }
@@ -287,10 +271,7 @@ mod tests {
         let peer_url = "http://example.com:9090";
         let expected_url = format!("{}/api/replication/registry/heartbeat.json", peer_url);
 
-        assert_eq!(
-            expected_url,
-            "http://example.com:9090/api/replication/registry/heartbeat.json"
-        );
+        assert_eq!(expected_url, "http://example.com:9090/api/replication/registry/heartbeat.json");
     }
 
     #[test]
@@ -298,10 +279,7 @@ mod tests {
         let peer_url = "http://localhost:8080";
         let expected_url = format!("{}/api/replication/registry/unregister.json", peer_url);
 
-        assert_eq!(
-            expected_url,
-            "http://localhost:8080/api/replication/registry/unregister.json"
-        );
+        assert_eq!(expected_url, "http://localhost:8080/api/replication/registry/unregister.json");
     }
 
     #[test]
@@ -309,10 +287,7 @@ mod tests {
         let peer_url = "http://peer:8080";
         let expected_url = format!("{}/api/replication/registry/services.json", peer_url);
 
-        assert_eq!(
-            expected_url,
-            "http://peer:8080/api/replication/registry/services.json"
-        );
+        assert_eq!(expected_url, "http://peer:8080/api/replication/registry/services.json");
     }
 
     #[test]
@@ -348,11 +323,7 @@ mod tests {
     #[test]
     fn test_default_client_has_correct_timeout() {
         let client = ReplicationClient::default();
-        assert_eq!(
-            client.timeout,
-            Duration::from_secs(5),
-            "默认超时应该是 5 秒"
-        );
+        assert_eq!(client.timeout, Duration::from_secs(5), "默认超时应该是 5 秒");
     }
 
     #[test]
@@ -396,12 +367,10 @@ mod tests {
     #[test]
     fn test_url_with_trailing_slash() {
         let peer_url = "http://example.com:8080/";
-        let expected_url = format!("{}/api/replication/registry/register.json", peer_url.trim_end_matches('/'));
+        let expected_url =
+            format!("{}/api/replication/registry/register.json", peer_url.trim_end_matches('/'));
 
-        assert_eq!(
-            expected_url,
-            "http://example.com:8080/api/replication/registry/register.json"
-        );
+        assert_eq!(expected_url, "http://example.com:8080/api/replication/registry/register.json");
     }
 
     #[test]
@@ -418,10 +387,7 @@ mod tests {
         let peer_url = "http://192.168.1.100:8080";
         let url = format!("{}/api/replication/registry/heartbeat.json", peer_url);
 
-        assert_eq!(
-            url,
-            "http://192.168.1.100:8080/api/replication/registry/heartbeat.json"
-        );
+        assert_eq!(url, "http://192.168.1.100:8080/api/replication/registry/heartbeat.json");
     }
 
     #[test]
@@ -429,10 +395,7 @@ mod tests {
         let peer_url = "http://localhost:8080";
         let url = format!("{}/api/replication/registry/services.json", peer_url);
 
-        assert_eq!(
-            url,
-            "http://localhost:8080/api/replication/registry/services.json"
-        );
+        assert_eq!(url, "http://localhost:8080/api/replication/registry/services.json");
     }
 
     // ===== 批量API URL 测试 =====
@@ -441,8 +404,10 @@ mod tests {
     fn test_batch_apis_url_consistency() {
         let peer_url = "http://test:8080";
 
-        let batch_register_url = format!("{}/api/replication/registry/batch-register.json", peer_url);
-        let batch_unregister_url = format!("{}/api/replication/registry/batch-unregister.json", peer_url);
+        let batch_register_url =
+            format!("{}/api/replication/registry/batch-register.json", peer_url);
+        let batch_unregister_url =
+            format!("{}/api/replication/registry/batch-unregister.json", peer_url);
 
         // 验证批量 API URL 都在同一路径前缀下
         assert!(batch_register_url.contains("/api/replication/registry/"));

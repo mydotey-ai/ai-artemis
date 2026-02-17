@@ -1,4 +1,5 @@
-use super::service::ServiceGroup;
+use crate::model::GroupStatus;
+use artemis_core::model::service::ServiceGroup;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -118,14 +119,6 @@ pub struct Group {
     /// 分组元数据
     #[serde(skip_serializing_if = "Option::is_none")]
     pub metadata: Option<HashMap<String, String>>,
-}
-
-/// 分组状态
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "lowercase")]
-pub enum GroupStatus {
-    Active,
-    Inactive,
 }
 
 impl Group {

@@ -9,18 +9,22 @@
 //! - get_all_instance_operations_post/get: 查询所有实例操作 (POST/GET)
 //! - get_all_server_operations_post/get: 查询所有服务器操作 (POST/GET)
 
-use artemis_core::model::{
-    GetAllInstanceOperationsRequest, GetAllServerOperationsRequest,
-    GetInstanceOperationsRequest, InstanceKey, InstanceOperation,
-    IsInstanceDownRequest, IsServerDownRequest, OperateInstanceRequest, OperateServerRequest,
-    ServerOperation,
+use artemis_core::model::InstanceKey;
+use artemis_management::model::{
+    GetAllInstanceOperationsRequest, GetAllServerOperationsRequest, GetInstanceOperationsRequest,
+    InstanceOperation, IsInstanceDownRequest, IsServerDownRequest, OperateInstanceRequest,
+    OperateServerRequest, ServerOperation,
 };
 use artemis_server::{
     RegistryServiceImpl, cache::VersionedCacheManager, change::InstanceChangeManager,
     lease::LeaseManager, registry::RegistryRepository,
 };
 use artemis_web::{api::management, state::AppState};
-use axum::{Json, extract::{Query, State}, http::StatusCode};
+use axum::{
+    Json,
+    extract::{Query, State},
+    http::StatusCode,
+};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -39,10 +43,8 @@ fn create_test_app_state() -> AppState {
         None,
     ));
 
-    let discovery_service = Arc::new(artemis_server::discovery::DiscoveryServiceImpl::new(
-        repository,
-        cache.clone(),
-    ));
+    let discovery_service =
+        Arc::new(artemis_server::discovery::DiscoveryServiceImpl::new(repository, cache.clone()));
 
     let session_manager = Arc::new(artemis_web::websocket::SessionManager::new());
     let instance_manager = Arc::new(artemis_management::InstanceManager::new());
@@ -125,11 +127,8 @@ async fn test_operate_instance_pull_in() {
     let instance_key = create_test_instance_key();
 
     // 先拉出
-    let _ = state.instance_manager.pull_out_instance(
-        &instance_key,
-        "test-operator".to_string(),
-        true,
-    );
+    let _ =
+        state.instance_manager.pull_out_instance(&instance_key, "test-operator".to_string(), true);
 
     // 然后拉入
     let request = OperateInstanceRequest {
@@ -158,16 +157,8 @@ async fn test_get_instance_operations() {
     let instance_key = create_test_instance_key();
 
     // 执行一些操作
-    let _ = state.instance_manager.pull_out_instance(
-        &instance_key,
-        "operator1".to_string(),
-        true,
-    );
-    let _ = state.instance_manager.pull_in_instance(
-        &instance_key,
-        "operator2".to_string(),
-        true,
-    );
+    let _ = state.instance_manager.pull_out_instance(&instance_key, "operator1".to_string(), true);
+    let _ = state.instance_manager.pull_in_instance(&instance_key, "operator2".to_string(), true);
 
     let request = GetInstanceOperationsRequest { instance_key };
 
@@ -185,11 +176,8 @@ async fn test_is_instance_down_true() {
     let instance_key = create_test_instance_key();
 
     // 拉出实例
-    let _ = state.instance_manager.pull_out_instance(
-        &instance_key,
-        "test-operator".to_string(),
-        true,
-    );
+    let _ =
+        state.instance_manager.pull_out_instance(&instance_key, "test-operator".to_string(), true);
 
     let request = IsInstanceDownRequest { instance_key };
 
@@ -233,9 +221,7 @@ async fn test_operate_server_pull_out() {
     assert_eq!(parts.status, StatusCode::OK);
 
     // 验证服务器确实被拉出
-    let is_down = state
-        .instance_manager
-        .is_server_down("test-server", "test-region");
+    let is_down = state.instance_manager.is_server_down("test-server", "test-region");
     assert!(is_down);
 }
 
@@ -267,9 +253,7 @@ async fn test_operate_server_pull_in() {
     assert_eq!(parts.status, StatusCode::OK);
 
     // 验证服务器已被拉入
-    let is_down = state
-        .instance_manager
-        .is_server_down("test-server", "test-region");
+    let is_down = state.instance_manager.is_server_down("test-server", "test-region");
     assert!(!is_down);
 }
 
@@ -324,16 +308,8 @@ async fn test_get_all_instance_operations_post() {
     let mut instance_key2 = create_test_instance_key();
     instance_key2.instance_id = "test-instance-2".to_string();
 
-    let _ = state.instance_manager.pull_out_instance(
-        &instance_key1,
-        "operator1".to_string(),
-        true,
-    );
-    let _ = state.instance_manager.pull_out_instance(
-        &instance_key2,
-        "operator2".to_string(),
-        true,
-    );
+    let _ = state.instance_manager.pull_out_instance(&instance_key1, "operator1".to_string(), true);
+    let _ = state.instance_manager.pull_out_instance(&instance_key2, "operator2".to_string(), true);
 
     let request = GetAllInstanceOperationsRequest { region_id: None };
 
@@ -349,11 +325,7 @@ async fn test_get_all_instance_operations_get() {
 
     // 执行一些操作
     let instance_key = create_test_instance_key();
-    let _ = state.instance_manager.pull_out_instance(
-        &instance_key,
-        "operator1".to_string(),
-        true,
-    );
+    let _ = state.instance_manager.pull_out_instance(&instance_key, "operator1".to_string(), true);
 
     let query = management::AllInstanceOperationsQuery { region_id: None };
 
@@ -370,18 +342,10 @@ async fn test_get_all_server_operations_post() {
     let state = create_test_app_state();
 
     // 执行一些操作
-    let _ = state.instance_manager.pull_out_server(
-        "server1",
-        "region1",
-        "operator1".to_string(),
-        true,
-    );
-    let _ = state.instance_manager.pull_out_server(
-        "server2",
-        "region1",
-        "operator2".to_string(),
-        true,
-    );
+    let _ =
+        state.instance_manager.pull_out_server("server1", "region1", "operator1".to_string(), true);
+    let _ =
+        state.instance_manager.pull_out_server("server2", "region1", "operator2".to_string(), true);
 
     let request = GetAllServerOperationsRequest { region_id: None };
 
@@ -396,12 +360,8 @@ async fn test_get_all_server_operations_get() {
     let state = create_test_app_state();
 
     // 执行一些操作
-    let _ = state.instance_manager.pull_out_server(
-        "server1",
-        "region1",
-        "operator1".to_string(),
-        true,
-    );
+    let _ =
+        state.instance_manager.pull_out_server("server1", "region1", "operator1".to_string(), true);
 
     let query = management::AllServerOperationsQuery { region_id: None };
 
@@ -453,21 +413,11 @@ async fn test_get_all_operations_with_region_filter() {
     let mut instance_key2 = create_test_instance_key();
     instance_key2.region_id = "region2".to_string();
 
-    let _ = state.instance_manager.pull_out_instance(
-        &instance_key1,
-        "operator1".to_string(),
-        true,
-    );
-    let _ = state.instance_manager.pull_out_instance(
-        &instance_key2,
-        "operator2".to_string(),
-        true,
-    );
+    let _ = state.instance_manager.pull_out_instance(&instance_key1, "operator1".to_string(), true);
+    let _ = state.instance_manager.pull_out_instance(&instance_key2, "operator2".to_string(), true);
 
     // 查询特定 region 的操作
-    let request = GetAllInstanceOperationsRequest {
-        region_id: Some("region1".to_string()),
-    };
+    let request = GetAllInstanceOperationsRequest { region_id: Some("region1".to_string()) };
 
     let response = management::get_all_instance_operations_post(State(state), Json(request)).await;
     let (parts, _) = response.into_parts();

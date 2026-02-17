@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 
 /// 用户角色
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -17,13 +18,17 @@ impl UserRole {
             UserRole::Viewer => "viewer",
         }
     }
+}
 
-    pub fn from_str(s: &str) -> Option<Self> {
+impl FromStr for UserRole {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "admin" => Some(UserRole::Admin),
-            "operator" => Some(UserRole::Operator),
-            "viewer" => Some(UserRole::Viewer),
-            _ => None,
+            "admin" => Ok(UserRole::Admin),
+            "operator" => Ok(UserRole::Operator),
+            "viewer" => Ok(UserRole::Viewer),
+            _ => Err(format!("Invalid user role: {}", s)),
         }
     }
 }
@@ -43,12 +48,16 @@ impl UserStatus {
             UserStatus::Inactive => "inactive",
         }
     }
+}
 
-    pub fn from_str(s: &str) -> Option<Self> {
+impl FromStr for UserStatus {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "active" => Some(UserStatus::Active),
-            "inactive" => Some(UserStatus::Inactive),
-            _ => None,
+            "active" => Ok(UserStatus::Active),
+            "inactive" => Ok(UserStatus::Inactive),
+            _ => Err(format!("Invalid user status: {}", s)),
         }
     }
 }
@@ -173,12 +182,16 @@ impl LoginStatus {
             LoginStatus::Failed => "failed",
         }
     }
+}
 
-    pub fn from_str(s: &str) -> Option<Self> {
+impl FromStr for LoginStatus {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "success" => Some(LoginStatus::Success),
-            "failed" => Some(LoginStatus::Failed),
-            _ => None,
+            "success" => Ok(LoginStatus::Success),
+            "failed" => Ok(LoginStatus::Failed),
+            _ => Err(format!("Invalid login status: {}", s)),
         }
     }
 }
@@ -216,9 +229,9 @@ impl LoginHistory {
 /// JWT Claims
 #[derive(Debug, Serialize, Deserialize)]
 pub struct JwtClaims {
-    pub sub: String,        // user_id
+    pub sub: String, // user_id
     pub username: String,
     pub role: String,
-    pub exp: i64,          // expiration time
-    pub iat: i64,          // issued at
+    pub exp: i64, // expiration time
+    pub iat: i64, // issued at
 }

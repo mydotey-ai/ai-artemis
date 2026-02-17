@@ -8,8 +8,8 @@
 
 use artemis_core::model::InstanceKey;
 use artemis_server::lease::LeaseManager;
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 use tokio::time;
 
@@ -69,12 +69,9 @@ async fn test_eviction_task_automatically_removes_expired_leases() {
 
     // 启动清理任务
     let counter = evicted_count.clone();
-    manager.clone().start_eviction_task(
-        Duration::from_millis(50),
-        move |_key| {
-            counter.fetch_add(1, Ordering::SeqCst);
-        },
-    );
+    manager.clone().start_eviction_task(Duration::from_millis(50), move |_key| {
+        counter.fetch_add(1, Ordering::SeqCst);
+    });
 
     // 等待租约过期和清理任务运行
     time::sleep(Duration::from_millis(200)).await;
@@ -93,12 +90,9 @@ async fn test_eviction_task_does_not_remove_renewed_leases() {
 
     // 启动清理任务
     let counter = evicted_count.clone();
-    manager.clone().start_eviction_task(
-        Duration::from_millis(50),
-        move |_key| {
-            counter.fetch_add(1, Ordering::SeqCst);
-        },
-    );
+    manager.clone().start_eviction_task(Duration::from_millis(50), move |_key| {
+        counter.fetch_add(1, Ordering::SeqCst);
+    });
 
     // 定期续约
     for _ in 0..5 {
@@ -381,15 +375,12 @@ async fn test_eviction_callback_receives_correct_key() {
 
     // 启动清理任务
     let keys = evicted_keys.clone();
-    manager.clone().start_eviction_task(
-        Duration::from_millis(50),
-        move |key| {
-            let keys = keys.clone();
-            tokio::spawn(async move {
-                keys.lock().await.push(key);
-            });
-        },
-    );
+    manager.clone().start_eviction_task(Duration::from_millis(50), move |key| {
+        let keys = keys.clone();
+        tokio::spawn(async move {
+            keys.lock().await.push(key);
+        });
+    });
 
     // 等待清理
     time::sleep(Duration::from_millis(200)).await;

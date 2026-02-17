@@ -155,7 +155,6 @@ mod tests {
             metadata: None,
             instances: vec![],
             logic_instances: None,
-            route_rules: None,
         }
     }
 

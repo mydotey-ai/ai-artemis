@@ -1,12 +1,12 @@
 //! Zone management HTTP API
 
 use crate::state::AppState;
-use artemis_core::model::OperateZoneRequest;
+use artemis_management::model::OperateZoneRequest;
 use axum::{
+    Json,
     extract::{Path, Query, State},
     http::StatusCode,
     response::IntoResponse,
-    Json,
 };
 use serde::{Deserialize, Serialize};
 
@@ -21,19 +21,11 @@ pub struct ApiResponse<T> {
 
 impl<T> ApiResponse<T> {
     pub fn success(data: T) -> Self {
-        Self {
-            success: true,
-            data: Some(data),
-            message: None,
-        }
+        Self { success: true, data: Some(data), message: None }
     }
 
     pub fn error(message: String) -> Self {
-        Self {
-            success: false,
-            data: None,
-            message: Some(message),
-        }
+        Self { success: false, data: None, message: Some(message) }
     }
 }
 
@@ -42,18 +34,13 @@ pub async fn pull_out_zone(
     State(state): State<AppState>,
     Json(req): Json<OperateZoneRequest>,
 ) -> impl IntoResponse {
-    match state
-        .zone_manager
-        .pull_out_zone(&req.zone_id, &req.region_id, req.operator_id.clone())
-    {
-        Ok(_) => (
-            StatusCode::OK,
-            Json(ApiResponse::success("Zone pulled out successfully".to_string())),
-        ),
-        Err(e) => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ApiResponse::<String>::error(e.to_string())),
-        ),
+    match state.zone_manager.pull_out_zone(&req.zone_id, &req.region_id, req.operator_id.clone()) {
+        Ok(_) => {
+            (StatusCode::OK, Json(ApiResponse::success("Zone pulled out successfully".to_string())))
+        }
+        Err(e) => {
+            (StatusCode::INTERNAL_SERVER_ERROR, Json(ApiResponse::<String>::error(e.to_string())))
+        }
     }
 }
 
@@ -62,18 +49,13 @@ pub async fn pull_in_zone(
     State(state): State<AppState>,
     Json(req): Json<OperateZoneRequest>,
 ) -> impl IntoResponse {
-    match state
-        .zone_manager
-        .pull_in_zone(&req.zone_id, &req.region_id, req.operator_id.clone())
-    {
-        Ok(_) => (
-            StatusCode::OK,
-            Json(ApiResponse::success("Zone pulled in successfully".to_string())),
-        ),
-        Err(e) => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ApiResponse::<String>::error(e.to_string())),
-        ),
+    match state.zone_manager.pull_in_zone(&req.zone_id, &req.region_id, req.operator_id.clone()) {
+        Ok(_) => {
+            (StatusCode::OK, Json(ApiResponse::success("Zone pulled in successfully".to_string())))
+        }
+        Err(e) => {
+            (StatusCode::INTERNAL_SERVER_ERROR, Json(ApiResponse::<String>::error(e.to_string())))
+        }
     }
 }
 
@@ -106,9 +88,7 @@ pub async fn list_zone_operations(
     State(state): State<AppState>,
     Query(query): Query<ListZoneOpsQuery>,
 ) -> impl IntoResponse {
-    let operations = state
-        .zone_manager
-        .list_operations(query.region_id.as_deref());
+    let operations = state.zone_manager.list_operations(query.region_id.as_deref());
 
     (StatusCode::OK, Json(ApiResponse::success(operations)))
 }
@@ -119,26 +99,18 @@ pub async fn delete_zone_operation(
     Path((zone_id, region_id)): Path<(String, String)>,
 ) -> impl IntoResponse {
     // Pull in is equivalent to deleting pull-out record
-    match state
-        .zone_manager
-        .pull_in_zone(&zone_id, &region_id, "system".to_string())
-    {
-        Ok(_) => (
-            StatusCode::OK,
-            Json(ApiResponse::success("Zone operation removed".to_string())),
-        ),
-        Err(e) => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ApiResponse::<String>::error(e.to_string())),
-        ),
+    match state.zone_manager.pull_in_zone(&zone_id, &region_id, "system".to_string()) {
+        Ok(_) => (StatusCode::OK, Json(ApiResponse::success("Zone operation removed".to_string()))),
+        Err(e) => {
+            (StatusCode::INTERNAL_SERVER_ERROR, Json(ApiResponse::<String>::error(e.to_string())))
+        }
     }
 }
-
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use artemis_core::model::OperateZoneRequest;
+    use artemis_management::model::OperateZoneRequest;
 
     #[test]
     fn test_api_response_success() {
@@ -176,7 +148,7 @@ mod tests {
 
     #[test]
     fn test_operate_zone_request() {
-        use artemis_core::model::ZoneOperation;
+        use artemis_management::model::ZoneOperation;
         let request = OperateZoneRequest {
             zone_id: "zone-1".to_string(),
             region_id: "us-east".to_string(),
@@ -190,7 +162,7 @@ mod tests {
 
     #[test]
     fn test_operate_zone_request_pull_in() {
-        use artemis_core::model::ZoneOperation;
+        use artemis_management::model::ZoneOperation;
         let request = OperateZoneRequest {
             zone_id: "zone-2".to_string(),
             region_id: "eu-west".to_string(),
@@ -203,17 +175,13 @@ mod tests {
 
     #[test]
     fn test_list_zone_ops_query() {
-        let query = ListZoneOpsQuery {
-            region_id: Some("us-west".to_string()),
-        };
+        let query = ListZoneOpsQuery { region_id: Some("us-west".to_string()) };
         assert_eq!(query.region_id, Some("us-west".to_string()));
     }
 
     #[test]
     fn test_list_zone_ops_query_no_region() {
-        let query = ListZoneOpsQuery {
-            region_id: None,
-        };
+        let query = ListZoneOpsQuery { region_id: None };
         assert!(query.region_id.is_none());
     }
 }

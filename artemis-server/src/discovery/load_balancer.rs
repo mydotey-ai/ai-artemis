@@ -7,8 +7,8 @@
 
 use artemis_core::model::Instance;
 use rand::Rng;
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 /// 负载均衡策略
 #[derive(Debug, Clone, Copy, Default)]
@@ -28,9 +28,7 @@ pub struct LoadBalancer {
 
 impl LoadBalancer {
     pub fn new() -> Self {
-        Self {
-            round_robin_counter: Arc::new(AtomicUsize::new(0)),
-        }
+        Self { round_robin_counter: Arc::new(AtomicUsize::new(0)) }
     }
 
     /// 从实例列表中选择一个实例

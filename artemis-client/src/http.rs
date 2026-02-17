@@ -51,8 +51,8 @@ where
 mod tests {
     use super::*;
     use crate::error::ClientError;
-    use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Arc;
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
     #[tokio::test]
     async fn test_retry_success_first_attempt() {

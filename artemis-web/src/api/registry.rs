@@ -1,5 +1,6 @@
 use crate::state::AppState;
-use artemis_core::{model::*, traits::RegistryService};
+use artemis_core::model::*;
+use artemis_server::traits::RegistryService;
 use axum::{Json, extract::State};
 
 pub async fn register(

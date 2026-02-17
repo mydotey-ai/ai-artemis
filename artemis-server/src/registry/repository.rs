@@ -1,7 +1,7 @@
 use artemis_core::model::{Instance, InstanceKey, Service};
 use dashmap::DashMap;
-use std::sync::Arc;
 use std::collections::HashMap;
+use std::sync::Arc;
 
 /// 内存中的注册表存储（高性能无锁）
 #[derive(Clone)]
@@ -82,23 +82,17 @@ impl RegistryRepository {
             let instance = entry.value().clone();
             let service_id = instance.service_id.clone();
 
-            services_map
-                .entry(service_id)
-                .or_default()
-                .push(instance);
+            services_map.entry(service_id).or_default().push(instance);
         }
 
         // 转换为 Service 对象
         services_map
             .into_iter()
-            .map(|(service_id, instances)| {
-                Service {
-                    service_id,
-                    metadata: None,
-                    instances,
-                    logic_instances: None,
-                    route_rules: None,
-                }
+            .map(|(service_id, instances)| Service {
+                service_id,
+                metadata: None,
+                instances,
+                logic_instances: None,
             })
             .collect()
     }

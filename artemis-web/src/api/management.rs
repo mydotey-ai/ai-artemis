@@ -1,19 +1,19 @@
 //! Management API endpoints for instance pull-in/pull-out operations
 
 use crate::state::AppState;
-use artemis_core::model::{
+use artemis_core::model::ResponseStatus;
+use artemis_management::model::{
     GetAllInstanceOperationsRequest, GetAllInstanceOperationsResponse,
-    GetAllServerOperationsRequest, GetAllServerOperationsResponse,
-    GetInstanceOperationsRequest, GetInstanceOperationsResponse, InstanceOperation,
-    IsInstanceDownRequest, IsInstanceDownResponse, IsServerDownRequest, IsServerDownResponse,
-    OperateInstanceRequest, OperateInstanceResponse, OperateServerRequest,
-    OperateServerResponse, ResponseStatus, ServerOperationInfo,
+    GetAllServerOperationsRequest, GetAllServerOperationsResponse, GetInstanceOperationsRequest,
+    GetInstanceOperationsResponse, InstanceOperation, IsInstanceDownRequest,
+    IsInstanceDownResponse, IsServerDownRequest, IsServerDownResponse, OperateInstanceRequest,
+    OperateInstanceResponse, OperateServerRequest, OperateServerResponse, ServerOperationInfo,
 };
 use axum::{
+    Json,
     extract::{Query, State},
     http::StatusCode,
     response::{IntoResponse, Response},
-    Json,
 };
 use serde::Deserialize;
 use tracing::{error, info};
@@ -46,15 +46,16 @@ pub async fn operate_instance(
 
     match result {
         Ok(_) => {
-            let response = OperateInstanceResponse {
-                status: ResponseStatus::success(),
-            };
+            let response = OperateInstanceResponse { status: ResponseStatus::success() };
             (StatusCode::OK, Json(response)).into_response()
         }
         Err(e) => {
             error!("Failed to operate instance: {}", e);
             let response = OperateInstanceResponse {
-                status: ResponseStatus::error(artemis_core::model::ErrorCode::InternalError, format!("Operation failed: {}", e)),
+                status: ResponseStatus::error(
+                    artemis_core::model::ErrorCode::InternalError,
+                    format!("Operation failed: {}", e),
+                ),
             };
             (StatusCode::INTERNAL_SERVER_ERROR, Json(response)).into_response()
         }
@@ -69,14 +70,9 @@ pub async fn get_instance_operations(
 ) -> Response {
     info!("Get instance operations: {:?}", req.instance_key);
 
-    let operations = state
-        .instance_manager
-        .get_instance_operations(&req.instance_key);
+    let operations = state.instance_manager.get_instance_operations(&req.instance_key);
 
-    let response = GetInstanceOperationsResponse {
-        status: ResponseStatus::success(),
-        operations,
-    };
+    let response = GetInstanceOperationsResponse { status: ResponseStatus::success(), operations };
 
     (StatusCode::OK, Json(response)).into_response()
 }
@@ -89,15 +85,9 @@ pub async fn is_instance_down(
 ) -> Response {
     let is_down = state.instance_manager.is_instance_down(&req.instance_key);
 
-    info!(
-        "Is instance down: {:?}, result: {}",
-        req.instance_key, is_down
-    );
+    info!("Is instance down: {:?}, result: {}", req.instance_key, is_down);
 
-    let response = IsInstanceDownResponse {
-        status: ResponseStatus::success(),
-        is_down,
-    };
+    let response = IsInstanceDownResponse { status: ResponseStatus::success(), is_down };
 
     (StatusCode::OK, Json(response)).into_response()
 }
@@ -116,31 +106,36 @@ pub async fn operate_server(
     );
 
     let result = match req.operation {
-        artemis_core::model::ServerOperation::PullOut => state.instance_manager.pull_out_server(
-            &req.server_id,
-            &req.region_id,
-            req.operator_id.clone(),
-            req.operation_complete,
-        ),
-        artemis_core::model::ServerOperation::PullIn => state.instance_manager.pull_in_server(
-            &req.server_id,
-            &req.region_id,
-            req.operator_id.clone(),
-            req.operation_complete,
-        ),
+        artemis_management::model::ServerOperation::PullOut => {
+            state.instance_manager.pull_out_server(
+                &req.server_id,
+                &req.region_id,
+                req.operator_id.clone(),
+                req.operation_complete,
+            )
+        }
+        artemis_management::model::ServerOperation::PullIn => {
+            state.instance_manager.pull_in_server(
+                &req.server_id,
+                &req.region_id,
+                req.operator_id.clone(),
+                req.operation_complete,
+            )
+        }
     };
 
     match result {
         Ok(_) => {
-            let response = OperateServerResponse {
-                status: ResponseStatus::success(),
-            };
+            let response = OperateServerResponse { status: ResponseStatus::success() };
             (StatusCode::OK, Json(response)).into_response()
         }
         Err(e) => {
             error!("Failed to operate server: {}", e);
             let response = OperateServerResponse {
-                status: ResponseStatus::error(artemis_core::model::ErrorCode::InternalError, format!("Operation failed: {}", e)),
+                status: ResponseStatus::error(
+                    artemis_core::model::ErrorCode::InternalError,
+                    format!("Operation failed: {}", e),
+                ),
             };
             (StatusCode::INTERNAL_SERVER_ERROR, Json(response)).into_response()
         }
@@ -153,19 +148,11 @@ pub async fn is_server_down(
     State(state): State<AppState>,
     Json(req): Json<IsServerDownRequest>,
 ) -> Response {
-    let is_down = state
-        .instance_manager
-        .is_server_down(&req.server_id, &req.region_id);
+    let is_down = state.instance_manager.is_server_down(&req.server_id, &req.region_id);
 
-    info!(
-        "Is server down: {}, region: {}, result: {}",
-        req.server_id, req.region_id, is_down
-    );
+    info!("Is server down: {}, region: {}, result: {}", req.server_id, req.region_id, is_down);
 
-    let response = IsServerDownResponse {
-        status: ResponseStatus::success(),
-        is_down,
-    };
+    let response = IsServerDownResponse { status: ResponseStatus::success(), is_down };
 
     (StatusCode::OK, Json(response)).into_response()
 }
@@ -178,14 +165,9 @@ pub async fn get_all_instance_operations_post(
     State(state): State<AppState>,
     Json(req): Json<GetAllInstanceOperationsRequest>,
 ) -> Response {
-    info!(
-        "Get all instance operations (POST), region_id: {:?}",
-        req.region_id
-    );
+    info!("Get all instance operations (POST), region_id: {:?}", req.region_id);
 
-    let records = state
-        .instance_manager
-        .get_all_instance_operations(req.region_id.as_deref());
+    let records = state.instance_manager.get_all_instance_operations(req.region_id.as_deref());
 
     let response = GetAllInstanceOperationsResponse {
         status: ResponseStatus::success(),
@@ -207,14 +189,9 @@ pub async fn get_all_instance_operations_get(
     State(state): State<AppState>,
     Query(query): Query<AllInstanceOperationsQuery>,
 ) -> Response {
-    info!(
-        "Get all instance operations (GET), region_id: {:?}",
-        query.region_id
-    );
+    info!("Get all instance operations (GET), region_id: {:?}", query.region_id);
 
-    let records = state
-        .instance_manager
-        .get_all_instance_operations(query.region_id.as_deref());
+    let records = state.instance_manager.get_all_instance_operations(query.region_id.as_deref());
 
     let response = GetAllInstanceOperationsResponse {
         status: ResponseStatus::success(),
@@ -230,14 +207,9 @@ pub async fn get_all_server_operations_post(
     State(state): State<AppState>,
     Json(req): Json<GetAllServerOperationsRequest>,
 ) -> Response {
-    info!(
-        "Get all server operations (POST), region_id: {:?}",
-        req.region_id
-    );
+    info!("Get all server operations (POST), region_id: {:?}", req.region_id);
 
-    let records = state
-        .instance_manager
-        .get_all_server_operations(req.region_id.as_deref());
+    let records = state.instance_manager.get_all_server_operations(req.region_id.as_deref());
 
     // 转换为 ServerOperationInfo
     let server_records: Vec<ServerOperationInfo> = records
@@ -269,14 +241,9 @@ pub async fn get_all_server_operations_get(
     State(state): State<AppState>,
     Query(query): Query<AllServerOperationsQuery>,
 ) -> Response {
-    info!(
-        "Get all server operations (GET), region_id: {:?}",
-        query.region_id
-    );
+    info!("Get all server operations (GET), region_id: {:?}", query.region_id);
 
-    let records = state
-        .instance_manager
-        .get_all_server_operations(query.region_id.as_deref());
+    let records = state.instance_manager.get_all_server_operations(query.region_id.as_deref());
 
     // 转换为 ServerOperationInfo
     let server_records: Vec<ServerOperationInfo> = records

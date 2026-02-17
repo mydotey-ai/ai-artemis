@@ -32,10 +32,8 @@ fn create_test_app_state() -> AppState {
         None,
     ));
 
-    let discovery_service = Arc::new(artemis_server::discovery::DiscoveryServiceImpl::new(
-        repository,
-        cache.clone(),
-    ));
+    let discovery_service =
+        Arc::new(artemis_server::discovery::DiscoveryServiceImpl::new(repository, cache.clone()));
 
     let session_manager = Arc::new(artemis_web::websocket::SessionManager::new());
     let instance_manager = Arc::new(artemis_management::InstanceManager::new());
@@ -48,11 +46,11 @@ fn create_test_app_state() -> AppState {
     let status_service = Arc::new(artemis_server::StatusService::new(
         None, // cluster_manager
         lease_manager.clone(),
-        "test-node".to_string(), // node_id
-        "test-region".to_string(), // region_id
-        "test-zone".to_string(), // zone_id
+        "test-node".to_string(),             // node_id
+        "test-region".to_string(),           // region_id
+        "test-zone".to_string(),             // zone_id
         "http://localhost:8080".to_string(), // server_url
-        "test-app".to_string(), // app_id
+        "test-app".to_string(),              // app_id
     ));
 
     let auth_manager = Arc::new(artemis_management::auth::AuthManager::new());
@@ -103,9 +101,7 @@ fn create_test_instance(id: &str) -> Instance {
 async fn test_register_success_single_instance() {
     let state = create_test_app_state();
     let instance = create_test_instance("inst-1");
-    let request = RegisterRequest {
-        instances: vec![instance.clone()],
-    };
+    let request = RegisterRequest { instances: vec![instance.clone()] };
 
     let response = registry::register(State(state), Json(request)).await;
 
@@ -132,9 +128,7 @@ async fn test_register_success_multiple_instances() {
 #[tokio::test]
 async fn test_register_empty_instances() {
     let state = create_test_app_state();
-    let request = RegisterRequest {
-        instances: vec![],
-    };
+    let request = RegisterRequest { instances: vec![] };
 
     let response = registry::register(State(state), Json(request)).await;
 
@@ -148,16 +142,12 @@ async fn test_register_duplicate_instance() {
     let instance = create_test_instance("inst-1");
 
     // 第一次注册
-    let request1 = RegisterRequest {
-        instances: vec![instance.clone()],
-    };
+    let request1 = RegisterRequest { instances: vec![instance.clone()] };
     let response1 = registry::register(State(state.clone()), Json(request1)).await;
     assert_eq!(response1.0.response_status.error_code, ErrorCode::Success);
 
     // 第二次注册相同实例 (应该更新)
-    let request2 = RegisterRequest {
-        instances: vec![instance],
-    };
+    let request2 = RegisterRequest { instances: vec![instance] };
     let response2 = registry::register(State(state), Json(request2)).await;
     assert_eq!(response2.0.response_status.error_code, ErrorCode::Success);
 }
@@ -167,17 +157,11 @@ async fn test_register_different_statuses() {
     let state = create_test_app_state();
 
     // 测试不同状态的实例注册
-    for status in [
-        InstanceStatus::Up,
-        InstanceStatus::Down,
-        InstanceStatus::Unhealthy,
-    ] {
+    for status in [InstanceStatus::Up, InstanceStatus::Down, InstanceStatus::Unhealthy] {
         let mut instance = create_test_instance(&format!("inst-{:?}", status));
         instance.status = status;
 
-        let request = RegisterRequest {
-            instances: vec![instance],
-        };
+        let request = RegisterRequest { instances: vec![instance] };
         let response = registry::register(State(state.clone()), Json(request)).await;
 
         assert_eq!(response.0.response_status.error_code, ErrorCode::Success);
@@ -194,15 +178,11 @@ async fn test_heartbeat_success() {
     let instance = create_test_instance("inst-1");
 
     // 先注册
-    let reg_request = RegisterRequest {
-        instances: vec![instance.clone()],
-    };
+    let reg_request = RegisterRequest { instances: vec![instance.clone()] };
     let _ = registry::register(State(state.clone()), Json(reg_request)).await;
 
     // 发送心跳
-    let hb_request = HeartbeatRequest {
-        instance_keys: vec![instance.key()],
-    };
+    let hb_request = HeartbeatRequest { instance_keys: vec![instance.key()] };
     let response = registry::heartbeat(State(state), Json(hb_request)).await;
 
     assert_eq!(response.0.response_status.error_code, ErrorCode::Success);
@@ -219,15 +199,12 @@ async fn test_heartbeat_multiple_instances() {
     ];
 
     // 注册所有实例
-    let reg_request = RegisterRequest {
-        instances: instances.clone(),
-    };
+    let reg_request = RegisterRequest { instances: instances.clone() };
     let _ = registry::register(State(state.clone()), Json(reg_request)).await;
 
     // 批量心跳
-    let hb_request = HeartbeatRequest {
-        instance_keys: instances.iter().map(|i| i.key()).collect(),
-    };
+    let hb_request =
+        HeartbeatRequest { instance_keys: instances.iter().map(|i| i.key()).collect() };
     let response = registry::heartbeat(State(state), Json(hb_request)).await;
 
     assert_eq!(response.0.response_status.error_code, ErrorCode::Success);
@@ -237,9 +214,7 @@ async fn test_heartbeat_multiple_instances() {
 #[tokio::test]
 async fn test_heartbeat_empty_keys() {
     let state = create_test_app_state();
-    let request = HeartbeatRequest {
-        instance_keys: vec![],
-    };
+    let request = HeartbeatRequest { instance_keys: vec![] };
 
     let response = registry::heartbeat(State(state), Json(request)).await;
 
@@ -253,13 +228,14 @@ async fn test_heartbeat_unregistered_instance() {
     let instance = create_test_instance("inst-nonexistent");
 
     // 未注册的实例发送心跳
-    let request = HeartbeatRequest {
-        instance_keys: vec![instance.key()],
-    };
+    let request = HeartbeatRequest { instance_keys: vec![instance.key()] };
     let response = registry::heartbeat(State(state), Json(request)).await;
 
     // 应该有失败记录
-    assert!(response.0.failed_instance_keys.is_some() && !response.0.failed_instance_keys.as_ref().unwrap().is_empty());
+    assert!(
+        response.0.failed_instance_keys.is_some()
+            && !response.0.failed_instance_keys.as_ref().unwrap().is_empty()
+    );
 }
 
 #[tokio::test]
@@ -268,15 +244,11 @@ async fn test_heartbeat_extends_lease() {
     let instance = create_test_instance("inst-1");
 
     // 注册实例
-    let reg_request = RegisterRequest {
-        instances: vec![instance.clone()],
-    };
+    let reg_request = RegisterRequest { instances: vec![instance.clone()] };
     let _ = registry::register(State(state.clone()), Json(reg_request)).await;
 
     // 第一次心跳
-    let hb_request1 = HeartbeatRequest {
-        instance_keys: vec![instance.key()],
-    };
+    let hb_request1 = HeartbeatRequest { instance_keys: vec![instance.key()] };
     let response1 = registry::heartbeat(State(state.clone()), Json(hb_request1)).await;
     assert_eq!(response1.0.response_status.error_code, ErrorCode::Success);
 
@@ -284,9 +256,7 @@ async fn test_heartbeat_extends_lease() {
     tokio::time::sleep(Duration::from_millis(100)).await;
 
     // 第二次心跳 (应该成功续约)
-    let hb_request2 = HeartbeatRequest {
-        instance_keys: vec![instance.key()],
-    };
+    let hb_request2 = HeartbeatRequest { instance_keys: vec![instance.key()] };
     let response2 = registry::heartbeat(State(state), Json(hb_request2)).await;
     assert_eq!(response2.0.response_status.error_code, ErrorCode::Success);
 }
@@ -301,15 +271,11 @@ async fn test_unregister_success() {
     let instance = create_test_instance("inst-1");
 
     // 先注册
-    let reg_request = RegisterRequest {
-        instances: vec![instance.clone()],
-    };
+    let reg_request = RegisterRequest { instances: vec![instance.clone()] };
     let _ = registry::register(State(state.clone()), Json(reg_request)).await;
 
     // 注销
-    let unreg_request = UnregisterRequest {
-        instance_keys: vec![instance.key()],
-    };
+    let unreg_request = UnregisterRequest { instance_keys: vec![instance.key()] };
     let response = registry::unregister(State(state), Json(unreg_request)).await;
 
     assert_eq!(response.0.response_status.error_code, ErrorCode::Success);
@@ -326,15 +292,12 @@ async fn test_unregister_multiple_instances() {
     ];
 
     // 注册所有实例
-    let reg_request = RegisterRequest {
-        instances: instances.clone(),
-    };
+    let reg_request = RegisterRequest { instances: instances.clone() };
     let _ = registry::register(State(state.clone()), Json(reg_request)).await;
 
     // 批量注销
-    let unreg_request = UnregisterRequest {
-        instance_keys: instances.iter().map(|i| i.key()).collect(),
-    };
+    let unreg_request =
+        UnregisterRequest { instance_keys: instances.iter().map(|i| i.key()).collect() };
     let response = registry::unregister(State(state), Json(unreg_request)).await;
 
     assert_eq!(response.0.response_status.error_code, ErrorCode::Success);
@@ -344,9 +307,7 @@ async fn test_unregister_multiple_instances() {
 #[tokio::test]
 async fn test_unregister_empty_keys() {
     let state = create_test_app_state();
-    let request = UnregisterRequest {
-        instance_keys: vec![],
-    };
+    let request = UnregisterRequest { instance_keys: vec![] };
 
     let response = registry::unregister(State(state), Json(request)).await;
 
@@ -360,9 +321,7 @@ async fn test_unregister_unregistered_instance() {
     let instance = create_test_instance("inst-nonexistent");
 
     // 注销未注册的实例
-    let request = UnregisterRequest {
-        instance_keys: vec![instance.key()],
-    };
+    let request = UnregisterRequest { instance_keys: vec![instance.key()] };
     let response = registry::unregister(State(state), Json(request)).await;
 
     // 注销不存在的实例应该返回成功 (幂等)
@@ -375,22 +334,16 @@ async fn test_unregister_twice() {
     let instance = create_test_instance("inst-1");
 
     // 注册
-    let reg_request = RegisterRequest {
-        instances: vec![instance.clone()],
-    };
+    let reg_request = RegisterRequest { instances: vec![instance.clone()] };
     let _ = registry::register(State(state.clone()), Json(reg_request)).await;
 
     // 第一次注销
-    let unreg_request1 = UnregisterRequest {
-        instance_keys: vec![instance.key()],
-    };
+    let unreg_request1 = UnregisterRequest { instance_keys: vec![instance.key()] };
     let response1 = registry::unregister(State(state.clone()), Json(unreg_request1)).await;
     assert_eq!(response1.0.response_status.error_code, ErrorCode::Success);
 
     // 第二次注销 (幂等性测试)
-    let unreg_request2 = UnregisterRequest {
-        instance_keys: vec![instance.key()],
-    };
+    let unreg_request2 = UnregisterRequest { instance_keys: vec![instance.key()] };
     let response2 = registry::unregister(State(state), Json(unreg_request2)).await;
     assert_eq!(response2.0.response_status.error_code, ErrorCode::Success);
 }
@@ -405,38 +358,24 @@ async fn test_full_lifecycle() {
     let instance = create_test_instance("inst-lifecycle");
 
     // 1. 注册
-    let reg_request = RegisterRequest {
-        instances: vec![instance.clone()],
-    };
+    let reg_request = RegisterRequest { instances: vec![instance.clone()] };
     let reg_response = registry::register(State(state.clone()), Json(reg_request)).await;
     assert_eq!(reg_response.0.response_status.error_code, ErrorCode::Success);
 
     // 2. 心跳
-    let hb_request = HeartbeatRequest {
-        instance_keys: vec![instance.key()],
-    };
+    let hb_request = HeartbeatRequest { instance_keys: vec![instance.key()] };
     let hb_response = registry::heartbeat(State(state.clone()), Json(hb_request)).await;
     assert_eq!(hb_response.0.response_status.error_code, ErrorCode::Success);
 
     // 3. 再次心跳
-    let hb_request2 = HeartbeatRequest {
-        instance_keys: vec![instance.key()],
-    };
+    let hb_request2 = HeartbeatRequest { instance_keys: vec![instance.key()] };
     let hb_response2 = registry::heartbeat(State(state.clone()), Json(hb_request2)).await;
-    assert_eq!(
-        hb_response2.0.response_status.error_code,
-        ErrorCode::Success
-    );
+    assert_eq!(hb_response2.0.response_status.error_code, ErrorCode::Success);
 
     // 4. 注销
-    let unreg_request = UnregisterRequest {
-        instance_keys: vec![instance.key()],
-    };
+    let unreg_request = UnregisterRequest { instance_keys: vec![instance.key()] };
     let unreg_response = registry::unregister(State(state), Json(unreg_request)).await;
-    assert_eq!(
-        unreg_response.0.response_status.error_code,
-        ErrorCode::Success
-    );
+    assert_eq!(unreg_response.0.response_status.error_code, ErrorCode::Success);
 }
 
 // ============================================================================
@@ -453,9 +392,7 @@ async fn test_concurrent_registrations() {
             let state = state.clone();
             tokio::spawn(async move {
                 let instance = create_test_instance(&format!("inst-{}", i));
-                let request = RegisterRequest {
-                    instances: vec![instance],
-                };
+                let request = RegisterRequest { instances: vec![instance] };
                 registry::register(State(state), Json(request)).await
             })
         })
@@ -474,9 +411,7 @@ async fn test_concurrent_heartbeats() {
 
     // 先注册 10 个实例
     let instances: Vec<_> = (0..10).map(|i| create_test_instance(&format!("inst-{}", i))).collect();
-    let reg_request = RegisterRequest {
-        instances: instances.clone(),
-    };
+    let reg_request = RegisterRequest { instances: instances.clone() };
     let _ = registry::register(State(state.clone()), Json(reg_request)).await;
 
     // 并发心跳
@@ -486,9 +421,7 @@ async fn test_concurrent_heartbeats() {
             let state = state.clone();
             let key = instance.key();
             tokio::spawn(async move {
-                let request = HeartbeatRequest {
-                    instance_keys: vec![key],
-                };
+                let request = HeartbeatRequest { instance_keys: vec![key] };
                 registry::heartbeat(State(state), Json(request)).await
             })
         })

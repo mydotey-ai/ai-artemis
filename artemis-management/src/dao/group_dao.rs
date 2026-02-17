@@ -1,6 +1,6 @@
-use artemis_core::model::{ServiceGroup, GroupTag, GroupType, GroupStatus};
-use sea_orm::{DatabaseConnection, Statement, ConnectionTrait};
+use crate::model::{GroupStatus, GroupTag, GroupType, ServiceGroup};
 use sea_orm::sea_query::Value;
+use sea_orm::{ConnectionTrait, DatabaseConnection, Statement};
 
 pub struct GroupDao {
     conn: DatabaseConnection,
@@ -18,7 +18,9 @@ impl GroupDao {
             GroupType::Logical => "logical",
         };
 
-        let metadata_json = serde_json::to_string(&group.metadata.as_ref().unwrap_or(&std::collections::HashMap::new()))?;
+        let metadata_json = serde_json::to_string(
+            &group.metadata.as_ref().unwrap_or(&std::collections::HashMap::new()),
+        )?;
 
         let stmt = Statement::from_sql_and_values(
             self.conn.get_database_backend(),
@@ -57,7 +59,9 @@ impl GroupDao {
             GroupType::Logical => "logical",
         };
 
-        let metadata_json = serde_json::to_string(&group.metadata.as_ref().unwrap_or(&std::collections::HashMap::new()))?;
+        let metadata_json = serde_json::to_string(
+            &group.metadata.as_ref().unwrap_or(&std::collections::HashMap::new()),
+        )?;
 
         let stmt = Statement::from_sql_and_values(
             self.conn.get_database_backend(),
@@ -225,11 +229,7 @@ impl GroupDao {
             VALUES (?, ?, ?)
             ON CONFLICT(group_id, tag_key) DO UPDATE SET tag_value = excluded.tag_value
             "#,
-            vec![
-                Value::from(group_id),
-                Value::from(&tag.key),
-                Value::from(&tag.value),
-            ],
+            vec![Value::from(group_id), Value::from(&tag.key), Value::from(&tag.value)],
         );
         self.conn.execute(stmt).await?;
         Ok(())

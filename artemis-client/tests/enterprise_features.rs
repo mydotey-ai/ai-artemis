@@ -1,7 +1,5 @@
 use artemis_client::{AddressManager, ClientConfig, FilterChain, StatusFilter};
-use artemis_core::model::{
-    DiscoveryConfig, Instance, InstanceStatus, LookupServicesRequest,
-};
+use artemis_core::model::{DiscoveryConfig, Instance, InstanceStatus, LookupServicesRequest};
 use std::time::Duration;
 
 #[tokio::test]
@@ -39,25 +37,16 @@ async fn test_config_validation() {
     assert!(bad_config.validate().is_err());
 
     // Valid config
-    let good_config = ClientConfig {
-        heartbeat_interval_secs: 30,
-        heartbeat_ttl_secs: 90,
-        ..Default::default()
-    };
+    let good_config =
+        ClientConfig { heartbeat_interval_secs: 30, heartbeat_ttl_secs: 90, ..Default::default() };
     assert!(good_config.validate().is_ok());
 
     // Empty server URLs
-    let empty_config = ClientConfig {
-        server_urls: vec![],
-        ..Default::default()
-    };
+    let empty_config = ClientConfig { server_urls: vec![], ..Default::default() };
     assert!(empty_config.validate().is_err());
 
     // Retry times out of range
-    let retry_config = ClientConfig {
-        http_retry_times: 15,
-        ..Default::default()
-    };
+    let retry_config = ClientConfig { http_retry_times: 15, ..Default::default() };
     assert!(retry_config.validate().is_err());
 }
 
@@ -95,10 +84,8 @@ async fn test_filter_chain_integration() {
     assert!(filtered.iter().all(|i| i.status == InstanceStatus::Up));
 
     // Filter Up and Down instances
-    let chain = FilterChain::new().add(Box::new(StatusFilter::new(vec![
-        InstanceStatus::Up,
-        InstanceStatus::Down,
-    ])));
+    let chain = FilterChain::new()
+        .add(Box::new(StatusFilter::new(vec![InstanceStatus::Up, InstanceStatus::Down])));
     let filtered = chain.apply(instances);
     assert_eq!(filtered.len(), 3);
 }
@@ -126,9 +113,7 @@ async fn test_batch_request_types() {
         },
     ];
 
-    let request = LookupServicesRequest {
-        discovery_configs: configs,
-    };
+    let request = LookupServicesRequest { discovery_configs: configs };
 
     assert_eq!(request.discovery_configs.len(), 3);
 
@@ -148,11 +133,8 @@ async fn test_address_manager_dynamic() {
     assert_eq!(manager.address_count(), 1);
 
     // Update with new addresses
-    let new_urls = vec![
-        "http://node1:8080".into(),
-        "http://node2:8080".into(),
-        "http://node3:8080".into(),
-    ];
+    let new_urls =
+        vec!["http://node1:8080".into(), "http://node2:8080".into(), "http://node3:8080".into()];
     manager.update_addresses(new_urls).await;
     assert_eq!(manager.address_count(), 3);
 
@@ -191,8 +173,8 @@ async fn test_retry_queue() {
 async fn test_http_retry() {
     use artemis_client::error::ClientError;
     use artemis_client::http::retry_with_backoff;
-    use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Arc;
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
     let counter = Arc::new(AtomicUsize::new(0));
 
@@ -202,11 +184,7 @@ async fn test_http_retry() {
         let c = c.clone();
         async move {
             let count = c.fetch_add(1, Ordering::SeqCst);
-            if count < 2 {
-                Err(ClientError::Internal("fail".into()))
-            } else {
-                Ok("success")
-            }
+            if count < 2 { Err(ClientError::Internal("fail".into())) } else { Ok("success") }
         }
     })
     .await;

@@ -16,15 +16,14 @@
 //! - get_instances_by_group: 按分组获取实例
 
 use artemis_core::model::{
-    ErrorCode, HeartbeatRequest, Instance, InstanceKey, InstanceStatus, RegisterRequest,
-    UnregisterRequest, ReplicateRegisterRequest, ReplicateHeartbeatRequest,
-    ReplicateUnregisterRequest, BatchRegisterRequest, BatchHeartbeatRequest,
-    BatchUnregisterRequest, ServicesDeltaRequest, SyncFullDataRequest,
+    BatchHeartbeatRequest, BatchRegisterRequest, BatchUnregisterRequest, ErrorCode,
+    HeartbeatRequest, Instance, InstanceKey, InstanceStatus, RegisterRequest,
+    ReplicateHeartbeatRequest, ReplicateRegisterRequest, ReplicateUnregisterRequest,
+    ServicesDeltaRequest, SyncFullDataRequest, UnregisterRequest,
 };
-use artemis_core::traits::RegistryService;
 use artemis_server::{
-    RegistryServiceImpl, cache::VersionedCacheManager, change::InstanceChangeManager,
-    lease::LeaseManager, registry::RegistryRepository,
+    traits::RegistryService, RegistryServiceImpl, cache::VersionedCacheManager,
+    change::InstanceChangeManager, lease::LeaseManager, registry::RegistryRepository,
 };
 use std::sync::Arc;
 use std::time::Duration;
@@ -84,9 +83,7 @@ async fn test_register_single_instance() {
     let (service, repo) = create_test_registry_service();
 
     let instance = create_test_instance("my-service", "inst-1");
-    let request = RegisterRequest {
-        instances: vec![instance],
-    };
+    let request = RegisterRequest { instances: vec![instance] };
 
     let response = service.register(request).await;
 
@@ -117,9 +114,7 @@ async fn test_register_updates_cache() {
     let (service, _repo) = create_test_registry_service();
 
     let instance = create_test_instance("my-service", "inst-1");
-    let request = RegisterRequest {
-        instances: vec![instance],
-    };
+    let request = RegisterRequest { instances: vec![instance] };
 
     service.register(request).await;
 
@@ -138,14 +133,10 @@ async fn test_heartbeat_success() {
     // 先注册
     let instance = create_test_instance("my-service", "inst-1");
     let key = instance.key();
-    service.register(RegisterRequest {
-        instances: vec![instance],
-    }).await;
+    service.register(RegisterRequest { instances: vec![instance] }).await;
 
     // 心跳
-    let request = HeartbeatRequest {
-        instance_keys: vec![key],
-    };
+    let request = HeartbeatRequest { instance_keys: vec![key] };
     let response = service.heartbeat(request).await;
 
     assert_eq!(response.response_status.error_code, ErrorCode::Success);
@@ -157,9 +148,7 @@ async fn test_heartbeat_non_existent_instance() {
     let (service, _repo) = create_test_registry_service();
 
     let key = create_instance_key("non-existent", "inst-1");
-    let request = HeartbeatRequest {
-        instance_keys: vec![key.clone()],
-    };
+    let request = HeartbeatRequest { instance_keys: vec![key.clone()] };
 
     let response = service.heartbeat(request).await;
 
@@ -178,14 +167,10 @@ async fn test_heartbeat_multiple_instances() {
     let key1 = inst1.key();
     let key2 = inst2.key();
 
-    service.register(RegisterRequest {
-        instances: vec![inst1, inst2],
-    }).await;
+    service.register(RegisterRequest { instances: vec![inst1, inst2] }).await;
 
     // 心跳
-    let request = HeartbeatRequest {
-        instance_keys: vec![key1, key2],
-    };
+    let request = HeartbeatRequest { instance_keys: vec![key1, key2] };
     let response = service.heartbeat(request).await;
 
     assert_eq!(response.response_status.error_code, ErrorCode::Success);
@@ -199,15 +184,11 @@ async fn test_heartbeat_partial_failure() {
     // 只注册 1 个实例
     let inst1 = create_test_instance("my-service", "inst-1");
     let key1 = inst1.key();
-    service.register(RegisterRequest {
-        instances: vec![inst1],
-    }).await;
+    service.register(RegisterRequest { instances: vec![inst1] }).await;
 
     // 心跳包含 1 个存在的和 1 个不存在的
     let key2 = create_instance_key("my-service", "inst-2");
-    let request = HeartbeatRequest {
-        instance_keys: vec![key1, key2],
-    };
+    let request = HeartbeatRequest { instance_keys: vec![key1, key2] };
 
     let response = service.heartbeat(request).await;
 
@@ -225,16 +206,12 @@ async fn test_unregister_single_instance() {
     // 注册
     let instance = create_test_instance("my-service", "inst-1");
     let key = instance.key();
-    service.register(RegisterRequest {
-        instances: vec![instance],
-    }).await;
+    service.register(RegisterRequest { instances: vec![instance] }).await;
 
     assert_eq!(repo.count(), 1);
 
     // 注销
-    let request = UnregisterRequest {
-        instance_keys: vec![key],
-    };
+    let request = UnregisterRequest { instance_keys: vec![key] };
     let response = service.unregister(request).await;
 
     assert_eq!(response.response_status.error_code, ErrorCode::Success);
@@ -257,9 +234,7 @@ async fn test_unregister_multiple_instances() {
     assert_eq!(repo.count(), 3);
 
     // 注销全部
-    let request = UnregisterRequest {
-        instance_keys: keys,
-    };
+    let request = UnregisterRequest { instance_keys: keys };
     service.unregister(request).await;
 
     assert_eq!(repo.count(), 0);
@@ -270,9 +245,7 @@ async fn test_unregister_non_existent_instance() {
     let (service, repo) = create_test_registry_service();
 
     let key = create_instance_key("non-existent", "inst-1");
-    let request = UnregisterRequest {
-        instance_keys: vec![key],
-    };
+    let request = UnregisterRequest { instance_keys: vec![key] };
 
     let response = service.unregister(request).await;
 
@@ -288,9 +261,7 @@ async fn test_register_from_replication() {
     let (service, repo) = create_test_registry_service();
 
     let instance = create_test_instance("my-service", "inst-1");
-    let request = ReplicateRegisterRequest {
-        instances: vec![instance],
-    };
+    let request = ReplicateRegisterRequest { instances: vec![instance] };
 
     let response = service.register_from_replication(request).await;
 
@@ -306,14 +277,10 @@ async fn test_heartbeat_from_replication() {
     // 先注册
     let instance = create_test_instance("my-service", "inst-1");
     let key = instance.key();
-    service.register(RegisterRequest {
-        instances: vec![instance],
-    }).await;
+    service.register(RegisterRequest { instances: vec![instance] }).await;
 
     // 复制心跳
-    let request = ReplicateHeartbeatRequest {
-        instance_keys: vec![key],
-    };
+    let request = ReplicateHeartbeatRequest { instance_keys: vec![key] };
     let response = service.heartbeat_from_replication(request).await;
 
     assert_eq!(response.response_status.error_code, ErrorCode::Success);
@@ -327,14 +294,10 @@ async fn test_unregister_from_replication() {
     // 先注册
     let instance = create_test_instance("my-service", "inst-1");
     let key = instance.key();
-    service.register(RegisterRequest {
-        instances: vec![instance],
-    }).await;
+    service.register(RegisterRequest { instances: vec![instance] }).await;
 
     // 复制注销
-    let request = ReplicateUnregisterRequest {
-        instance_keys: vec![key],
-    };
+    let request = ReplicateUnregisterRequest { instance_keys: vec![key] };
     let response = service.unregister_from_replication(request).await;
 
     assert_eq!(response.response_status.error_code, ErrorCode::Success);
@@ -375,9 +338,7 @@ async fn test_batch_heartbeat() {
     service.register(RegisterRequest { instances }).await;
 
     // 批量心跳
-    let request = BatchHeartbeatRequest {
-        instance_keys: keys,
-    };
+    let request = BatchHeartbeatRequest { instance_keys: keys };
     let response = service.batch_heartbeat(request).await;
 
     assert_eq!(response.response_status.error_code, ErrorCode::Success);
@@ -391,15 +352,11 @@ async fn test_batch_heartbeat_partial_failure() {
     // 只注册 1 个
     let inst1 = create_test_instance("my-service", "inst-1");
     let key1 = inst1.key();
-    service.register(RegisterRequest {
-        instances: vec![inst1],
-    }).await;
+    service.register(RegisterRequest { instances: vec![inst1] }).await;
 
     // 批量心跳包含不存在的实例
     let key2 = create_instance_key("my-service", "inst-2");
-    let request = BatchHeartbeatRequest {
-        instance_keys: vec![key1, key2],
-    };
+    let request = BatchHeartbeatRequest { instance_keys: vec![key1, key2] };
 
     let response = service.batch_heartbeat(request).await;
 
@@ -424,9 +381,7 @@ async fn test_batch_unregister() {
     assert_eq!(repo.count(), 3);
 
     // 批量注销
-    let request = BatchUnregisterRequest {
-        instance_keys: keys,
-    };
+    let request = BatchUnregisterRequest { instance_keys: keys };
     let response = service.batch_unregister(request).await;
 
     assert_eq!(response.response_status.error_code, ErrorCode::Success);
@@ -527,9 +482,7 @@ async fn test_get_instances_by_group() {
     let mut inst2 = create_test_instance("my-service", "inst-2");
     inst2.group_id = Some("group-2".to_string());
 
-    service.register(RegisterRequest {
-        instances: vec![inst1, inst2],
-    }).await;
+    service.register(RegisterRequest { instances: vec![inst1, inst2] }).await;
 
     // 查询 group-1 的实例
     let instances = service.get_instances_by_group("my-service", "group-1", None);
@@ -544,9 +497,7 @@ async fn test_get_instances_by_group_empty() {
 
     // 注册实例但不指定分组
     let instance = create_test_instance("my-service", "inst-1");
-    service.register(RegisterRequest {
-        instances: vec![instance],
-    }).await;
+    service.register(RegisterRequest { instances: vec![instance] }).await;
 
     // 查询不存在的分组
     let instances = service.get_instances_by_group("my-service", "non-existent-group", None);
@@ -561,9 +512,7 @@ async fn test_cache_consistency_after_register() {
     let (service, _repo) = create_test_registry_service();
 
     let instance = create_test_instance("my-service", "inst-1");
-    service.register(RegisterRequest {
-        instances: vec![instance],
-    }).await;
+    service.register(RegisterRequest { instances: vec![instance] }).await;
 
     // 验证通过 get_all_services 能获取到注册的实例
     let all_services = service.get_all_services().await;
@@ -578,14 +527,10 @@ async fn test_cache_consistency_after_unregister() {
     // 注册
     let instance = create_test_instance("my-service", "inst-1");
     let key = instance.key();
-    service.register(RegisterRequest {
-        instances: vec![instance],
-    }).await;
+    service.register(RegisterRequest { instances: vec![instance] }).await;
 
     // 注销
-    service.unregister(UnregisterRequest {
-        instance_keys: vec![key],
-    }).await;
+    service.unregister(UnregisterRequest { instance_keys: vec![key] }).await;
 
     // 验证缓存已清空
     let all_services = service.get_all_services().await;
@@ -607,9 +552,7 @@ async fn test_cache_consistency_with_multiple_services() {
     // 注销 service-1 的所有实例
     let key1 = create_instance_key("service-1", "inst-1");
     let key2 = create_instance_key("service-1", "inst-2");
-    service.unregister(UnregisterRequest {
-        instance_keys: vec![key1, key2],
-    }).await;
+    service.unregister(UnregisterRequest { instance_keys: vec![key1, key2] }).await;
 
     // 验证 service-1 已被删除,但 service-2 仍存在
     let all_services = service.get_all_services().await;

@@ -8,7 +8,7 @@ use artemis_core::model::{
 };
 use artemis_core::traits::{DiscoveryService, RegistryService};
 use artemis_server::{
-    cache::VersionedCacheManager, change::InstanceChangeManager, RegistryServiceImpl,
+    RegistryServiceImpl, cache::VersionedCacheManager, change::InstanceChangeManager,
     discovery::DiscoveryServiceImpl, lease::LeaseManager, registry::RegistryRepository,
 };
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
@@ -48,10 +48,7 @@ fn bench_register(c: &mut Criterion) {
                     let cache = Arc::new(VersionedCacheManager::new());
                     let change_mgr = Arc::new(InstanceChangeManager::new());
                     let service = RegistryServiceImpl::new(
-                        repo,
-                        lease_mgr,
-                        cache,
-                        change_mgr,
+                        repo, lease_mgr, cache, change_mgr,
                         None, // No replication in benchmark
                     );
 
@@ -131,10 +128,7 @@ fn bench_discovery(c: &mut Criterion) {
                     reg_service.register(RegisterRequest { instances }).await;
 
                     // 服务发现测试
-                    let discovery = DiscoveryServiceImpl::new(
-                        repo,
-                        cache,
-                    );
+                    let discovery = DiscoveryServiceImpl::new(repo, cache);
 
                     let config = DiscoveryConfig {
                         service_id: "benchmark-service".to_string(),
@@ -143,9 +137,7 @@ fn bench_discovery(c: &mut Criterion) {
                         discovery_data: None,
                     };
 
-                    let request = GetServiceRequest {
-                        discovery_config: config,
-                    };
+                    let request = GetServiceRequest { discovery_config: config };
 
                     black_box(discovery.get_service(request).await);
                 });
@@ -170,11 +162,7 @@ fn bench_concurrent_register(c: &mut Criterion) {
                     let cache = Arc::new(VersionedCacheManager::new());
                     let change_mgr = Arc::new(InstanceChangeManager::new());
                     let service = Arc::new(RegistryServiceImpl::new(
-                        repo,
-                        lease_mgr,
-                        cache,
-                        change_mgr,
-                        None,
+                        repo, lease_mgr, cache, change_mgr, None,
                     ));
 
                     let mut handles = vec![];

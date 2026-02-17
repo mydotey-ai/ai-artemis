@@ -14,10 +14,8 @@ use std::sync::Arc;
 
 #[test]
 fn test_new_cluster_manager_with_peers() {
-    let peers = vec![
-        "http://192.168.1.101:8080".to_string(),
-        "http://192.168.1.102:8080".to_string(),
-    ];
+    let peers =
+        vec!["http://192.168.1.101:8080".to_string(), "http://192.168.1.102:8080".to_string()];
 
     let manager = ClusterManager::new("node-0".to_string(), peers);
 
@@ -46,11 +44,7 @@ fn test_register_multiple_nodes() {
     let manager = ClusterManager::default();
 
     for i in 1..=5 {
-        let node = ClusterNode::new(
-            format!("node-{}", i),
-            format!("192.168.1.{}", 100 + i),
-            8080,
-        );
+        let node = ClusterNode::new(format!("node-{}", i), format!("192.168.1.{}", 100 + i), 8080);
         manager.register_node(node);
     }
 
@@ -116,11 +110,7 @@ fn test_get_healthy_nodes_all_up() {
     let manager = ClusterManager::default();
 
     for i in 1..=3 {
-        let node = ClusterNode::new(
-            format!("node-{}", i),
-            format!("192.168.1.{}", 100 + i),
-            8080,
-        );
+        let node = ClusterNode::new(format!("node-{}", i), format!("192.168.1.{}", 100 + i), 8080);
         manager.register_node(node);
     }
 
@@ -290,11 +280,8 @@ fn test_concurrent_node_registration() {
     for i in 0..10 {
         let mgr = manager.clone();
         let handle = thread::spawn(move || {
-            let node = ClusterNode::new(
-                format!("node-{}", i),
-                format!("192.168.1.{}", 100 + i),
-                8080,
-            );
+            let node =
+                ClusterNode::new(format!("node-{}", i), format!("192.168.1.{}", 100 + i), 8080);
             mgr.register_node(node);
         });
         handles.push(handle);
@@ -315,11 +302,7 @@ fn test_concurrent_heartbeat_updates() {
 
     // 先注册 5 个节点
     for i in 0..5 {
-        let node = ClusterNode::new(
-            format!("node-{}", i),
-            format!("192.168.1.{}", 100 + i),
-            8080,
-        );
+        let node = ClusterNode::new(format!("node-{}", i), format!("192.168.1.{}", 100 + i), 8080);
         manager.register_node(node);
     }
 

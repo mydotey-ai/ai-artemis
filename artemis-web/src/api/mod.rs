@@ -7,5 +7,5 @@ pub mod metrics;
 pub mod registry;
 pub mod replication;
 pub mod routing;
-pub mod zone;
 pub mod status;
+pub mod zone;

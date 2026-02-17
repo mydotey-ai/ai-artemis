@@ -29,10 +29,7 @@ impl StatusFilter {
 
 impl RegistryFilter for StatusFilter {
     fn filter(&self, instances: Vec<Instance>) -> Vec<Instance> {
-        instances
-            .into_iter()
-            .filter(|inst| self.allowed_statuses.contains(&inst.status))
-            .collect()
+        instances.into_iter().filter(|inst| self.allowed_statuses.contains(&inst.status)).collect()
     }
 
     fn name(&self) -> &str {
@@ -51,9 +48,7 @@ pub struct FilterChain {
 impl FilterChain {
     /// Create an empty filter chain
     pub fn new() -> Self {
-        Self {
-            filters: Vec::new(),
-        }
+        Self { filters: Vec::new() }
     }
 
     /// Add a filter to the chain
@@ -134,8 +129,7 @@ mod tests {
 
     #[test]
     fn test_filter_chain() {
-        let chain = FilterChain::new()
-            .add(Box::new(StatusFilter::new(vec![InstanceStatus::Up])));
+        let chain = FilterChain::new().add(Box::new(StatusFilter::new(vec![InstanceStatus::Up])));
 
         let instances = vec![
             make_test_instance("1", InstanceStatus::Up),

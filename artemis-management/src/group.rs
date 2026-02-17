@@ -6,13 +6,13 @@
 //! - Group-instance associations
 //! - Operation history tracking
 
-use artemis_core::model::{GroupOperation, GroupTag, ServiceGroup};
-use artemis_core::model::group::{BindingType, GroupInstance};
+use crate::dao::{GroupDao, GroupInstanceDao};
+use crate::db::Database;
+use crate::model::{BindingType, GroupInstance};
+use crate::model::{GroupOperation, GroupTag, ServiceGroup};
 use dashmap::DashMap;
 use std::sync::Arc;
 use tracing::info;
-use crate::db::Database;
-use crate::dao::{GroupDao, GroupInstanceDao};
 
 /// 服务分组管理器
 #[derive(Clone)]
@@ -97,10 +97,9 @@ impl GroupManager {
         group.group_id = Some(group_id);
 
         // 设置创建时间
-        let now = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_secs() as i64;
+        let now =
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs()
+                as i64;
         group.created_at = Some(now);
         group.updated_at = Some(now);
 
@@ -140,10 +139,9 @@ impl GroupManager {
 
         // 更新时间
         let mut updated_group = group;
-        let now = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_secs() as i64;
+        let now =
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs()
+                as i64;
         updated_group.updated_at = Some(now);
 
         info!("Updating group: {}", group_key);
@@ -171,10 +169,7 @@ impl GroupManager {
                 .get(group_key)
                 .ok_or_else(|| format!("Group not found: {}", group_key))?;
 
-            group
-                .value()
-                .group_id
-                .ok_or_else(|| "Group has no ID".to_string())?
+            group.value().group_id.ok_or_else(|| "Group has no ID".to_string())?
         }; // group reference dropped here
 
         info!("Deleting group: {} (ID: {})", group_key, group_id);
@@ -222,10 +217,7 @@ impl GroupManager {
     }
 
     pub fn list_groups(&self) -> Vec<ServiceGroup> {
-        self.groups
-            .iter()
-            .map(|entry| entry.value().clone())
-            .collect()
+        self.groups.iter().map(|entry| entry.value().clone()).collect()
     }
 
     pub fn list_groups_by_service(&self, service_id: &str) -> Vec<ServiceGroup> {
@@ -283,10 +275,7 @@ impl GroupManager {
             .map(|entry| entry.key().0)
             .collect();
 
-        group_ids
-            .into_iter()
-            .filter_map(|gid| self.get_group_by_id(gid))
-            .collect()
+        group_ids.into_iter().filter_map(|gid| self.get_group_by_id(gid)).collect()
     }
 
     // === 实例管理 ===
@@ -304,10 +293,7 @@ impl GroupManager {
     pub fn remove_instance(&self, group_id: i64, instance_id: &str) -> Result<(), String> {
         let key = (group_id, instance_id.to_string());
         if self.group_instances.remove(&key).is_none() {
-            return Err(format!(
-                "Instance {} not in group {}",
-                instance_id, group_id
-            ));
+            return Err(format!("Instance {} not in group {}", instance_id, group_id));
         }
         Ok(())
     }
@@ -391,15 +377,10 @@ impl GroupManager {
         // 持久化到数据库
         if let Some(db) = &self.database {
             let dao = GroupInstanceDao::new(db.conn().clone());
-            dao.insert(&binding)
-                .await
-                .map_err(|e| format!("Failed to persist binding: {}", e))?;
+            dao.insert(&binding).await.map_err(|e| format!("Failed to persist binding: {}", e))?;
         }
 
-        info!(
-            "Added instance {} to group {} (manual binding)",
-            instance_id, group_id
-        );
+        info!("Added instance {} to group {} (manual binding)", instance_id, group_id);
 
         Ok(())
     }
@@ -415,10 +396,7 @@ impl GroupManager {
         // 内存中删除
         let key = (group_id, instance_id.to_string());
         if self.group_instances.remove(&key).is_none() {
-            return Err(format!(
-                "Instance {} not in group {}",
-                instance_id, group_id
-            ));
+            return Err(format!("Instance {} not in group {}", instance_id, group_id));
         }
 
         // 从数据库删除
@@ -429,10 +407,7 @@ impl GroupManager {
                 .map_err(|e| format!("Failed to delete binding: {}", e))?;
         }
 
-        info!(
-            "Removed instance {} from group {}",
-            instance_id, group_id
-        );
+        info!("Removed instance {} from group {}", instance_id, group_id);
 
         Ok(())
     }
@@ -490,10 +465,7 @@ impl GroupManager {
                 .await
                 .map_err(|e| format!("Failed to batch insert: {}", e))?;
 
-            info!(
-                "Batch added {} instances to group {}",
-                count, group_id
-            );
+            info!("Batch added {} instances to group {}", count, group_id);
             Ok(count)
         } else {
             Ok(instances.len())
@@ -510,7 +482,7 @@ impl Default for GroupManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use artemis_core::model::{GroupStatus, GroupType};
+    use crate::model::{GroupStatus, GroupType};
 
     fn create_test_group(name: &str) -> ServiceGroup {
         ServiceGroup {
@@ -607,10 +579,7 @@ mod tests {
 
         let group_id = manager.get_group(&group.group_key()).unwrap().group_id.unwrap();
 
-        let tag = GroupTag {
-            key: "env".to_string(),
-            value: "production".to_string(),
-        };
+        let tag = GroupTag { key: "env".to_string(), value: "production".to_string() };
 
         assert!(manager.add_tag(group_id, tag).is_ok());
 
@@ -630,13 +599,7 @@ mod tests {
         let group_id1 = group1.group_id.unwrap();
 
         manager
-            .add_tag(
-                group_id1,
-                GroupTag {
-                    key: "env".to_string(),
-                    value: "prod".to_string(),
-                },
-            )
+            .add_tag(group_id1, GroupTag { key: "env".to_string(), value: "prod".to_string() })
             .unwrap();
 
         let groups = manager.find_groups_by_tag("env", "prod");
@@ -687,13 +650,7 @@ mod tests {
         let group_id = group.group_id.unwrap();
 
         manager
-            .add_tag(
-                group_id,
-                GroupTag {
-                    key: "env".to_string(),
-                    value: "prod".to_string(),
-                },
-            )
+            .add_tag(group_id, GroupTag { key: "env".to_string(), value: "prod".to_string() })
             .unwrap();
 
         manager.add_instance(group_id, "inst-1").unwrap();
@@ -836,10 +793,9 @@ mod tests {
         let group = manager.get_group(&create_test_group("group-1").group_key()).unwrap();
         let group_id = group.group_id.unwrap();
 
-        manager.add_tag(group_id, GroupTag {
-            key: "env".to_string(),
-            value: "prod".to_string(),
-        }).unwrap();
+        manager
+            .add_tag(group_id, GroupTag { key: "env".to_string(), value: "prod".to_string() })
+            .unwrap();
 
         assert_eq!(manager.get_tags(group_id).len(), 1);
 
@@ -866,10 +822,7 @@ mod tests {
         let group = manager.get_group(&create_test_group("group-1").group_key()).unwrap();
         let group_id = group.group_id.unwrap();
 
-        let tag = GroupTag {
-            key: "env".to_string(),
-            value: "prod".to_string(),
-        };
+        let tag = GroupTag { key: "env".to_string(), value: "prod".to_string() };
 
         // DashMap.insert 会覆盖已存在的值,不会返回错误
         assert!(manager.add_tag(group_id, tag.clone()).is_ok());

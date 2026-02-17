@@ -1,7 +1,7 @@
-use artemis_core::model::{RouteRule, RouteRuleStatus, RouteStrategy};
+use crate::model::{RouteRule, RouteRuleStatus, RouteStrategy};
 use artemis_core::model::service::ServiceGroup;
-use sea_orm::{DatabaseConnection, Statement, ConnectionTrait};
 use sea_orm::sea_query::Value;
+use sea_orm::{ConnectionTrait, DatabaseConnection, Statement};
 
 pub struct RouteRuleDao {
     conn: DatabaseConnection,
@@ -207,7 +207,7 @@ impl RouteRuleDao {
                 Value::from(rule_id),
                 Value::from(&group.group_key),
                 Value::from(weight as i32),
-                Value::from(""),  // region_id 暂时为空
+                Value::from(""), // region_id 暂时为空
             ],
         );
 

@@ -1,10 +1,12 @@
-use artemis_core::config::ArtemisConfig;
-use artemis_management::{AuthManager, GroupManager, InstanceManager, RouteManager, Database, ConfigLoader};
 use artemis_management::auth::UserRole;
+use artemis_management::{
+    AuthManager, ConfigLoader, Database, GroupManager, InstanceManager, RouteManager,
+};
+use artemis_server::config::ArtemisConfig;
 use artemis_server::{
-    cache::VersionedCacheManager, cluster::ClusterManager, discovery::DiscoveryServiceImpl,
-    lease::LeaseManager, registry::RegistryRepository, replication::ReplicationManager,
-    routing::RouteEngine, RegistryServiceImpl,
+    RegistryServiceImpl, cache::VersionedCacheManager, cluster::ClusterManager,
+    discovery::DiscoveryServiceImpl, lease::LeaseManager, registry::RegistryRepository,
+    replication::ReplicationManager, routing::RouteEngine,
 };
 use artemis_web::{server::run_server, state::AppState};
 use clap::{Parser, Subcommand};
@@ -62,9 +64,7 @@ async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Server { config, addr } => {
-            start_server(config, addr).await
-        }
+        Commands::Server { config, addr } => start_server(config, addr).await,
         Commands::Service { action } => match action {
             ServiceAction::List => {
                 println!("Listing services...");
@@ -84,7 +84,10 @@ async fn main() -> anyhow::Result<()> {
     }
 }
 
-async fn start_server(config_path: Option<String>, addr_override: Option<String>) -> anyhow::Result<()> {
+async fn start_server(
+    config_path: Option<String>,
+    addr_override: Option<String>,
+) -> anyhow::Result<()> {
     // 1. Load configuration
     let config = if let Some(path) = config_path {
         println!("Loading configuration from {}", path);
@@ -95,11 +98,8 @@ async fn start_server(config_path: Option<String>, addr_override: Option<String>
     };
 
     // 2. Determine listen address
-    let listen_addr: SocketAddr = if let Some(addr_str) = addr_override {
-        addr_str.parse()?
-    } else {
-        config.listen_addr()
-    };
+    let listen_addr: SocketAddr =
+        if let Some(addr_str) = addr_override { addr_str.parse()? } else { config.listen_addr() };
 
     println!("Node ID: {}", config.server.node_id);
     println!("Region: {}, Zone: {}", config.server.region, config.server.zone);
@@ -107,11 +107,7 @@ async fn start_server(config_path: Option<String>, addr_override: Option<String>
 
     // 3a. Initialize database (optional)
     let database = if let Some(db_config) = &config.database {
-        println!(
-            "Initializing database: {} (type: {})",
-            db_config.url,
-            db_config.db_type
-        );
+        println!("Initializing database: {} (type: {})", db_config.url, db_config.db_type);
         let db = Arc::new(Database::new(&db_config.url, db_config.max_connections).await?);
 
         // 运行数据库迁移
@@ -126,9 +122,7 @@ async fn start_server(config_path: Option<String>, addr_override: Option<String>
 
     // 3. Initialize core components
     let repository = RegistryRepository::new();
-    let lease_manager = Arc::new(LeaseManager::new(
-        Duration::from_secs(config.lease.ttl_secs)
-    ));
+    let lease_manager = Arc::new(LeaseManager::new(Duration::from_secs(config.lease.ttl_secs)));
     let cache = Arc::new(VersionedCacheManager::new());
     let change_manager = Arc::new(artemis_server::InstanceChangeManager::new());
 
@@ -150,11 +144,7 @@ async fn start_server(config_path: Option<String>, addr_override: Option<String>
         let repl_mgr = Arc::new(repl_mgr);
 
         // 启动复制工作器
-        ReplicationManager::start_worker(
-            event_rx,
-            cluster.clone(),
-            config.replication.clone(),
-        );
+        ReplicationManager::start_worker(event_rx, cluster.clone(), config.replication.clone());
 
         println!("Cluster initialized with {} peers", cluster.node_count());
 
@@ -179,7 +169,8 @@ async fn start_server(config_path: Option<String>, addr_override: Option<String>
     let group_manager = Arc::new(GroupManager::with_database(database.clone()));
     let route_manager = Arc::new(RouteManager::with_database(database.clone()));
     let zone_manager = Arc::new(artemis_management::ZoneManager::with_database(database.clone()));
-    let canary_manager = Arc::new(artemis_management::CanaryManager::with_database(database.clone()));
+    let canary_manager =
+        Arc::new(artemis_management::CanaryManager::with_database(database.clone()));
     let audit_manager = Arc::new(artemis_management::AuditManager::new());
     let route_engine = Arc::new(RouteEngine::new());
 
@@ -231,9 +222,10 @@ async fn start_server(config_path: Option<String>, addr_override: Option<String>
     ));
 
     // Add group routing filter
-    discovery_service.add_filter(Arc::new(
-        artemis_server::discovery::GroupRoutingFilter::new(route_manager.clone(), route_engine.clone()),
-    ));
+    discovery_service.add_filter(Arc::new(artemis_server::discovery::GroupRoutingFilter::new(
+        route_manager.clone(),
+        route_engine.clone(),
+    )));
 
     let discovery_service = Arc::new(discovery_service);
 

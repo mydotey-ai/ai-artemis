@@ -1,7 +1,11 @@
 use crate::state::AppState;
 use artemis_core::model::*;
-use artemis_core::traits::RegistryService;
-use axum::{Json, extract::{State, Query}, http::{HeaderMap, StatusCode}};
+use artemis_server::traits::RegistryService;
+use axum::{
+    Json,
+    extract::{Query, State},
+    http::{HeaderMap, StatusCode},
+};
 use serde::Deserialize;
 
 /// 复制-注册端点
@@ -53,9 +57,7 @@ pub async fn replicate_unregister(
 }
 
 /// 获取所有服务(用于新节点启动同步) - POST 版本
-pub async fn get_all_services(
-    State(state): State<AppState>,
-) -> Json<GetAllServicesResponse> {
+pub async fn get_all_services(State(state): State<AppState>) -> Json<GetAllServicesResponse> {
     let response = state.registry_service.get_all_services().await;
     Json(response)
 }

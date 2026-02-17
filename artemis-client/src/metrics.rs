@@ -67,11 +67,8 @@ impl ClientMetrics {
         .unwrap();
 
         let heartbeat_latency = Histogram::with_opts(
-            HistogramOpts::new(
-                "artemis_client_heartbeat_latency_seconds",
-                "Heartbeat latency",
-            )
-            .buckets(vec![0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0]),
+            HistogramOpts::new("artemis_client_heartbeat_latency_seconds", "Heartbeat latency")
+                .buckets(vec![0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0]),
         )
         .unwrap();
 
@@ -82,19 +79,13 @@ impl ClientMetrics {
         .unwrap();
 
         let discovery_latency = Histogram::with_opts(
-            HistogramOpts::new(
-                "artemis_client_discovery_latency_seconds",
-                "Discovery latency",
-            )
-            .buckets(vec![0.01, 0.05, 0.1, 0.5, 1.0, 2.0, 5.0]),
+            HistogramOpts::new("artemis_client_discovery_latency_seconds", "Discovery latency")
+                .buckets(vec![0.01, 0.05, 0.1, 0.5, 1.0, 2.0, 5.0]),
         )
         .unwrap();
 
         let http_status_codes = IntCounterVec::new(
-            Opts::new(
-                "artemis_client_http_status_total",
-                "HTTP status code distribution",
-            ),
+            Opts::new("artemis_client_http_status_total", "HTTP status code distribution"),
             &["status_code"],
         )
         .unwrap();
@@ -118,12 +109,8 @@ impl ClientMetrics {
         REGISTRY.register(Box::new(discovery_total.clone())).ok();
         REGISTRY.register(Box::new(discovery_latency.clone())).ok();
         REGISTRY.register(Box::new(http_status_codes.clone())).ok();
-        REGISTRY
-            .register(Box::new(websocket_messages.clone()))
-            .ok();
-        REGISTRY
-            .register(Box::new(websocket_connections.clone()))
-            .ok();
+        REGISTRY.register(Box::new(websocket_messages.clone())).ok();
+        REGISTRY.register(Box::new(websocket_connections.clone())).ok();
 
         Self {
             heartbeat_total,
@@ -139,9 +126,7 @@ impl ClientMetrics {
 
     /// Record an HTTP status code
     pub fn record_http_status(&self, status: u16) {
-        self.http_status_codes
-            .with_label_values(&[&status.to_string()])
-            .inc();
+        self.http_status_codes.with_label_values(&[&status.to_string()]).inc();
     }
 }
 

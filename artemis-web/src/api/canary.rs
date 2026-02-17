@@ -1,12 +1,12 @@
 //! Canary release HTTP API
 
 use crate::state::AppState;
-use artemis_core::model::{CanaryConfig, EnableCanaryRequest, SetCanaryConfigRequest};
+use artemis_management::model::{CanaryConfig, EnableCanaryRequest, SetCanaryConfigRequest};
 use axum::{
+    Json,
     extract::{Path, State},
     http::StatusCode,
     response::IntoResponse,
-    Json,
 };
 use serde::Serialize;
 
@@ -21,19 +21,11 @@ pub struct ApiResponse<T> {
 
 impl<T> ApiResponse<T> {
     pub fn success(data: T) -> Self {
-        Self {
-            success: true,
-            data: Some(data),
-            message: None,
-        }
+        Self { success: true, data: Some(data), message: None }
     }
 
     pub fn error(message: String) -> Self {
-        Self {
-            success: false,
-            data: None,
-            message: Some(message),
-        }
+        Self { success: false, data: None, message: Some(message) }
     }
 }
 
@@ -53,10 +45,9 @@ pub async fn set_canary_config(
             StatusCode::OK,
             Json(ApiResponse::success("Canary config set successfully".to_string())),
         ),
-        Err(e) => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ApiResponse::<String>::error(e.to_string())),
-        ),
+        Err(e) => {
+            (StatusCode::INTERNAL_SERVER_ERROR, Json(ApiResponse::<String>::error(e.to_string())))
+        }
     }
 }
 
@@ -69,9 +60,7 @@ pub async fn get_canary_config(
         Some(config) => (StatusCode::OK, Json(ApiResponse::success(config))),
         None => (
             StatusCode::NOT_FOUND,
-            Json(ApiResponse::<CanaryConfig>::error(
-                "Canary config not found".to_string(),
-            )),
+            Json(ApiResponse::<CanaryConfig>::error("Canary config not found".to_string())),
         ),
     }
 }
@@ -90,10 +79,9 @@ pub async fn enable_canary(
                 req.service_id
             ))),
         ),
-        Err(e) => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ApiResponse::<String>::error(e.to_string())),
-        ),
+        Err(e) => {
+            (StatusCode::INTERNAL_SERVER_ERROR, Json(ApiResponse::<String>::error(e.to_string())))
+        }
     }
 }
 
@@ -103,14 +91,10 @@ pub async fn delete_canary_config(
     Path(service_id): Path<String>,
 ) -> impl IntoResponse {
     match state.canary_manager.remove_config(&service_id) {
-        Ok(_) => (
-            StatusCode::OK,
-            Json(ApiResponse::success("Canary config removed".to_string())),
-        ),
-        Err(e) => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ApiResponse::<String>::error(e.to_string())),
-        ),
+        Ok(_) => (StatusCode::OK, Json(ApiResponse::success("Canary config removed".to_string()))),
+        Err(e) => {
+            (StatusCode::INTERNAL_SERVER_ERROR, Json(ApiResponse::<String>::error(e.to_string())))
+        }
     }
 }
 
@@ -142,7 +126,7 @@ mod tests {
 
     #[test]
     fn test_set_canary_config_request() {
-        use artemis_core::model::SetCanaryConfigRequest;
+        use artemis_management::model::SetCanaryConfigRequest;
         let req = SetCanaryConfigRequest {
             service_id: "service1".to_string(),
             ip_whitelist: vec!["192.168.1.1".to_string()],
@@ -153,18 +137,15 @@ mod tests {
 
     #[test]
     fn test_enable_canary_request() {
-        use artemis_core::model::EnableCanaryRequest;
-        let req = EnableCanaryRequest {
-            service_id: "service1".to_string(),
-            enabled: true,
-        };
+        use artemis_management::model::EnableCanaryRequest;
+        let req = EnableCanaryRequest { service_id: "service1".to_string(), enabled: true };
         assert_eq!(req.service_id, "service1");
         assert!(req.enabled);
     }
 
     #[test]
     fn test_canary_config() {
-        use artemis_core::model::CanaryConfig;
+        use artemis_management::model::CanaryConfig;
         let config = CanaryConfig {
             service_id: "service1".to_string(),
             ip_whitelist: vec!["192.168.1.1".to_string(), "10.0.0.1".to_string()],
@@ -177,7 +158,7 @@ mod tests {
 
     #[test]
     fn test_canary_config_disabled() {
-        use artemis_core::model::CanaryConfig;
+        use artemis_management::model::CanaryConfig;
         let config = CanaryConfig {
             service_id: "service2".to_string(),
             ip_whitelist: vec![],
@@ -189,34 +170,26 @@ mod tests {
 
     #[test]
     fn test_enable_canary_request_disabled() {
-        use artemis_core::model::EnableCanaryRequest;
-        let req = EnableCanaryRequest {
-            service_id: "service2".to_string(),
-            enabled: false,
-        };
+        use artemis_management::model::EnableCanaryRequest;
+        let req = EnableCanaryRequest { service_id: "service2".to_string(), enabled: false };
         assert_eq!(req.service_id, "service2");
         assert!(!req.enabled);
     }
 
     #[test]
     fn test_set_canary_config_request_empty_whitelist() {
-        use artemis_core::model::SetCanaryConfigRequest;
-        let req = SetCanaryConfigRequest {
-            service_id: "service3".to_string(),
-            ip_whitelist: vec![],
-        };
+        use artemis_management::model::SetCanaryConfigRequest;
+        let req =
+            SetCanaryConfigRequest { service_id: "service3".to_string(), ip_whitelist: vec![] };
         assert_eq!(req.service_id, "service3");
         assert!(req.ip_whitelist.is_empty());
     }
 
     #[test]
     fn test_set_canary_config_request_multiple_ips() {
-        use artemis_core::model::SetCanaryConfigRequest;
-        let ips = vec![
-            "192.168.1.1".to_string(),
-            "192.168.1.2".to_string(),
-            "10.0.0.1".to_string(),
-        ];
+        use artemis_management::model::SetCanaryConfigRequest;
+        let ips =
+            vec!["192.168.1.1".to_string(), "192.168.1.2".to_string(), "10.0.0.1".to_string()];
         let req = SetCanaryConfigRequest {
             service_id: "service4".to_string(),
             ip_whitelist: ips.clone(),

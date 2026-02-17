@@ -77,10 +77,7 @@ impl DiscoveryFilter for ManagementDiscoveryFilter {
             }
 
             // 检查服务器是否被拉出
-            if self
-                .instance_manager
-                .is_server_down(&inst.ip, &inst.region_id)
-            {
+            if self.instance_manager.is_server_down(&inst.ip, &inst.region_id) {
                 tracing::debug!(
                     "Filtering out instance (server pull-out): {} on {}",
                     key.instance_id,
@@ -113,10 +110,7 @@ pub struct GroupRoutingFilter {
 
 impl GroupRoutingFilter {
     pub fn new(route_manager: Arc<RouteManager>, route_engine: Arc<RouteEngine>) -> Self {
-        Self {
-            route_manager,
-            route_engine,
-        }
+        Self { route_manager, route_engine }
     }
 }
 
@@ -149,11 +143,7 @@ impl DiscoveryFilter for GroupRoutingFilter {
             let instances = std::mem::take(&mut service.instances);
 
             // 应用路由引擎
-            let filtered_instances = self.route_engine.apply_route_rule(
-                instances,
-                rule,
-                &context,
-            );
+            let filtered_instances = self.route_engine.apply_route_rule(instances, rule, &context);
 
             // 更新服务实例
             service.instances = filtered_instances;
@@ -198,7 +188,6 @@ mod tests {
             instances,
             metadata: None,
             logic_instances: None,
-            route_rules: None,
         }
     }
 

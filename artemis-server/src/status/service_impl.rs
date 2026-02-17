@@ -1,10 +1,11 @@
-use artemis_core::model::{
+use artemis_core::model::ResponseStatus;
+use artemis_management::model::status::node_status;
+use artemis_management::model::{
     GetClusterNodeStatusRequest, GetClusterNodeStatusResponse, GetClusterStatusRequest,
     GetClusterStatusResponse, GetConfigStatusRequest, GetConfigStatusResponse,
     GetDeploymentStatusRequest, GetDeploymentStatusResponse, GetLeasesStatusRequest,
-    GetLeasesStatusResponse, LeaseStatus, ResponseStatus, ServiceNode, ServiceNodeStatus,
+    GetLeasesStatusResponse, LeaseStatus, ServiceNode, ServiceNodeStatus,
 };
-use artemis_core::model::node_status;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -32,15 +33,7 @@ impl StatusService {
         server_url: String,
         app_id: String,
     ) -> Self {
-        Self {
-            cluster_manager,
-            lease_manager,
-            node_id,
-            region_id,
-            zone_id,
-            server_url,
-            app_id,
-        }
+        Self { cluster_manager, lease_manager, node_id, region_id, zone_id, server_url, app_id }
     }
 
     // ==================== Node Status ====================
@@ -142,9 +135,10 @@ impl StatusService {
         for (key, lease) in all_leases.iter() {
             // 如果有 service_ids 过滤条件,检查是否匹配
             if let Some(ref service_ids) = request.service_ids
-                && !service_ids.contains(&key.service_id) {
-                    continue;
-                }
+                && !service_ids.contains(&key.service_id)
+            {
+                continue;
+            }
 
             // 使用 Instant 计算时间差(秒)
             let now = std::time::Instant::now();
@@ -178,10 +172,7 @@ impl StatusService {
                 ttl: ttl_secs,
             };
 
-            leases_status
-                .entry(key.service_id.clone())
-                .or_default()
-                .push(lease_status);
+            leases_status.entry(key.service_id.clone()).or_default().push(lease_status);
         }
 
         let lease_count = leases_status.values().map(|v| v.len()).sum();
@@ -223,11 +214,7 @@ impl StatusService {
         properties.insert("zone_id".to_string(), self.zone_id.clone());
         properties.insert("app_id".to_string(), self.app_id.clone());
 
-        GetConfigStatusResponse {
-            sources,
-            properties,
-            response_status: ResponseStatus::success(),
-        }
+        GetConfigStatusResponse { sources, properties, response_status: ResponseStatus::success() }
     }
 
     // ==================== Deployment Status ====================
@@ -279,28 +266,17 @@ impl StatusService {
 
     fn parse_url(url: &str) -> (String, u16, String, String) {
         // 简单的 URL 解析,支持 http://ip:port/path 格式
-        let protocol = if url.starts_with("https://") {
-            "https"
-        } else {
-            "http"
-        }
-        .to_string();
+        let protocol = if url.starts_with("https://") { "https" } else { "http" }.to_string();
 
         let without_protocol = url.trim_start_matches("http://").trim_start_matches("https://");
 
         let parts: Vec<&str> = without_protocol.splitn(2, '/').collect();
         let host_port = parts[0];
-        let path = if parts.len() > 1 {
-            format!("/{}", parts[1])
-        } else {
-            "/".to_string()
-        };
+        let path = if parts.len() > 1 { format!("/{}", parts[1]) } else { "/".to_string() };
 
         let (ip, port) = if let Some(pos) = host_port.rfind(':') {
             let ip = host_port[..pos].to_string();
-            let port = host_port[pos + 1..]
-                .parse::<u16>()
-                .unwrap_or(8080);
+            let port = host_port[pos + 1..].parse::<u16>().unwrap_or(8080);
             (ip, port)
         } else {
             (host_port.to_string(), 8080)
@@ -351,8 +327,7 @@ mod tests {
         assert_eq!(protocol, "http");
         assert_eq!(path, "/api");
 
-        let (ip, port, protocol, path) =
-            StatusService::parse_url("https://example.com:9090");
+        let (ip, port, protocol, path) = StatusService::parse_url("https://example.com:9090");
         assert_eq!(ip, "example.com");
         assert_eq!(port, 9090);
         assert_eq!(protocol, "https");
@@ -363,7 +338,8 @@ mod tests {
 
     #[test]
     fn test_parse_url_with_ipv4() {
-        let (ip, port, protocol, path) = StatusService::parse_url("http://192.168.1.100:9090/api/v1");
+        let (ip, port, protocol, path) =
+            StatusService::parse_url("http://192.168.1.100:9090/api/v1");
         assert_eq!(ip, "192.168.1.100");
         assert_eq!(port, 9090);
         assert_eq!(protocol, "http");
@@ -466,7 +442,10 @@ mod tests {
         // 至少包含当前节点
         assert!(response.node_count >= 1);
         assert!(!response.nodes_status.is_empty());
-        assert!(matches!(response.response_status.error_code, artemis_core::model::ErrorCode::Success));
+        assert!(matches!(
+            response.response_status.error_code,
+            artemis_core::model::ErrorCode::Success
+        ));
     }
 
     // ========== Config Status 测试 ==========

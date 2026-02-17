@@ -9,13 +9,12 @@
 //! - get_deployment_status: 获取部署状态
 //! - parse_url: URL 解析辅助函数
 
-use artemis_core::model::{
-    ErrorCode, GetClusterNodeStatusRequest, GetClusterStatusRequest, GetConfigStatusRequest,
-    GetDeploymentStatusRequest, GetLeasesStatusRequest, InstanceKey,
+use artemis_core::model::{ErrorCode, InstanceKey};
+use artemis_management::model::{
+    GetClusterNodeStatusRequest, GetClusterStatusRequest, GetConfigStatusRequest,
+    GetDeploymentStatusRequest, GetLeasesStatusRequest,
 };
-use artemis_server::{
-    StatusService, cluster::ClusterManager, lease::LeaseManager,
-};
+use artemis_server::{StatusService, cluster::ClusterManager, lease::LeaseManager};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -41,10 +40,7 @@ fn create_test_status_service_with_cluster() -> StatusService {
     let lease_manager = Arc::new(LeaseManager::new(Duration::from_secs(30)));
 
     // 创建有 2 个 peer 节点的 ClusterManager
-    let peers = vec![
-        "http://192.168.1.2:8080".to_string(),
-        "http://192.168.1.3:8080".to_string(),
-    ];
+    let peers = vec!["http://192.168.1.2:8080".to_string(), "http://192.168.1.3:8080".to_string()];
     let cluster_manager = Arc::new(ClusterManager::new("node-1".to_string(), peers));
 
     StatusService::new(
@@ -68,7 +64,6 @@ fn create_test_instance_key(service_id: &str, instance_id: &str) -> InstanceKey 
         instance_id: instance_id.to_string(),
     }
 }
-
 
 // ===== get_cluster_node_status 测试 =====
 
@@ -140,10 +135,7 @@ async fn test_get_cluster_status_with_cluster_manager() {
     assert!(!response.nodes_status.is_empty());
 
     // 验证当前节点存在
-    let has_current_node = response
-        .nodes_status
-        .iter()
-        .any(|n| n.node.node_id == "node-1");
+    let has_current_node = response.nodes_status.iter().any(|n| n.node.node_id == "node-1");
     assert!(has_current_node);
 }
 
@@ -168,9 +160,7 @@ async fn test_get_cluster_status_all_nodes_healthy() {
 async fn test_get_leases_status_empty() {
     let (service, _) = create_test_status_service();
 
-    let request = GetLeasesStatusRequest {
-        service_ids: None,
-    };
+    let request = GetLeasesStatusRequest { service_ids: None };
 
     let response = service.get_leases_status(request).await;
 
@@ -193,9 +183,7 @@ async fn test_get_leases_status_with_leases() {
     lease_mgr.create_lease(key2);
     lease_mgr.create_lease(key3);
 
-    let request = GetLeasesStatusRequest {
-        service_ids: None,
-    };
+    let request = GetLeasesStatusRequest { service_ids: None };
 
     let response = service.get_leases_status(request).await;
 
@@ -224,9 +212,7 @@ async fn test_get_leases_status_with_filter() {
     lease_mgr.create_lease(key2);
 
     // 只查询 service-1
-    let request = GetLeasesStatusRequest {
-        service_ids: Some(vec!["service-1".to_string()]),
-    };
+    let request = GetLeasesStatusRequest { service_ids: Some(vec!["service-1".to_string()]) };
 
     let response = service.get_leases_status(request).await;
 
@@ -271,9 +257,7 @@ async fn test_get_leases_status_lease_fields() {
     let key = create_test_instance_key("my-service", "inst-1");
     lease_mgr.create_lease(key);
 
-    let request = GetLeasesStatusRequest {
-        service_ids: None,
-    };
+    let request = GetLeasesStatusRequest { service_ids: None };
 
     let response = service.get_leases_status(request).await;
 
@@ -286,9 +270,7 @@ async fn test_get_leases_status_lease_fields() {
     assert!(lease_status.ttl > 0);
 
     // eviction_time 应该是 "in X seconds" 或 "expired"
-    assert!(
-        lease_status.evition_time.contains("in") || lease_status.evition_time == "expired"
-    );
+    assert!(lease_status.evition_time.contains("in") || lease_status.evition_time == "expired");
 }
 
 // ===== get_legacy_leases_status 测试 =====
@@ -301,19 +283,14 @@ async fn test_get_legacy_leases_status() {
     let key = create_test_instance_key("my-service", "inst-1");
     lease_mgr.create_lease(key);
 
-    let request = GetLeasesStatusRequest {
-        service_ids: None,
-    };
+    let request = GetLeasesStatusRequest { service_ids: None };
 
     // Legacy API 应该返回与 get_leases_status 相同的结果
     let legacy_response = service.get_legacy_leases_status(request.clone()).await;
     let normal_response = service.get_leases_status(request).await;
 
     assert_eq!(legacy_response.lease_count, normal_response.lease_count);
-    assert_eq!(
-        legacy_response.leases_status.len(),
-        normal_response.leases_status.len()
-    );
+    assert_eq!(legacy_response.leases_status.len(), normal_response.leases_status.len());
 }
 
 // ===== get_config_status 测试 =====
@@ -444,9 +421,7 @@ async fn test_get_leases_status_many_services() {
         }
     }
 
-    let request = GetLeasesStatusRequest {
-        service_ids: None,
-    };
+    let request = GetLeasesStatusRequest { service_ids: None };
 
     let response = service.get_leases_status(request).await;
 
@@ -466,9 +441,8 @@ async fn test_get_leases_status_filter_non_existent_service() {
     lease_mgr.create_lease(key);
 
     // 查询不存在的服务
-    let request = GetLeasesStatusRequest {
-        service_ids: Some(vec!["non-existent-service".to_string()]),
-    };
+    let request =
+        GetLeasesStatusRequest { service_ids: Some(vec!["non-existent-service".to_string()]) };
 
     let response = service.get_leases_status(request).await;
 
@@ -486,9 +460,7 @@ async fn test_get_leases_status_empty_filter() {
     lease_mgr.create_lease(key);
 
     // 空过滤器
-    let request = GetLeasesStatusRequest {
-        service_ids: Some(vec![]),
-    };
+    let request = GetLeasesStatusRequest { service_ids: Some(vec![]) };
 
     let response = service.get_leases_status(request).await;
 

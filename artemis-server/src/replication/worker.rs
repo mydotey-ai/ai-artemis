@@ -1,10 +1,10 @@
 use super::client::ReplicationClient;
 use super::manager::ReplicationEvent;
 use crate::cluster::ClusterManager;
-use artemis_core::config::ReplicationConfig;
+use crate::config::ReplicationConfig;
 use artemis_core::model::{
-    Instance, InstanceKey, ReplicateRegisterRequest, ReplicateHeartbeatRequest,
-    ReplicateUnregisterRequest, BatchRegisterRequest, BatchUnregisterRequest,
+    BatchRegisterRequest, BatchUnregisterRequest, Instance, InstanceKey, ReplicateHeartbeatRequest,
+    ReplicateRegisterRequest, ReplicateUnregisterRequest,
 };
 use std::collections::VecDeque;
 use std::sync::Arc;
@@ -144,22 +144,12 @@ impl ReplicationWorker {
             return;
         }
 
-        info!(
-            "Batch replicating {} registers to {} peers",
-            instances.len(),
-            peers.len()
-        );
+        info!("Batch replicating {} registers to {} peers", instances.len(), peers.len());
 
         for peer in peers {
-            let request = BatchRegisterRequest {
-                instances: instances.clone(),
-            };
+            let request = BatchRegisterRequest { instances: instances.clone() };
 
-            match self
-                .client
-                .batch_register(&peer.base_url(), request)
-                .await
-            {
+            match self.client.batch_register(&peer.base_url(), request).await {
                 Ok(_) => {
                     debug!(
                         "Successfully batch replicated {} registers to {}",
@@ -168,10 +158,7 @@ impl ReplicationWorker {
                     );
                 }
                 Err(e) if e.is_retryable() => {
-                    warn!(
-                        "Retryable error batch replicating registers to {}: {}",
-                        peer.node_id, e
-                    );
+                    warn!("Retryable error batch replicating registers to {}: {}", peer.node_id, e);
                     // 批处理失败,将每个实例单独加入重试队列
                     for instance in &instances {
                         self.add_to_retry_queue(
@@ -182,10 +169,7 @@ impl ReplicationWorker {
                     }
                 }
                 Err(e) => {
-                    warn!(
-                        "Permanent error batch replicating registers to {}: {}",
-                        peer.node_id, e
-                    );
+                    warn!("Permanent error batch replicating registers to {}: {}", peer.node_id, e);
                 }
             }
         }
@@ -205,22 +189,12 @@ impl ReplicationWorker {
             return;
         }
 
-        info!(
-            "Batch replicating {} unregisters to {} peers",
-            keys.len(),
-            peers.len()
-        );
+        info!("Batch replicating {} unregisters to {} peers", keys.len(), peers.len());
 
         for peer in peers {
-            let request = BatchUnregisterRequest {
-                instance_keys: keys.clone(),
-            };
+            let request = BatchUnregisterRequest { instance_keys: keys.clone() };
 
-            match self
-                .client
-                .batch_unregister(&peer.base_url(), request)
-                .await
-            {
+            match self.client.batch_unregister(&peer.base_url(), request).await {
                 Ok(_) => {
                     debug!(
                         "Successfully batch replicated {} unregisters to {}",
@@ -266,34 +240,17 @@ impl ReplicationWorker {
             return;
         }
 
-        info!(
-            "Replicating {} heartbeats to {} peers",
-            keys.len(),
-            peers.len()
-        );
+        info!("Replicating {} heartbeats to {} peers", keys.len(), peers.len());
 
         for peer in peers {
-            let request = ReplicateHeartbeatRequest {
-                instance_keys: keys.clone(),
-            };
+            let request = ReplicateHeartbeatRequest { instance_keys: keys.clone() };
 
-            match self
-                .client
-                .replicate_heartbeat(&peer.base_url(), request)
-                .await
-            {
+            match self.client.replicate_heartbeat(&peer.base_url(), request).await {
                 Ok(_) => {
-                    debug!(
-                        "Successfully replicated {} heartbeats to {}",
-                        keys.len(),
-                        peer.node_id
-                    );
+                    debug!("Successfully replicated {} heartbeats to {}", keys.len(), peer.node_id);
                 }
                 Err(e) if e.is_retryable() => {
-                    warn!(
-                        "Retryable error replicating heartbeats to {}: {}",
-                        peer.node_id, e
-                    );
+                    warn!("Retryable error replicating heartbeats to {}: {}", peer.node_id, e);
                     // 心跳批处理失败,将每个心跳单独加入重试队列
                     for key in &keys {
                         self.add_to_retry_queue(
@@ -304,10 +261,7 @@ impl ReplicationWorker {
                     }
                 }
                 Err(e) => {
-                    warn!(
-                        "Permanent error replicating heartbeats to {}: {}",
-                        peer.node_id, e
-                    );
+                    warn!("Permanent error replicating heartbeats to {}: {}", peer.node_id, e);
                 }
             }
         }
@@ -330,18 +284,16 @@ impl ReplicationWorker {
         let backoff_secs = 2u64.pow(retry_count);
         let next_retry_time = Instant::now() + Duration::from_secs(backoff_secs);
 
-        let item = RetryItem {
-            node_id: node_id.clone(),
-            event,
-            retry_count,
-            next_retry_time,
-        };
+        let item = RetryItem { node_id: node_id.clone(), event, retry_count, next_retry_time };
 
         self.retry_queue.push_back(item);
 
         debug!(
             "Added event to retry queue for {}, retry {} of {}, next retry in {}s",
-            node_id, retry_count + 1, self.config.max_retries, backoff_secs
+            node_id,
+            retry_count + 1,
+            self.config.max_retries,
+            backoff_secs
         );
     }
 
@@ -373,12 +325,7 @@ impl ReplicationWorker {
 
     /// 重试单个事件
     async fn retry_event(&mut self, item: RetryItem) {
-        let RetryItem {
-            node_id,
-            event,
-            retry_count,
-            ..
-        } = item;
+        let RetryItem { node_id, event, retry_count, .. } = item;
 
         // 获取节点信息
         let peer = match self
@@ -397,14 +344,8 @@ impl ReplicationWorker {
         // 根据事件类型执行重试并处理结果
         match event {
             ReplicationEvent::Register(instance) => {
-                let request = ReplicateRegisterRequest {
-                    instances: vec![instance.clone()],
-                };
-                match self
-                    .client
-                    .replicate_register(&peer.base_url(), request)
-                    .await
-                {
+                let request = ReplicateRegisterRequest { instances: vec![instance.clone()] };
+                match self.client.replicate_register(&peer.base_url(), request).await {
                     Ok(_) => {
                         info!(
                             "Successfully retried register to {} (attempt {})",
@@ -413,12 +354,7 @@ impl ReplicationWorker {
                         );
                     }
                     Err(e) if e.is_retryable() => {
-                        warn!(
-                            "Retry attempt {} failed for {}: {}",
-                            retry_count + 1,
-                            node_id,
-                            e
-                        );
+                        warn!("Retry attempt {} failed for {}: {}", retry_count + 1, node_id, e);
                         self.add_to_retry_queue(
                             node_id,
                             ReplicationEvent::Register(instance),
@@ -426,22 +362,13 @@ impl ReplicationWorker {
                         );
                     }
                     Err(e) => {
-                        warn!(
-                            "Permanent error on retry to {}: {}, dropping",
-                            node_id, e
-                        );
+                        warn!("Permanent error on retry to {}: {}, dropping", node_id, e);
                     }
                 }
             }
             ReplicationEvent::Heartbeat(key) => {
-                let request = ReplicateHeartbeatRequest {
-                    instance_keys: vec![key.clone()],
-                };
-                match self
-                    .client
-                    .replicate_heartbeat(&peer.base_url(), request)
-                    .await
-                {
+                let request = ReplicateHeartbeatRequest { instance_keys: vec![key.clone()] };
+                match self.client.replicate_heartbeat(&peer.base_url(), request).await {
                     Ok(_) => {
                         info!(
                             "Successfully retried heartbeat to {} (attempt {})",
@@ -450,12 +377,7 @@ impl ReplicationWorker {
                         );
                     }
                     Err(e) if e.is_retryable() => {
-                        warn!(
-                            "Retry attempt {} failed for {}: {}",
-                            retry_count + 1,
-                            node_id,
-                            e
-                        );
+                        warn!("Retry attempt {} failed for {}: {}", retry_count + 1, node_id, e);
                         self.add_to_retry_queue(
                             node_id,
                             ReplicationEvent::Heartbeat(key),
@@ -463,22 +385,13 @@ impl ReplicationWorker {
                         );
                     }
                     Err(e) => {
-                        warn!(
-                            "Permanent error on retry to {}: {}, dropping",
-                            node_id, e
-                        );
+                        warn!("Permanent error on retry to {}: {}, dropping", node_id, e);
                     }
                 }
             }
             ReplicationEvent::Unregister(key) => {
-                let request = ReplicateUnregisterRequest {
-                    instance_keys: vec![key.clone()],
-                };
-                match self
-                    .client
-                    .replicate_unregister(&peer.base_url(), request)
-                    .await
-                {
+                let request = ReplicateUnregisterRequest { instance_keys: vec![key.clone()] };
+                match self.client.replicate_unregister(&peer.base_url(), request).await {
                     Ok(_) => {
                         info!(
                             "Successfully retried unregister to {} (attempt {})",
@@ -487,12 +400,7 @@ impl ReplicationWorker {
                         );
                     }
                     Err(e) if e.is_retryable() => {
-                        warn!(
-                            "Retry attempt {} failed for {}: {}",
-                            retry_count + 1,
-                            node_id,
-                            e
-                        );
+                        warn!("Retry attempt {} failed for {}: {}", retry_count + 1, node_id, e);
                         self.add_to_retry_queue(
                             node_id,
                             ReplicationEvent::Unregister(key),
@@ -500,10 +408,7 @@ impl ReplicationWorker {
                         );
                     }
                     Err(e) => {
-                        warn!(
-                            "Permanent error on retry to {}: {}, dropping",
-                            node_id, e
-                        );
+                        warn!("Permanent error on retry to {}: {}, dropping", node_id, e);
                     }
                 }
             }
@@ -624,12 +529,8 @@ mod tests {
         let event = ReplicationEvent::Register(instance);
         let next_retry_time = Instant::now() + Duration::from_secs(2);
 
-        let item = RetryItem {
-            node_id: "node-1".to_string(),
-            event,
-            retry_count: 1,
-            next_retry_time,
-        };
+        let item =
+            RetryItem { node_id: "node-1".to_string(), event, retry_count: 1, next_retry_time };
 
         let cloned = item.clone();
         assert_eq!(cloned.node_id, item.node_id);
@@ -760,11 +661,7 @@ mod tests {
         for retry_count in 0..3 {
             let event = ReplicationEvent::Register(instance.clone());
             let before = Instant::now();
-            worker.add_to_retry_queue(
-                format!("node-{}", retry_count),
-                event,
-                retry_count,
-            );
+            worker.add_to_retry_queue(format!("node-{}", retry_count), event, retry_count);
 
             let item = worker.retry_queue.back().unwrap();
             let backoff = item.next_retry_time.duration_since(before);
@@ -1040,21 +937,13 @@ mod tests {
         let key = create_test_instance_key();
 
         // 添加不同类型的事件
-        worker.add_to_retry_queue(
-            "node-1".to_string(),
-            ReplicationEvent::Register(instance),
-            0,
-        );
+        worker.add_to_retry_queue("node-1".to_string(), ReplicationEvent::Register(instance), 0);
         worker.add_to_retry_queue(
             "node-2".to_string(),
             ReplicationEvent::Heartbeat(key.clone()),
             0,
         );
-        worker.add_to_retry_queue(
-            "node-3".to_string(),
-            ReplicationEvent::Unregister(key),
-            0,
-        );
+        worker.add_to_retry_queue("node-3".to_string(), ReplicationEvent::Unregister(key), 0);
 
         assert_eq!(worker.retry_queue.len(), 3);
     }

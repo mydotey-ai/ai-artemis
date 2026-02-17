@@ -1,11 +1,11 @@
 use super::filter::{DiscoveryFilterChain, StatusFilter};
 use crate::cache::VersionedCacheManager;
 use crate::registry::RegistryRepository;
+use crate::traits::DiscoveryService;
 use artemis_core::model::{
     ErrorCode, GetServiceRequest, GetServiceResponse, GetServicesDeltaRequest,
     GetServicesDeltaResponse, GetServicesRequest, GetServicesResponse, ResponseStatus, Service,
 };
-use artemis_core::traits::DiscoveryService;
 use async_trait::async_trait;
 use std::sync::Arc;
 
@@ -39,7 +39,6 @@ impl DiscoveryServiceImpl {
                 metadata: None,
                 instances,
                 logic_instances: None,
-                route_rules: None,
             })
         }
     }

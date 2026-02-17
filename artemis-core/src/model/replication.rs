@@ -1,6 +1,6 @@
 use super::instance::{Instance, InstanceKey};
-use super::service::Service;
 use super::request::ResponseStatus;
+use super::service::Service;
 use serde::{Deserialize, Serialize};
 
 // ===== 复制-注册 =====
@@ -97,7 +97,7 @@ pub struct BatchUnregisterResponse {
 pub struct ServicesDeltaRequest {
     pub region_id: String,
     pub zone_id: String,
-    pub since_timestamp: i64,  // Unix timestamp in milliseconds
+    pub since_timestamp: i64, // Unix timestamp in milliseconds
 }
 
 #[derive(Debug, Serialize, Deserialize)]

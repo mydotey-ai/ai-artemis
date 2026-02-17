@@ -157,17 +157,16 @@ mod tests {
     #[test]
     fn test_validation() {
         // Test heartbeat TTL validation
-        let config = ClientConfig {
-            heartbeat_ttl_secs: 20,
-            ..Default::default()
-        };
+        let config = ClientConfig { heartbeat_ttl_secs: 20, ..Default::default() };
         let result = config.validate();
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("TTL must be at least 3x heartbeat interval"));
+        assert!(
+            result.unwrap_err().to_string().contains("TTL must be at least 3x heartbeat interval")
+        );
 
         // HTTP retry times upper bound validation
         let config = ClientConfig {
-            http_retry_times: 15,  // > 10
+            http_retry_times: 15, // > 10
             ..Default::default()
         };
         let result = config.validate();
@@ -176,25 +175,29 @@ mod tests {
 
         // WebSocket ping interval lower bound validation
         let config = ClientConfig {
-            websocket_ping_interval_secs: 3,  // < 5
+            websocket_ping_interval_secs: 3, // < 5
             ..Default::default()
         };
         let result = config.validate();
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("websocket_ping_interval_secs must be 5-300"));
+        assert!(
+            result.unwrap_err().to_string().contains("websocket_ping_interval_secs must be 5-300")
+        );
 
         // WebSocket ping interval upper bound validation
         let config = ClientConfig {
-            websocket_ping_interval_secs: 400,  // > 300
+            websocket_ping_interval_secs: 400, // > 300
             ..Default::default()
         };
         let result = config.validate();
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("websocket_ping_interval_secs must be 5-300"));
+        assert!(
+            result.unwrap_err().to_string().contains("websocket_ping_interval_secs must be 5-300")
+        );
 
         // Cache TTL minimum value validation
         let config = ClientConfig {
-            cache_ttl_secs: 30,  // < 60
+            cache_ttl_secs: 30, // < 60
             ..Default::default()
         };
         let result = config.validate();
