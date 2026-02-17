@@ -21,10 +21,9 @@ use artemis_core::model::{
     ReplicateHeartbeatRequest, ReplicateRegisterRequest, ReplicateUnregisterRequest,
     ServicesDeltaRequest, SyncFullDataRequest, UnregisterRequest,
 };
-use artemis_core::traits::RegistryService;
 use artemis_server::{
-    RegistryServiceImpl, cache::VersionedCacheManager, change::InstanceChangeManager,
-    lease::LeaseManager, registry::RegistryRepository,
+    traits::RegistryService, RegistryServiceImpl, cache::VersionedCacheManager,
+    change::InstanceChangeManager, lease::LeaseManager, registry::RegistryRepository,
 };
 use std::sync::Arc;
 use std::time::Duration;

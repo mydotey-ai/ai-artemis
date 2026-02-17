@@ -9,10 +9,11 @@
 //! - get_all_instance_operations_post/get: 查询所有实例操作 (POST/GET)
 //! - get_all_server_operations_post/get: 查询所有服务器操作 (POST/GET)
 
-use artemis_core::model::{
+use artemis_core::model::InstanceKey;
+use artemis_management::model::{
     GetAllInstanceOperationsRequest, GetAllServerOperationsRequest, GetInstanceOperationsRequest,
-    InstanceKey, InstanceOperation, IsInstanceDownRequest, IsServerDownRequest,
-    OperateInstanceRequest, OperateServerRequest, ServerOperation,
+    InstanceOperation, IsInstanceDownRequest, IsServerDownRequest, OperateInstanceRequest,
+    OperateServerRequest, ServerOperation,
 };
 use artemis_server::{
     RegistryServiceImpl, cache::VersionedCacheManager, change::InstanceChangeManager,

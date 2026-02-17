@@ -9,9 +9,10 @@
 //! - get_deployment_status: 获取部署状态
 //! - parse_url: URL 解析辅助函数
 
-use artemis_core::model::{
-    ErrorCode, GetClusterNodeStatusRequest, GetClusterStatusRequest, GetConfigStatusRequest,
-    GetDeploymentStatusRequest, GetLeasesStatusRequest, InstanceKey,
+use artemis_core::model::{ErrorCode, InstanceKey};
+use artemis_management::model::{
+    GetClusterNodeStatusRequest, GetClusterStatusRequest, GetConfigStatusRequest,
+    GetDeploymentStatusRequest, GetLeasesStatusRequest,
 };
 use artemis_server::{StatusService, cluster::ClusterManager, lease::LeaseManager};
 use std::sync::Arc;

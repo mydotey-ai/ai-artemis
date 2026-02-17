@@ -41,7 +41,6 @@ fn create_test_service(service_id: &str, instances: Vec<Instance>) -> Service {
         metadata: None,
         instances,
         logic_instances: None,
-        route_rules: None,
     }
 }
 

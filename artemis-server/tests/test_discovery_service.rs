@@ -12,9 +12,9 @@ use artemis_core::model::{
     DiscoveryConfig, ErrorCode, GetServiceRequest, GetServicesDeltaRequest, GetServicesRequest,
     Instance, InstanceStatus,
 };
-use artemis_core::traits::DiscoveryService;
 use artemis_server::{
-    cache::VersionedCacheManager, discovery::DiscoveryServiceImpl, registry::RegistryRepository,
+    traits::DiscoveryService, cache::VersionedCacheManager, discovery::DiscoveryServiceImpl,
+    registry::RegistryRepository,
 };
 use std::sync::Arc;
 

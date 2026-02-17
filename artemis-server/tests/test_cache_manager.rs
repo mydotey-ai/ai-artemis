@@ -22,7 +22,6 @@ fn create_test_service(service_id: &str, instance_count: usize) -> Service {
         metadata: None,
         instances,
         logic_instances: None,
-        route_rules: None,
     }
 }
 
@@ -482,7 +481,6 @@ fn test_empty_service_list() {
         metadata: None,
         instances: vec![],
         logic_instances: None,
-        route_rules: None,
     };
 
     manager.update_service(empty_service);
