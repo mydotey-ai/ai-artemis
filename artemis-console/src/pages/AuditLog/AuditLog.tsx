@@ -982,9 +982,11 @@ const AuditLog: React.FC = () => {
                 </Button>
               </Tooltip>
               <Tooltip title="Refresh now">
-                <IconButton color="primary" onClick={handleRefresh} disabled={loading}>
-                  <RefreshIcon />
-                </IconButton>
+                <span>
+                  <IconButton color="primary" onClick={handleRefresh} disabled={loading}>
+                    <RefreshIcon />
+                  </IconButton>
+                </span>
               </Tooltip>
               <Tooltip title={showFilters ? 'Hide filters' : 'Show filters'}>
                 <IconButton onClick={() => setShowFilters(!showFilters)}>

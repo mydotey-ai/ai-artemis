@@ -874,9 +874,11 @@ const Users: React.FC = () => {
       <Box sx={{ flexGrow: 1 }} />
 
       <Tooltip title="Refresh">
-        <IconButton color="primary" onClick={handleRefresh} disabled={loading}>
-          <RefreshIcon />
-        </IconButton>
+        <span>
+          <IconButton color="primary" onClick={handleRefresh} disabled={loading}>
+            <RefreshIcon />
+          </IconButton>
+        </span>
       </Tooltip>
 
       <Button variant="outlined" startIcon={<DownloadIcon />} onClick={handleExportCsv}>

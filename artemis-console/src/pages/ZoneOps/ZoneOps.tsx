@@ -578,9 +578,11 @@ const ZoneOps: React.FC = () => {
 
           <Box sx={{ display: 'flex', gap: 1 }}>
             <Tooltip title="Refresh">
-              <IconButton onClick={loadOperations} disabled={loading}>
-                <RefreshIcon />
-              </IconButton>
+              <span>
+                <IconButton onClick={loadOperations} disabled={loading}>
+                  <RefreshIcon />
+                </IconButton>
+              </span>
             </Tooltip>
             <Tooltip title="Export CSV">
               <IconButton onClick={handleExport}>

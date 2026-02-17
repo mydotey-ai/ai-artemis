@@ -68,7 +68,6 @@ import {
   deleteCanaryConfig,
   enableCanary,
   disableCanary,
-  getCanaryStats,
   addIpToWhitelist,
   removeIpFromWhitelist,
   type CanaryConfig,
@@ -204,17 +203,16 @@ const Canary: React.FC = () => {
         );
       }
 
-      // Fetch stats
-      const statsResponse = await getCanaryStats();
-      if (statsResponse.success && statsResponse.data) {
-        setStatistics({
-          activeConfigs: statsResponse.data.enabled_count,
-          totalConfigs: statsResponse.data.total_services,
-          servicesWithCanary: statsResponse.data.total_services,
-        });
-      }
+      // Calculate stats from configs data
+      const configs = configsResponse.data || [];
+      const enabledCount = configs.filter((config: any) => config.enabled).length;
+      setStatistics({
+        activeConfigs: enabledCount,
+        totalConfigs: configs.length,
+        servicesWithCanary: configs.length,
+      });
 
-      setConfigs(configsResponse.data);
+      setConfigs(configs);
       setServices(servicesResponse.services);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error occurred');

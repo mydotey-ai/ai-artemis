@@ -679,9 +679,11 @@ const Routing: React.FC = () => {
           </Typography>
         </Box>
         <Tooltip title="Refresh">
-          <IconButton onClick={fetchData} disabled={loading}>
-            <RefreshIcon />
-          </IconButton>
+          <span>
+            <IconButton onClick={fetchData} disabled={loading}>
+              <RefreshIcon />
+            </IconButton>
+          </span>
         </Tooltip>
       </Box>
 
