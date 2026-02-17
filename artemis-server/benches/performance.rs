@@ -6,7 +6,7 @@ use artemis_core::model::{
     DiscoveryConfig, GetServiceRequest, HeartbeatRequest, Instance, InstanceKey, InstanceStatus,
     RegisterRequest, Service,
 };
-use artemis_core::traits::{DiscoveryService, RegistryService};
+use artemis_server::traits::{DiscoveryService, RegistryService};
 use artemis_server::{
     RegistryServiceImpl, cache::VersionedCacheManager, change::InstanceChangeManager,
     discovery::DiscoveryServiceImpl, lease::LeaseManager, registry::RegistryRepository,
@@ -205,7 +205,6 @@ fn bench_cache_operations(c: &mut Criterion) {
                         metadata: None,
                         instances: instances.clone(),
                         logic_instances: None,
-                        route_rules: None,
                     };
                     cache.update_service(service.clone());
                     let cached = cache.get_service("benchmark-service");
