@@ -1,6 +1,6 @@
 use crate::state::AppState;
 use artemis_core::model::*;
-use artemis_core::traits::RegistryService;
+use artemis_server::traits::RegistryService;
 use axum::{
     Json,
     extract::{Query, State},

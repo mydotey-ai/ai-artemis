@@ -5,7 +5,7 @@ use artemis_core::model::{
     ErrorCode, GetServiceRequest, GetServiceResponse, GetServicesDeltaRequest,
     GetServicesDeltaResponse, GetServicesRequest, GetServicesResponse, ResponseStatus, Service,
 };
-use artemis_core::traits::DiscoveryService;
+use crate::traits::DiscoveryService;
 use async_trait::async_trait;
 use std::sync::Arc;
 

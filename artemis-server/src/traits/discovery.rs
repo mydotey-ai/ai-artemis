@@ -1,6 +1,6 @@
-use crate::model::{GetServiceRequest, GetServiceResponse};
-use crate::model::{GetServicesDeltaRequest, GetServicesDeltaResponse};
-use crate::model::{GetServicesRequest, GetServicesResponse};
+use artemis_core::model::{GetServiceRequest, GetServiceResponse};
+use artemis_core::model::{GetServicesDeltaRequest, GetServicesDeltaResponse};
+use artemis_core::model::{GetServicesRequest, GetServicesResponse};
 use async_trait::async_trait;
 
 #[async_trait]

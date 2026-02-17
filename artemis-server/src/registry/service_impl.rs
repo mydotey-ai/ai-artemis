@@ -31,7 +31,7 @@ use artemis_core::model::{
     UnregisterRequest,
     UnregisterResponse,
 };
-use artemis_core::traits::RegistryService;
+use crate::traits::RegistryService;
 use async_trait::async_trait;
 use std::sync::Arc;
 use tracing::{info, warn};

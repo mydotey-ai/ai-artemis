@@ -1,6 +1,7 @@
 use crate::state::AppState;
-use artemis_core::{model::*, traits::DiscoveryService};
+use artemis_core::model::*;
 use artemis_server::discovery::LoadBalanceStrategy;
+use artemis_server::traits::DiscoveryService;
 use axum::{
     Json,
     extract::{Query, State},

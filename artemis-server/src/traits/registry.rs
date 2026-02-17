@@ -1,11 +1,11 @@
-use crate::model::{
+use artemis_core::model::{
     GetAllServicesResponse, ReplicateHeartbeatRequest, ReplicateHeartbeatResponse,
     ReplicateRegisterRequest, ReplicateRegisterResponse, ReplicateUnregisterRequest,
     ReplicateUnregisterResponse,
 };
-use crate::model::{HeartbeatRequest, HeartbeatResponse};
-use crate::model::{RegisterRequest, RegisterResponse};
-use crate::model::{UnregisterRequest, UnregisterResponse};
+use artemis_core::model::{HeartbeatRequest, HeartbeatResponse};
+use artemis_core::model::{RegisterRequest, RegisterResponse};
+use artemis_core::model::{UnregisterRequest, UnregisterResponse};
 use async_trait::async_trait;
 
 #[async_trait]
