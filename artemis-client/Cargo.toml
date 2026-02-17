@@ -17,7 +17,7 @@ parking_lot = { workspace = true }
 tracing = { workspace = true }
 futures = { workspace = true }
 thiserror = { workspace = true }
-rand = "0.8"
+rand = { workspace = true }
 prometheus = { workspace = true, optional = true }
 lazy_static = { workspace = true, optional = true }
 
