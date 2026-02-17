@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS auth_users (
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL CHECK(role IN ('admin', 'operator', 'viewer')),
     status TEXT NOT NULL CHECK(status IN ('active', 'inactive')),
+    description TEXT,
     created_at BIGINT NOT NULL,
     updated_at BIGINT NOT NULL
 );
