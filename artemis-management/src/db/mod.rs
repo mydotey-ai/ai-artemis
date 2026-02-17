@@ -106,13 +106,9 @@ impl Database {
                 .map_err(|e| anyhow::anyhow!("Failed to enable foreign keys: {}", e))?;
         }
 
-        // 迁移1: 初始Schema (实例操作、服务分组、路由规则等)
+        // 数据库初始化: 所有表的创建 (业务表 + 认证表)
         let migration_001 = include_str!("../../migrations/001_initial_schema.sql");
         self.execute_migration("001_initial_schema", migration_001).await?;
-
-        // 迁移2: 认证系统 (用户、会话、登录历史)
-        let migration_002 = include_str!("../../migrations/002_auth_schema.sql");
-        self.execute_migration("002_auth_schema", migration_002).await?;
 
         tracing::info!("All database migrations completed successfully");
 
