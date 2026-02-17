@@ -115,3 +115,6 @@ bcrypt = "0.15"
 indicatif = "0.17"
 tokio-metrics = "0.3"
 hdrhistogram = "7.5"
+
+# 内存分配器 (长时间运行的服务器)
+mimalloc = { version = "0.1", default-features = false }

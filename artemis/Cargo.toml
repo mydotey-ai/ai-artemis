@@ -23,5 +23,8 @@ reqwest = { workspace = true }
 serde_json = { workspace = true }
 anyhow = { workspace = true }
 
+# 全局内存分配器 (适合长时间运行的服务器)
+mimalloc = { workspace = true, default-features = false }
+
 [dev-dependencies]
 artemis-client = { path = "../artemis-client" }

@@ -1,3 +1,9 @@
+// 使用 mimalloc 作为全局内存分配器
+// mimalloc 是 Microsoft 开发的高性能分配器，适合长时间运行的服务器程序
+// 特点：低延迟、低碎片、优秀的多线程扩展性
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 use artemis_management::auth::UserRole;
 use artemis_management::{
     AuthManager, ConfigLoader, Database, GroupManager, GroupRoutingFilter, InstanceManager,
