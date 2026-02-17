@@ -5,7 +5,9 @@ edition.workspace = true
 
 [dependencies]
 artemis-core = { path = "../artemis-core" }
+artemis-server = { path = "../artemis-server" }
 sea-orm = { workspace = true }
+async-trait = { workspace = true }
 sea-orm-migration = { workspace = true }
 tokio = { workspace = true }
 serde = { workspace = true }
@@ -13,8 +15,12 @@ serde_json = { workspace = true }
 chrono = { workspace = true }
 uuid = { workspace = true }
 tracing = { workspace = true }
-axum = { workspace = true }
 anyhow = { workspace = true }
 dashmap = { workspace = true }
 jsonwebtoken = { workspace = true }
 bcrypt = { workspace = true }
+
+# Web framework dependencies for management API
+axum = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }

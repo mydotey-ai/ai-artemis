@@ -1,6 +1,6 @@
 //! Audit log HTTP API
 
-use crate::state::AppState;
+use crate::web::state::ManagementState;
 use axum::{
     Json,
     extract::{Query, State},
@@ -33,7 +33,7 @@ pub struct QueryLogsParams {
 
 /// GET /api/management/audit/logs - 查询所有操作日志
 pub async fn query_logs(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Query(params): Query<QueryLogsParams>,
 ) -> impl IntoResponse {
     let logs = state.audit_manager.query_logs(
@@ -54,7 +54,7 @@ pub struct QueryInstanceLogsParams {
 
 /// GET /api/management/audit/instance-logs - 查询实例操作日志
 pub async fn query_instance_logs(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Query(params): Query<QueryInstanceLogsParams>,
 ) -> impl IntoResponse {
     let logs = state.audit_manager.query_instance_logs(
@@ -75,7 +75,7 @@ pub struct QueryServerLogsParams {
 
 /// GET /api/management/audit/server-logs - 查询服务器操作日志
 pub async fn query_server_logs(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Query(params): Query<QueryServerLogsParams>,
 ) -> impl IntoResponse {
     let logs = state.audit_manager.query_server_logs(
@@ -98,7 +98,7 @@ pub struct QueryGroupLogsParams {
 
 /// POST /api/management/log/group-logs.json - 查询分组操作日志
 pub async fn query_group_logs(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Query(params): Query<QueryGroupLogsParams>,
 ) -> impl IntoResponse {
     let logs = state.audit_manager.query_group_logs(
@@ -119,7 +119,7 @@ pub struct QueryRouteRuleLogsParams {
 
 /// POST /api/management/log/route-rule-logs.json - 查询路由规则操作日志
 pub async fn query_route_rule_logs(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Query(params): Query<QueryRouteRuleLogsParams>,
 ) -> impl IntoResponse {
     let logs = state.audit_manager.query_route_rule_logs(
@@ -141,7 +141,7 @@ pub struct QueryRouteRuleGroupLogsParams {
 
 /// POST /api/management/log/route-rule-group-logs.json - 查询路由规则分组操作日志
 pub async fn query_route_rule_group_logs(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Query(params): Query<QueryRouteRuleGroupLogsParams>,
 ) -> impl IntoResponse {
     let logs = state.audit_manager.query_route_rule_group_logs(
@@ -164,7 +164,7 @@ pub struct QueryZoneLogsParams {
 
 /// POST /api/management/log/zone-operation-logs.json - 查询 Zone 操作日志
 pub async fn query_zone_operation_logs(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Query(params): Query<QueryZoneLogsParams>,
 ) -> impl IntoResponse {
     let logs = state.audit_manager.query_zone_logs(
@@ -187,7 +187,7 @@ pub struct QueryGroupInstanceLogsParams {
 
 /// POST /api/management/log/group-instance-logs.json - 查询分组实例绑定日志
 pub async fn query_group_instance_logs(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Query(params): Query<QueryGroupInstanceLogsParams>,
 ) -> impl IntoResponse {
     let logs = state.audit_manager.query_group_instance_logs(
@@ -210,7 +210,7 @@ pub struct QueryServiceInstanceLogsParams {
 
 /// POST /api/management/log/service-instance-logs.json - 查询服务实例日志
 pub async fn query_service_instance_logs(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Query(params): Query<QueryServiceInstanceLogsParams>,
 ) -> impl IntoResponse {
     let logs = state.audit_manager.query_service_instance_logs(

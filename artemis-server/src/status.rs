@@ -1,6 +1,6 @@
 use artemis_core::model::ResponseStatus;
-use artemis_management::model::status::node_status;
-use artemis_management::model::{
+use crate::model::status::node_status;
+use crate::model::{
     GetClusterNodeStatusRequest, GetClusterNodeStatusResponse, GetClusterStatusRequest,
     GetClusterStatusResponse, GetConfigStatusRequest, GetConfigStatusResponse,
     GetDeploymentStatusRequest, GetDeploymentStatusResponse, GetLeasesStatusRequest,

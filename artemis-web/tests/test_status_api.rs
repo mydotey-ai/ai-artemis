@@ -8,7 +8,7 @@
 //! - get_config_status: 获取配置状态 (POST/GET)
 //! - get_deployment_status: 获取部署状态 (POST/GET)
 
-use artemis_management::model::{
+use artemis_server::model::{
     GetClusterNodeStatusRequest, GetClusterStatusRequest, GetConfigStatusRequest,
     GetDeploymentStatusRequest, GetLeasesStatusRequest,
 };

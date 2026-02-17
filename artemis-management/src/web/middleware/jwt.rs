@@ -1,4 +1,4 @@
-use crate::state::AppState;
+use crate::web::state::ManagementState;
 use axum::{
     extract::{Request, State},
     http::{HeaderMap, StatusCode},
@@ -10,7 +10,7 @@ use axum::{
 ///
 /// 从 Authorization header 中提取 Bearer token,验证并将 user_id 注入到请求扩展中
 pub async fn jwt_auth(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     headers: HeaderMap,
     mut req: Request,
     next: Next,

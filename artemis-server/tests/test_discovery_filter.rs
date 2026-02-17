@@ -7,12 +7,10 @@
 //! - DiscoveryFilterChain: 过滤器链组合测试
 
 use artemis_core::model::{DiscoveryConfig, Instance, InstanceStatus, Service};
-use artemis_management::{InstanceManager, RouteManager};
-use artemis_server::discovery::filter::{
-    DiscoveryFilter, DiscoveryFilterChain, GroupRoutingFilter, ManagementDiscoveryFilter,
-    StatusFilter,
+use artemis_management::{
+    GroupRoutingFilter, InstanceManager, ManagementDiscoveryFilter, RouteEngine, RouteManager,
 };
-use artemis_server::routing::RouteEngine;
+use artemis_server::discovery::filter::{DiscoveryFilter, DiscoveryFilterChain, StatusFilter};
 use std::sync::Arc;
 
 /// 创建测试实例

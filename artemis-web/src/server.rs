@@ -1,55 +1,22 @@
 use crate::state::AppState;
-use axum::{
-    Router, middleware,
-    routing::{get, post},
-};
+use artemis_management::{management_routes, ManagementState};
+use axum::{routing::get, routing::post, Router};
 use std::net::SocketAddr;
 use tower_http::cors::CorsLayer;
 
 pub async fn run_server(state: AppState, addr: SocketAddr) -> anyhow::Result<()> {
-    // 受保护的路由（需要 JWT 认证）
-    let protected_routes = Router::new()
-        // Auth endpoints - Protected
-        .route("/api/auth/logout", post(crate::api::auth::logout))
-        .route("/api/auth/refresh", post(crate::api::auth::refresh_token))
-        .route("/api/auth/user", get(crate::api::auth::get_current_user))
-        .route("/api/auth/permissions", get(crate::api::auth::get_user_permissions))
-        .route("/api/auth/password/change", post(crate::api::auth::change_password))
-        .route("/api/auth/password/reset/{user_id}", post(crate::api::auth::reset_password))
-        .route("/api/auth/sessions", get(crate::api::auth::list_sessions))
-        .route(
-            "/api/auth/sessions/{session_id}",
-            axum::routing::delete(crate::api::auth::revoke_session),
-        )
-        .route("/api/auth/check-permission", post(crate::api::auth::check_permission))
-        .route(
-            "/api/auth/users",
-            get(crate::api::auth::list_users).post(crate::api::auth::create_user),
-        )
-        .route("/api/auth/users/{user_id}", get(crate::api::auth::get_user))
-        .route("/api/auth/users/{user_id}", axum::routing::put(crate::api::auth::update_user))
-        .route("/api/auth/users/{user_id}", axum::routing::delete(crate::api::auth::delete_user))
-        .route(
-            "/api/auth/users/{user_id}/status",
-            axum::routing::patch(crate::api::auth::update_user_status),
-        )
-        .route("/api/auth/users/{user_id}/login-history", get(crate::api::auth::get_login_history))
-        // 应用 JWT 认证中间件
-        .route_layer(middleware::from_fn_with_state(
-            state.clone(),
-            crate::middleware::jwt::jwt_auth,
-        ));
-
-    // 公开路由（无需认证）
-    let app = Router::new()
+    // 核心服务路由 (注册、发现、复制、状态、监控)
+    let core_routes = Router::new()
         .route("/health", get(|| async { "OK" }))
         .route("/metrics", get(crate::api::metrics::metrics))
+        // Registry endpoints
         .route("/api/registry/register", post(crate::api::registry::register))
         .route("/api/registry/register.json", post(crate::api::registry::register))
         .route("/api/registry/heartbeat", post(crate::api::registry::heartbeat))
         .route("/api/registry/heartbeat.json", post(crate::api::registry::heartbeat))
         .route("/api/registry/unregister", post(crate::api::registry::unregister))
         .route("/api/registry/unregister.json", post(crate::api::registry::unregister))
+        // Discovery endpoints
         .route(
             "/api/discovery/service",
             post(crate::api::discovery::get_service)
@@ -110,46 +77,7 @@ pub async fn run_server(state: AppState, addr: SocketAddr) -> anyhow::Result<()>
             "/api/replication/registry/sync-full.json",
             post(crate::api::replication::sync_full_data),
         )
-        // Management endpoints - Instance operations
-        .route(
-            "/api/management/instance/operate-instance.json",
-            post(crate::api::management::operate_instance),
-        )
-        .route(
-            "/api/management/instance/get-instance-operations.json",
-            post(crate::api::management::get_instance_operations),
-        )
-        .route(
-            "/api/management/instance/is-instance-down.json",
-            post(crate::api::management::is_instance_down),
-        )
-        // Management endpoints - Server operations
-        .route(
-            "/api/management/server/operate-server.json",
-            post(crate::api::management::operate_server),
-        )
-        .route(
-            "/api/management/server/is-server-down.json",
-            post(crate::api::management::is_server_down),
-        )
-        // Management endpoints - Batch query operations (Phase 25)
-        .route(
-            "/api/management/all-instance-operations.json",
-            post(crate::api::management::get_all_instance_operations_post),
-        )
-        .route(
-            "/api/management/all-instance-operations.json",
-            get(crate::api::management::get_all_instance_operations_get),
-        )
-        .route(
-            "/api/management/all-server-operations.json",
-            post(crate::api::management::get_all_server_operations_post),
-        )
-        .route(
-            "/api/management/all-server-operations.json",
-            get(crate::api::management::get_all_server_operations_get),
-        )
-        // Routing endpoints - Group management
+        // Routing endpoints - Group management (保留在 artemis-web,因为需要访问 registry_service)
         .route("/api/routing/groups", post(crate::api::routing::create_group))
         .route("/api/routing/groups", get(crate::api::routing::list_groups))
         .route("/api/routing/groups/by-id/{group_id}", get(crate::api::routing::get_group))
@@ -196,7 +124,10 @@ pub async fn run_server(state: AppState, addr: SocketAddr) -> anyhow::Result<()>
             axum::routing::patch(crate::api::routing::update_rule),
         )
         .route("/api/routing/rules/{rule_id}/publish", post(crate::api::routing::publish_rule))
-        .route("/api/routing/rules/{rule_id}/unpublish", post(crate::api::routing::unpublish_rule))
+        .route(
+            "/api/routing/rules/{rule_id}/unpublish",
+            post(crate::api::routing::unpublish_rule),
+        )
         // Routing endpoints - Rule group association
         .route("/api/routing/rules/{rule_id}/groups", post(crate::api::routing::add_rule_group))
         .route("/api/routing/rules/{rule_id}/groups", get(crate::api::routing::get_rule_groups))
@@ -208,59 +139,6 @@ pub async fn run_server(state: AppState, addr: SocketAddr) -> anyhow::Result<()>
             "/api/routing/rules/{rule_id}/groups/{group_id}",
             axum::routing::patch(crate::api::routing::update_rule_group),
         )
-        // Zone management endpoints
-        .route("/api/management/zone/pull-out", post(crate::api::zone::pull_out_zone))
-        .route("/api/management/zone/pull-in", post(crate::api::zone::pull_in_zone))
-        .route(
-            "/api/management/zone/status/{zone_id}/{region_id}",
-            get(crate::api::zone::get_zone_status),
-        )
-        .route("/api/management/zone/operations", get(crate::api::zone::list_zone_operations))
-        .route(
-            "/api/management/zone/{zone_id}/{region_id}",
-            axum::routing::delete(crate::api::zone::delete_zone_operation),
-        )
-        // Canary release endpoints
-        .route("/api/management/canary/config", post(crate::api::canary::set_canary_config))
-        .route(
-            "/api/management/canary/config/{service_id}",
-            get(crate::api::canary::get_canary_config),
-        )
-        .route("/api/management/canary/enable", post(crate::api::canary::enable_canary))
-        .route(
-            "/api/management/canary/config/{service_id}",
-            axum::routing::delete(crate::api::canary::delete_canary_config),
-        )
-        .route("/api/management/canary/configs", get(crate::api::canary::list_canary_configs))
-        // Audit log endpoints
-        .route("/api/management/audit/logs", get(crate::api::audit::query_logs))
-        .route("/api/management/audit/instance-logs", get(crate::api::audit::query_instance_logs))
-        .route("/api/management/audit/server-logs", get(crate::api::audit::query_server_logs))
-        // Phase 24: 审计日志细分 API
-        .route("/api/management/log/group-logs.json", post(crate::api::audit::query_group_logs))
-        .route(
-            "/api/management/log/route-rule-logs.json",
-            post(crate::api::audit::query_route_rule_logs),
-        )
-        .route(
-            "/api/management/log/route-rule-group-logs.json",
-            post(crate::api::audit::query_route_rule_group_logs),
-        )
-        .route(
-            "/api/management/log/zone-operation-logs.json",
-            post(crate::api::audit::query_zone_operation_logs),
-        )
-        .route(
-            "/api/management/log/group-instance-logs.json",
-            post(crate::api::audit::query_group_instance_logs),
-        )
-        .route(
-            "/api/management/log/service-instance-logs.json",
-            post(crate::api::audit::query_service_instance_logs),
-        )
-        // Auth endpoints - Public (no JWT required)
-        .route("/api/auth/login", post(crate::api::auth::login))
-        .route("/api/auth/roles", get(crate::api::auth::list_roles))
         // Status endpoints
         .route("/api/status/node.json", post(crate::api::status::get_cluster_node_status_post))
         .route("/api/status/node.json", get(crate::api::status::get_cluster_node_status_get))
@@ -278,14 +156,37 @@ pub async fn run_server(state: AppState, addr: SocketAddr) -> anyhow::Result<()>
         )
         .route("/api/status/config.json", post(crate::api::status::get_config_status_post))
         .route("/api/status/config.json", get(crate::api::status::get_config_status_get))
-        .route("/api/status/deployment.json", post(crate::api::status::get_deployment_status_post))
-        .route("/api/status/deployment.json", get(crate::api::status::get_deployment_status_get))
+        .route(
+            "/api/status/deployment.json",
+            post(crate::api::status::get_deployment_status_post),
+        )
+        .route(
+            "/api/status/deployment.json",
+            get(crate::api::status::get_deployment_status_get),
+        )
+        // WebSocket endpoint
         .route("/ws", get(crate::websocket::ws_handler))
-        // 合并受保护的路由
-        .merge(protected_routes)
-        // 应用 CORS 和状态
-        .layer(CorsLayer::permissive())
-        .with_state(state);
+        .with_state(state.clone());
+
+    // 创建管理状态 (从 AppState 中提取管理相关的 managers)
+    let management_state = ManagementState::new(
+        state.auth_manager.clone(),
+        state.instance_manager.clone(),
+        state.group_manager.clone(),
+        state.route_manager.clone(),
+        state.zone_manager.clone(),
+        state.canary_manager.clone(),
+        state.audit_manager.clone(),
+    );
+
+    // 管理路由 (从 artemis-management crate)
+    let mgmt_routes = management_routes(management_state);
+
+    // 合并所有路由
+    let app = Router::new()
+        .merge(core_routes)
+        .merge(mgmt_routes)
+        .layer(CorsLayer::permissive());
 
     tracing::info!("Starting Artemis Web Server on {}", addr);
     let listener = tokio::net::TcpListener::bind(addr).await?;

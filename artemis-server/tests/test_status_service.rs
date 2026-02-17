@@ -10,7 +10,7 @@
 //! - parse_url: URL 解析辅助函数
 
 use artemis_core::model::{ErrorCode, InstanceKey};
-use artemis_management::model::{
+use artemis_server::model::{
     GetClusterNodeStatusRequest, GetClusterStatusRequest, GetConfigStatusRequest,
     GetDeploymentStatusRequest, GetLeasesStatusRequest,
 };

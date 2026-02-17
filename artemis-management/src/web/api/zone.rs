@@ -1,7 +1,7 @@
 //! Zone management HTTP API
 
-use crate::state::AppState;
-use artemis_management::model::OperateZoneRequest;
+use crate::model::OperateZoneRequest;
+use crate::web::state::ManagementState;
 use axum::{
     Json,
     extract::{Path, Query, State},
@@ -31,7 +31,7 @@ impl<T> ApiResponse<T> {
 
 /// POST /api/management/zone/pull-out - 拉出整个 Zone
 pub async fn pull_out_zone(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Json(req): Json<OperateZoneRequest>,
 ) -> impl IntoResponse {
     match state.zone_manager.pull_out_zone(&req.zone_id, &req.region_id, req.operator_id.clone()) {
@@ -46,7 +46,7 @@ pub async fn pull_out_zone(
 
 /// POST /api/management/zone/pull-in - 拉入整个 Zone
 pub async fn pull_in_zone(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Json(req): Json<OperateZoneRequest>,
 ) -> impl IntoResponse {
     match state.zone_manager.pull_in_zone(&req.zone_id, &req.region_id, req.operator_id.clone()) {
@@ -61,7 +61,7 @@ pub async fn pull_in_zone(
 
 /// GET /api/management/zone/status/:zone_id/:region_id - 查询 Zone 状态
 pub async fn get_zone_status(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Path((zone_id, region_id)): Path<(String, String)>,
 ) -> impl IntoResponse {
     let is_down = state.zone_manager.is_zone_down(&zone_id, &region_id);
@@ -85,7 +85,7 @@ pub struct ListZoneOpsQuery {
 
 /// GET /api/management/zone/operations - 列出所有 Zone 操作
 pub async fn list_zone_operations(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Query(query): Query<ListZoneOpsQuery>,
 ) -> impl IntoResponse {
     let operations = state.zone_manager.list_operations(query.region_id.as_deref());
@@ -95,7 +95,7 @@ pub async fn list_zone_operations(
 
 /// DELETE /api/management/zone/:zone_id/:region_id - 移除 Zone 操作记录
 pub async fn delete_zone_operation(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Path((zone_id, region_id)): Path<(String, String)>,
 ) -> impl IntoResponse {
     // Pull in is equivalent to deleting pull-out record
@@ -110,7 +110,7 @@ pub async fn delete_zone_operation(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use artemis_management::model::OperateZoneRequest;
+    use crate::model::OperateZoneRequest;
 
     #[test]
     fn test_api_response_success() {
@@ -148,7 +148,7 @@ mod tests {
 
     #[test]
     fn test_operate_zone_request() {
-        use artemis_management::model::ZoneOperation;
+        use crate::model::ZoneOperation;
         let request = OperateZoneRequest {
             zone_id: "zone-1".to_string(),
             region_id: "us-east".to_string(),
@@ -162,7 +162,7 @@ mod tests {
 
     #[test]
     fn test_operate_zone_request_pull_in() {
-        use artemis_management::model::ZoneOperation;
+        use crate::model::ZoneOperation;
         let request = OperateZoneRequest {
             zone_id: "zone-2".to_string(),
             region_id: "eu-west".to_string(),

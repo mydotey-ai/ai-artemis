@@ -1,10 +1,10 @@
-use crate::state::AppState;
-use artemis_management::auth::{Session, UserResponse, UserRole, UserStatus};
+use crate::auth::{Session, UserResponse, UserRole, UserStatus};
+use crate::web::state::ManagementState;
 use axum::{
-    Extension, Json,
     extract::{Path, Request, State},
     http::StatusCode,
     response::IntoResponse,
+    Extension, Json,
 };
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
@@ -105,7 +105,7 @@ fn extract_user_id(req: &Request) -> Result<String, (StatusCode, String)> {
 
 /// POST /api/auth/login - 用户登录
 pub async fn login(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Json(req): Json<LoginRequest>,
 ) -> impl IntoResponse {
     match state.auth_manager.authenticate(&req.username, &req.password, None, None) {
@@ -125,7 +125,7 @@ pub async fn login(
 }
 
 /// POST /api/auth/logout - 用户登出
-pub async fn logout(State(state): State<AppState>, req: Request) -> impl IntoResponse {
+pub async fn logout(State(state): State<ManagementState>, req: Request) -> impl IntoResponse {
     // 从 header 中提取 token
     let token = req
         .headers()
@@ -147,7 +147,7 @@ pub async fn logout(State(state): State<AppState>, req: Request) -> impl IntoRes
 
 /// POST /api/auth/refresh - 刷新 token
 pub async fn refresh_token(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Json(req): Json<RefreshTokenRequest>,
 ) -> impl IntoResponse {
     match state.auth_manager.refresh_token(&req.token) {
@@ -167,7 +167,10 @@ pub async fn refresh_token(
 }
 
 /// GET /api/auth/user - 获取当前用户信息
-pub async fn get_current_user(State(state): State<AppState>, req: Request) -> impl IntoResponse {
+pub async fn get_current_user(
+    State(state): State<ManagementState>,
+    req: Request,
+) -> impl IntoResponse {
     match extract_user_id(&req) {
         Ok(user_id) => match state.auth_manager.get_user(&user_id) {
             Some(user) => (StatusCode::OK, Json(ApiResponse::success(user.to_response()))),
@@ -182,7 +185,7 @@ pub async fn get_current_user(State(state): State<AppState>, req: Request) -> im
 
 /// GET /api/auth/permissions - 获取用户权限
 pub async fn get_user_permissions(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     req: Request,
 ) -> impl IntoResponse {
     match extract_user_id(&req) {
@@ -196,7 +199,7 @@ pub async fn get_user_permissions(
 
 /// POST /api/auth/password/change - 修改密码
 pub async fn change_password(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Extension(user_id): Extension<String>,
     Json(body): Json<ChangePasswordRequest>,
 ) -> impl IntoResponse {
@@ -211,7 +214,7 @@ pub async fn change_password(
 
 /// POST /api/auth/password/reset/:user_id - 重置密码（管理员）
 pub async fn reset_password(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Path(user_id): Path<String>,
     Json(req): Json<ResetPasswordRequest>,
 ) -> impl IntoResponse {
@@ -224,7 +227,10 @@ pub async fn reset_password(
 }
 
 /// GET /api/auth/sessions - 列出用户会话
-pub async fn list_sessions(State(state): State<AppState>, req: Request) -> impl IntoResponse {
+pub async fn list_sessions(
+    State(state): State<ManagementState>,
+    req: Request,
+) -> impl IntoResponse {
     match extract_user_id(&req) {
         Ok(user_id) => {
             let sessions = state.auth_manager.list_user_sessions(&user_id);
@@ -236,7 +242,7 @@ pub async fn list_sessions(State(state): State<AppState>, req: Request) -> impl 
 
 /// DELETE /api/auth/sessions/:session_id - 撤销会话
 pub async fn revoke_session(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Path(session_id): Path<String>,
 ) -> impl IntoResponse {
     match state.auth_manager.revoke_session(&session_id) {
@@ -255,7 +261,7 @@ pub async fn list_roles() -> impl IntoResponse {
 
 /// POST /api/auth/check-permission - 检查权限
 pub async fn check_permission(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Extension(user_id): Extension<String>,
     Json(body): Json<CheckPermissionRequest>,
 ) -> impl IntoResponse {
@@ -266,7 +272,7 @@ pub async fn check_permission(
 // ===== 用户管理 API =====
 
 /// GET /api/auth/users - 列出所有用户
-pub async fn list_users(State(state): State<AppState>) -> impl IntoResponse {
+pub async fn list_users(State(state): State<ManagementState>) -> impl IntoResponse {
     let users: Vec<UserResponse> =
         state.auth_manager.list_users().into_iter().map(|u| u.to_response()).collect();
     (StatusCode::OK, Json(ApiResponse::success(users)))
@@ -274,7 +280,7 @@ pub async fn list_users(State(state): State<AppState>) -> impl IntoResponse {
 
 /// POST /api/auth/users - 创建用户
 pub async fn create_user(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Json(req): Json<CreateUserRequest>,
 ) -> impl IntoResponse {
     let role = match UserRole::from_str(&req.role) {
@@ -298,7 +304,7 @@ pub async fn create_user(
 
 /// GET /api/auth/users/:user_id - 获取用户详情
 pub async fn get_user(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Path(user_id): Path<String>,
 ) -> impl IntoResponse {
     match state.auth_manager.get_user(&user_id) {
@@ -312,7 +318,7 @@ pub async fn get_user(
 
 /// PUT /api/auth/users/:user_id - 更新用户
 pub async fn update_user(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Path(user_id): Path<String>,
     Json(req): Json<UpdateUserRequest>,
 ) -> impl IntoResponse {
@@ -335,7 +341,7 @@ pub async fn update_user(
 
 /// DELETE /api/auth/users/:user_id - 删除用户
 pub async fn delete_user(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Path(user_id): Path<String>,
 ) -> impl IntoResponse {
     match state.auth_manager.delete_user(&user_id) {
@@ -348,7 +354,7 @@ pub async fn delete_user(
 
 /// PATCH /api/auth/users/:user_id/status - 修改用户状态
 pub async fn update_user_status(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Path(user_id): Path<String>,
     Json(req): Json<UpdateUserStatusRequest>,
 ) -> impl IntoResponse {
@@ -367,7 +373,7 @@ pub async fn update_user_status(
 
 /// GET /api/auth/users/:user_id/login-history - 获取登录历史
 pub async fn get_login_history(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Path(user_id): Path<String>,
 ) -> impl IntoResponse {
     let history = state.auth_manager.get_login_history(&user_id, 50);

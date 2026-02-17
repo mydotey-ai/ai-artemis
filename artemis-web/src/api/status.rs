@@ -1,5 +1,5 @@
 use crate::state::AppState;
-use artemis_management::model::{
+use artemis_server::model::{
     GetClusterNodeStatusRequest, GetClusterStatusRequest, GetConfigStatusRequest,
     GetDeploymentStatusRequest, GetLeasesStatusRequest,
 };

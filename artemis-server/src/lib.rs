@@ -10,7 +10,6 @@ pub mod model;
 pub mod ratelimiter;
 pub mod registry;
 pub mod replication;
-pub mod routing;
 pub mod status;
 pub mod storage;
 pub mod telemetry;

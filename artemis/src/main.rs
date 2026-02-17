@@ -1,12 +1,13 @@
 use artemis_management::auth::UserRole;
 use artemis_management::{
-    AuthManager, ConfigLoader, Database, GroupManager, InstanceManager, RouteManager,
+    AuthManager, ConfigLoader, Database, GroupManager, GroupRoutingFilter, InstanceManager,
+    ManagementDiscoveryFilter, RouteEngine, RouteManager,
 };
 use artemis_server::config::ArtemisConfig;
 use artemis_server::{
     RegistryServiceImpl, cache::VersionedCacheManager, cluster::ClusterManager,
     discovery::DiscoveryServiceImpl, lease::LeaseManager, registry::RegistryRepository,
-    replication::ReplicationManager, routing::RouteEngine,
+    replication::ReplicationManager,
 };
 use artemis_web::{server::run_server, state::AppState};
 use clap::{Parser, Subcommand};
@@ -217,12 +218,12 @@ async fn start_server(
     let mut discovery_service = DiscoveryServiceImpl::new(repository, cache.clone());
 
     // Add management filter (pull-in/pull-out)
-    discovery_service.add_filter(Arc::new(
-        artemis_server::discovery::ManagementDiscoveryFilter::new(instance_manager.clone()),
-    ));
+    discovery_service.add_filter(Arc::new(ManagementDiscoveryFilter::new(
+        instance_manager.clone(),
+    )));
 
     // Add group routing filter
-    discovery_service.add_filter(Arc::new(artemis_server::discovery::GroupRoutingFilter::new(
+    discovery_service.add_filter(Arc::new(GroupRoutingFilter::new(
         route_manager.clone(),
         route_engine.clone(),
     )));

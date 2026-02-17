@@ -1,14 +1,14 @@
 //! Management API endpoints for instance pull-in/pull-out operations
 
-use crate::state::AppState;
-use artemis_core::model::ResponseStatus;
-use artemis_management::model::{
+use crate::model::{
     GetAllInstanceOperationsRequest, GetAllInstanceOperationsResponse,
     GetAllServerOperationsRequest, GetAllServerOperationsResponse, GetInstanceOperationsRequest,
     GetInstanceOperationsResponse, InstanceOperation, IsInstanceDownRequest,
     IsInstanceDownResponse, IsServerDownRequest, IsServerDownResponse, OperateInstanceRequest,
     OperateInstanceResponse, OperateServerRequest, OperateServerResponse, ServerOperationInfo,
 };
+use crate::web::state::ManagementState;
+use artemis_core::model::ResponseStatus;
 use axum::{
     Json,
     extract::{Query, State},
@@ -23,7 +23,7 @@ use tracing::{error, info};
 /// POST /api/management/instance/operate-instance.json
 /// 操作实例 (拉入/拉出)
 pub async fn operate_instance(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Json(req): Json<OperateInstanceRequest>,
 ) -> Response {
     info!(
@@ -65,7 +65,7 @@ pub async fn operate_instance(
 /// POST /api/management/instance/get-instance-operations.json
 /// 查询实例操作列表
 pub async fn get_instance_operations(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Json(req): Json<GetInstanceOperationsRequest>,
 ) -> Response {
     info!("Get instance operations: {:?}", req.instance_key);
@@ -80,7 +80,7 @@ pub async fn get_instance_operations(
 /// POST /api/management/instance/is-instance-down.json
 /// 查询实例是否被拉出
 pub async fn is_instance_down(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Json(req): Json<IsInstanceDownRequest>,
 ) -> Response {
     let is_down = state.instance_manager.is_instance_down(&req.instance_key);
@@ -97,7 +97,7 @@ pub async fn is_instance_down(
 /// POST /api/management/server/operate-server.json
 /// 操作服务器 (批量拉入/拉出)
 pub async fn operate_server(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Json(req): Json<OperateServerRequest>,
 ) -> Response {
     info!(
@@ -106,7 +106,7 @@ pub async fn operate_server(
     );
 
     let result = match req.operation {
-        artemis_management::model::ServerOperation::PullOut => {
+        crate::model::ServerOperation::PullOut => {
             state.instance_manager.pull_out_server(
                 &req.server_id,
                 &req.region_id,
@@ -114,7 +114,7 @@ pub async fn operate_server(
                 req.operation_complete,
             )
         }
-        artemis_management::model::ServerOperation::PullIn => {
+        crate::model::ServerOperation::PullIn => {
             state.instance_manager.pull_in_server(
                 &req.server_id,
                 &req.region_id,
@@ -145,7 +145,7 @@ pub async fn operate_server(
 /// POST /api/management/server/is-server-down.json
 /// 查询服务器是否被拉出
 pub async fn is_server_down(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Json(req): Json<IsServerDownRequest>,
 ) -> Response {
     let is_down = state.instance_manager.is_server_down(&req.server_id, &req.region_id);
@@ -162,7 +162,7 @@ pub async fn is_server_down(
 /// POST /api/management/all-instance-operations.json
 /// 查询所有实例操作 (POST 版本)
 pub async fn get_all_instance_operations_post(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Json(req): Json<GetAllInstanceOperationsRequest>,
 ) -> Response {
     info!("Get all instance operations (POST), region_id: {:?}", req.region_id);
@@ -186,7 +186,7 @@ pub struct AllInstanceOperationsQuery {
 }
 
 pub async fn get_all_instance_operations_get(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Query(query): Query<AllInstanceOperationsQuery>,
 ) -> Response {
     info!("Get all instance operations (GET), region_id: {:?}", query.region_id);
@@ -204,7 +204,7 @@ pub async fn get_all_instance_operations_get(
 /// POST /api/management/all-server-operations.json
 /// 查询所有服务器操作 (POST 版本)
 pub async fn get_all_server_operations_post(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Json(req): Json<GetAllServerOperationsRequest>,
 ) -> Response {
     info!("Get all server operations (POST), region_id: {:?}", req.region_id);
@@ -238,7 +238,7 @@ pub struct AllServerOperationsQuery {
 }
 
 pub async fn get_all_server_operations_get(
-    State(state): State<AppState>,
+    State(state): State<ManagementState>,
     Query(query): Query<AllServerOperationsQuery>,
 ) -> Response {
     info!("Get all server operations (GET), region_id: {:?}", query.region_id);
