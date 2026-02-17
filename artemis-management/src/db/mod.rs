@@ -94,7 +94,15 @@ impl Database {
     ///
     /// 执行 migrations/ 目录下的所有 SQL 迁移文件
     pub async fn run_migrations(&self) -> anyhow::Result<()> {
+        use sea_orm::ConnectionTrait;
+
         tracing::info!("Running database migrations for {:?}", self.db_type);
+
+        // 对于 SQLite，启用外键约束
+        if self.db_type == DatabaseType::SQLite {
+            self.conn.execute_unprepared("PRAGMA foreign_keys = ON").await
+                .map_err(|e| anyhow::anyhow!("Failed to enable foreign keys: {}", e))?;
+        }
 
         // 迁移1: 初始Schema (实例操作、服务分组、路由规则等)
         let migration_001 = include_str!("../../migrations/001_initial_schema.sql");
@@ -115,13 +123,37 @@ impl Database {
 
         tracing::debug!("Executing migration: {}", name);
 
-        // 按分号分割SQL语句并逐个执行
-        for statement in sql.split(';') {
-            let trimmed = statement.trim();
-            if !trimmed.is_empty() && !trimmed.starts_with("--") {
-                self.conn.execute_unprepared(trimmed).await
-                    .map_err(|e| anyhow::anyhow!("Failed to execute migration {}: {}", name, e))?;
-            }
+        // 改进的SQL语句分割和清理逻辑
+        let statements: Vec<String> = sql
+            .split(';')
+            .map(|s| {
+                // 移除每行的注释，保留SQL代码
+                s.lines()
+                    .map(|line| {
+                        // 移除行注释
+                        if let Some(pos) = line.find("--") {
+                            &line[..pos]
+                        } else {
+                            line
+                        }
+                    })
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            })
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .collect();
+
+        // 逐个执行SQL语句
+        for (i, statement) in statements.iter().enumerate() {
+            tracing::debug!("Executing statement {} of {}", i + 1, statements.len());
+            self.conn.execute_unprepared(statement).await
+                .map_err(|e| {
+                    anyhow::anyhow!(
+                        "Failed to execute migration {} (statement {}): {}\nSQL: {}",
+                        name, i + 1, e, statement
+                    )
+                })?;
         }
 
         tracing::debug!("Migration {} completed", name);
@@ -277,6 +309,9 @@ mod tests {
         let db = Database::new("sqlite::memory:", 5).await.unwrap();
         // run_migrations 目前只是占位符,应该不会失败
         let result = db.run_migrations().await;
+        if let Err(e) = &result {
+            eprintln!("Migration failed: {:?}", e);
+        }
         assert!(result.is_ok());
     }
 
