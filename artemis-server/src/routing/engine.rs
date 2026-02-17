@@ -112,11 +112,9 @@ impl Default for RouteEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use artemis_core::model::{
-        InstanceStatus, RouteRuleStatus, RouteStrategy as RouteStrategyEnum,
-    };
-    // Import ServiceGroup from service module (not group module)
+    use artemis_core::model::InstanceStatus;
     use artemis_core::model::service::ServiceGroup;
+    use artemis_management::model::{RouteRuleStatus, RouteStrategy as RouteStrategyEnum};
 
     fn create_test_instance(service_id: &str, instance_id: &str, group_id: &str) -> Instance {
         Instance {

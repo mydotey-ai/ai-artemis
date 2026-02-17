@@ -529,7 +529,8 @@ impl AuditManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::model::{InstanceKey, InstanceOperation, ServerOperation};
+    use crate::model::{InstanceOperation, ServerOperation};
+    use artemis_core::model::InstanceKey;
 
     // ========== 基础功能测试 ==========
 

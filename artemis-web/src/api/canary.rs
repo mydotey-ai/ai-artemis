@@ -126,7 +126,7 @@ mod tests {
 
     #[test]
     fn test_set_canary_config_request() {
-        use artemis_core::model::SetCanaryConfigRequest;
+        use artemis_management::model::SetCanaryConfigRequest;
         let req = SetCanaryConfigRequest {
             service_id: "service1".to_string(),
             ip_whitelist: vec!["192.168.1.1".to_string()],
@@ -137,7 +137,7 @@ mod tests {
 
     #[test]
     fn test_enable_canary_request() {
-        use artemis_core::model::EnableCanaryRequest;
+        use artemis_management::model::EnableCanaryRequest;
         let req = EnableCanaryRequest { service_id: "service1".to_string(), enabled: true };
         assert_eq!(req.service_id, "service1");
         assert!(req.enabled);
@@ -170,7 +170,7 @@ mod tests {
 
     #[test]
     fn test_enable_canary_request_disabled() {
-        use artemis_core::model::EnableCanaryRequest;
+        use artemis_management::model::EnableCanaryRequest;
         let req = EnableCanaryRequest { service_id: "service2".to_string(), enabled: false };
         assert_eq!(req.service_id, "service2");
         assert!(!req.enabled);
@@ -178,7 +178,7 @@ mod tests {
 
     #[test]
     fn test_set_canary_config_request_empty_whitelist() {
-        use artemis_core::model::SetCanaryConfigRequest;
+        use artemis_management::model::SetCanaryConfigRequest;
         let req =
             SetCanaryConfigRequest { service_id: "service3".to_string(), ip_whitelist: vec![] };
         assert_eq!(req.service_id, "service3");
@@ -187,7 +187,7 @@ mod tests {
 
     #[test]
     fn test_set_canary_config_request_multiple_ips() {
-        use artemis_core::model::SetCanaryConfigRequest;
+        use artemis_management::model::SetCanaryConfigRequest;
         let ips =
             vec!["192.168.1.1".to_string(), "192.168.1.2".to_string(), "10.0.0.1".to_string()];
         let req = SetCanaryConfigRequest {

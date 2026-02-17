@@ -670,7 +670,7 @@ pub async fn batch_add_service_instances(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use artemis_core::model::{GroupStatus, GroupTag, GroupType, RouteStrategy};
+    use artemis_management::model::{GroupStatus, GroupTag, GroupType, RouteStrategy};
 
     // ===== ApiResponse 测试 =====
 

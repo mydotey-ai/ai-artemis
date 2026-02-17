@@ -135,7 +135,6 @@ mod tests {
             instances: vec![],
             metadata: None,
             logic_instances: None,
-            route_rules: None,
         }
     }
 
