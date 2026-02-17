@@ -4,14 +4,15 @@
 
 ## 📢 文档更新说明
 
-**最后更新**: 2026-02-16
-**更新依据**: 代码实际实现状态检查 + 文档规范化整理
+**最后更新**: 2026-02-17
+**更新依据**: artemis-core 重构完成 + 架构优化
 
 **关键变更**:
 1. ✅ **Phase 1-25 全部完成** - 核心功能 + 功能对齐 100%实现
 2. ✅ **Phase 11 说明** - 已跳过/合并到其他Phase
 3. 📊 **更新API端点统计** - 101个端点全部实现
 4. 📁 **文档规范化** - 25个Phase文档完整，结构清晰
+5. 🔧 **artemis-core 重构** (2026-02-17) - 代码精简78.5%，模块职责清晰化
 
 ---
 
@@ -39,6 +40,67 @@
 
 ---
 
+## 🔧 artemis-core 重构 (2026-02-17)
+
+**重构目标**: 精简 artemis-core 为核心协议层，让 client 只依赖必需的部分
+
+**重构成果**:
+
+| 指标 | 重构前 | 重构后 | 改进 |
+|------|--------|--------|------|
+| **代码行数** | 2193 行 | 471 行 | **-78.5%** |
+| **模块数量** | 21 个文件 | 8 个文件 | **-62%** |
+| **编译速度** | 基准 | 更快 | Client 编译提速 |
+| **测试通过** | 756 个 | 811 个 | 增加 55 个 |
+| **编译警告** | 0 | 0 | 保持零警告 |
+
+**模块重组**:
+
+```
+artemis-core (精简后 - 471 行)
+├── error.rs              # 错误类型定义
+├── lib.rs                # 库入口
+└── model/
+    ├── instance.rs       # Instance, InstanceKey, InstanceStatus
+    ├── service.rs        # Service
+    ├── request.rs        # Register/Heartbeat/Discovery 请求
+    ├── change.rs         # InstanceChange (WebSocket)
+    ├── replication.rs    # Server 间复制协议
+    └── mod.rs
+
+artemis-server (新增模块)
+├── config/               # 从 artemis-core 迁移
+├── telemetry/            # 从 artemis-core 迁移
+├── utils.rs              # 从 artemis-core 迁移
+├── traits/               # 从 artemis-core 迁移
+│   ├── discovery.rs
+│   └── registry.rs
+└── model/                # 从 artemis-core 迁移
+    └── lease.rs
+
+artemis-management (新增模块)
+└── model/                # 从 artemis-core 迁移
+    ├── management.rs     # InstanceOperation, ServerOperation
+    ├── group.rs          # ServiceGroup, GroupInstance
+    ├── route.rs          # RouteRule, RouteStrategy
+    ├── zone.rs           # ZoneOperation
+    ├── canary.rs         # CanaryConfig
+    └── status.rs         # Status 查询
+```
+
+**依赖关系优化**:
+- ✅ `artemis-client` → 只依赖精简后的 `artemis-core` (471 行)
+- ✅ `artemis-server` → 包含所有 server 特有基础设施
+- ✅ `artemis-management` → 包含所有管理功能模型
+- ✅ 无循环依赖，依赖关系清晰
+
+**设计文档**: [`docs/plans/2026-02-17-artemis-core-refactoring-design.md`](2026-02-17-artemis-core-refactoring-design.md)
+**实施计划**: [`docs/plans/2026-02-17-artemis-core-refactoring.md`](2026-02-17-artemis-core-refactoring.md)
+
+**提交记录**: 16 个重构提交，108 个文件变更，已合并到 main 分支
+
+---
+
 ## 项目概述
 
 **Goal:** 使用Rust重写Artemis服务注册中心，消除GC问题，实现P99延迟<10ms，支持100k+实例
@@ -46,11 +108,11 @@
 **实际达成**: ✅ P99延迟 **< 0.5ms** (超越目标20倍)
 
 **Architecture:** Workspace多Crate架构，包含6个crate：
-- `artemis-core` - 核心模型和trait定义
-- `artemis-server` - 业务逻辑实现
+- `artemis-core` (471行) - 核心协议定义（Instance, Service, Request/Response, Replication）
+- `artemis-server` - 业务逻辑实现 + server 特有基础设施（config, telemetry, traits, utils, lease）
 - `artemis-web` - HTTP/WebSocket API层
-- `artemis-management` - 管理功能和持久化
-- `artemis-client` - 客户端SDK
+- `artemis-management` - 管理功能和持久化 + management 模型（group, route, zone, canary, status）
+- `artemis-client` - 客户端SDK（仅依赖精简后的 artemis-core）
 - `artemis` - CLI工具和服务器启动程序
 
 **Tech Stack:** Rust 2024, Tokio, Axum, DashMap, parking_lot, SQLx, Governor, Serde, Clap
