@@ -4,7 +4,7 @@
  * 提供 Zone 级别的批量操作和管理功能
  */
 
-import axios from 'axios';
+import apiClient from '@/api/client';
 
 const API_BASE = '/api/management/zone';
 
@@ -38,7 +38,7 @@ export interface ApiResponse<T> {
  * POST /api/management/zone/pull-out
  */
 export async function pullOutZone(request: OperateZoneRequest): Promise<ApiResponse<any>> {
-  const response = await axios.post(`${API_BASE}/pull-out`, request);
+  const response = await apiClient.post(`${API_BASE}/pull-out`, request);
   return response.data;
 }
 
@@ -47,7 +47,7 @@ export async function pullOutZone(request: OperateZoneRequest): Promise<ApiRespo
  * POST /api/management/zone/pull-in
  */
 export async function pullInZone(request: OperateZoneRequest): Promise<ApiResponse<any>> {
-  const response = await axios.post(`${API_BASE}/pull-in`, request);
+  const response = await apiClient.post(`${API_BASE}/pull-in`, request);
   return response.data;
 }
 
@@ -60,7 +60,7 @@ export async function queryZoneOperations(
   regionId?: string,
   limit?: number
 ): Promise<ApiResponse<any[]>> {
-  const response = await axios.get(`${API_BASE}/operations`, {
+  const response = await apiClient.get(`${API_BASE}/operations`, {
     params: {
       zone_id: zoneId,
       region_id: regionId,
@@ -75,7 +75,7 @@ export async function queryZoneOperations(
  * GET /api/management/zone/:zone_id
  */
 export async function getZoneInfo(zoneId: string, regionId: string): Promise<ApiResponse<ZoneInfo>> {
-  const response = await axios.get(`${API_BASE}/${zoneId}`, {
+  const response = await apiClient.get(`${API_BASE}/${zoneId}`, {
     params: { region_id: regionId },
   });
   return response.data;
@@ -86,7 +86,7 @@ export async function getZoneInfo(zoneId: string, regionId: string): Promise<Api
  * GET /api/management/zone
  */
 export async function listZones(regionId?: string): Promise<ApiResponse<ZoneInfo[]>> {
-  const response = await axios.get(API_BASE, {
+  const response = await apiClient.get(API_BASE, {
     params: { region_id: regionId },
   });
   return response.data;
@@ -97,7 +97,7 @@ export async function listZones(regionId?: string): Promise<ApiResponse<ZoneInfo
  * GET /api/management/zone/:zone_id/is-down
  */
 export async function isZoneDown(zoneId: string, regionId: string): Promise<ApiResponse<{ is_down: boolean }>> {
-  const response = await axios.get(`${API_BASE}/${zoneId}/is-down`, {
+  const response = await apiClient.get(`${API_BASE}/${zoneId}/is-down`, {
     params: { region_id: regionId },
   });
   return response.data;
@@ -112,7 +112,7 @@ export async function getZoneInstances(
   regionId: string,
   status?: string
 ): Promise<ApiResponse<any[]>> {
-  const response = await axios.get(`${API_BASE}/${zoneId}/instances`, {
+  const response = await apiClient.get(`${API_BASE}/${zoneId}/instances`, {
     params: {
       region_id: regionId,
       status,
@@ -130,7 +130,7 @@ export async function updateZoneStatus(
   regionId: string,
   status: 'ACTIVE' | 'INACTIVE'
 ): Promise<ApiResponse<any>> {
-  const response = await axios.put(`${API_BASE}/${zoneId}/status`, {
+  const response = await apiClient.put(`${API_BASE}/${zoneId}/status`, {
     zone_id: zoneId,
     region_id: regionId,
     status,
@@ -145,7 +145,7 @@ export async function updateZoneStatus(
 export async function batchPullOutZones(
   zones: OperateZoneRequest[]
 ): Promise<ApiResponse<{ failed: any[] }>> {
-  const response = await axios.post(`${API_BASE}/batch-pull-out`, { zones });
+  const response = await apiClient.post(`${API_BASE}/batch-pull-out`, { zones });
   return response.data;
 }
 
@@ -156,6 +156,6 @@ export async function batchPullOutZones(
 export async function batchPullInZones(
   zones: OperateZoneRequest[]
 ): Promise<ApiResponse<{ failed: any[] }>> {
-  const response = await axios.post(`${API_BASE}/batch-pull-in`, { zones });
+  const response = await apiClient.post(`${API_BASE}/batch-pull-in`, { zones });
   return response.data;
 }

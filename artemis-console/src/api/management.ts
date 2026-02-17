@@ -7,7 +7,7 @@
  * - 操作历史查询
  */
 
-import axios from 'axios';
+import apiClient from '@/api/client';
 
 /**
  * 响应状态
@@ -123,7 +123,7 @@ export async function operateInstance(
   };
 
   try {
-    const response = await axios.post(
+    const response = await apiClient.post(
       '/api/management/instance/operate-instance.json',
       request
     );
@@ -171,7 +171,7 @@ export async function getInstanceOperations(
   };
 
   try {
-    const response = await axios.post(
+    const response = await apiClient.post(
       '/api/management/instance/get-instance-operations.json',
       request
     );
@@ -221,7 +221,7 @@ export async function isInstanceDown(
   };
 
   try {
-    const response = await axios.post(
+    const response = await apiClient.post(
       '/api/management/instance/is-instance-down.json',
       request
     );
@@ -290,7 +290,7 @@ export async function operateServer(
   };
 
   try {
-    const response = await axios.post(
+    const response = await apiClient.post(
       '/api/management/server/operate-server.json',
       request
     );
@@ -344,7 +344,7 @@ export async function isServerDown(
   };
 
   try {
-    const response = await axios.post(
+    const response = await apiClient.post(
       '/api/management/server/is-server-down.json',
       request
     );
@@ -396,7 +396,7 @@ export async function getAllInstanceOperations(
   };
 
   try {
-    const response = await axios.post(
+    const response = await apiClient.post(
       '/api/management/all-instance-operations.json',
       request
     );
@@ -429,7 +429,7 @@ export async function getAllInstanceOperationsGet(
       params.append('regionId', region_id);
     }
 
-    const response = await axios.get(
+    const response = await apiClient.get(
       '/api/management/all-instance-operations.json',
       { params }
     );
@@ -479,7 +479,7 @@ export async function getAllServerOperations(
   };
 
   try {
-    const response = await axios.post(
+    const response = await apiClient.post(
       '/api/management/all-server-operations.json',
       request
     );
@@ -512,7 +512,7 @@ export async function getAllServerOperationsGet(
       params.append('regionId', region_id);
     }
 
-    const response = await axios.get(
+    const response = await apiClient.get(
       '/api/management/all-server-operations.json',
       { params }
     );

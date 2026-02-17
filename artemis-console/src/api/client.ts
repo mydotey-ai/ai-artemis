@@ -13,9 +13,12 @@ import { getToken, removeToken } from '@/utils/token';
 
 /**
  * Create Axios instance with custom configuration
+ *
+ * 在开发环境中，baseURL 为空以使用 Vite 代理（vite.config.ts 中的 proxy 配置）
+ * 在生产环境中，可以设置 VITE_API_BASE_URL 为完整的 API 地址
  */
 const apiClient: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
+  baseURL: import.meta.env.VITE_API_BASE_URL || '',
   timeout: 30000, // 30 seconds
   headers: {
     'Content-Type': 'application/json',

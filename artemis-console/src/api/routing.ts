@@ -4,7 +4,7 @@
  * 提供分组管理和路由规则配置的 HTTP API
  */
 
-import axios from 'axios';
+import apiClient from '@/api/client';
 
 const API_BASE = '/api/management/routing';
 
@@ -97,7 +97,7 @@ export interface ApiResponse<T> {
  * POST /api/management/routing/groups
  */
 export async function createGroup(request: CreateGroupRequest): Promise<ApiResponse<any>> {
-  const response = await axios.post(`${API_BASE}/groups`, request);
+  const response = await apiClient.post(`${API_BASE}/groups`, request);
   return response.data;
 }
 
@@ -106,7 +106,7 @@ export async function createGroup(request: CreateGroupRequest): Promise<ApiRespo
  * GET /api/management/routing/groups
  */
 export async function listGroups(query?: ListGroupsQuery): Promise<ApiResponse<any>> {
-  const response = await axios.get(`${API_BASE}/groups`, { params: query });
+  const response = await apiClient.get(`${API_BASE}/groups`, { params: query });
   return response.data;
 }
 
@@ -115,7 +115,7 @@ export async function listGroups(query?: ListGroupsQuery): Promise<ApiResponse<a
  * GET /api/management/routing/groups/:group_id
  */
 export async function getGroup(groupId: string): Promise<ApiResponse<any>> {
-  const response = await axios.get(`${API_BASE}/groups/${groupId}`);
+  const response = await apiClient.get(`${API_BASE}/groups/${groupId}`);
   return response.data;
 }
 
@@ -124,7 +124,7 @@ export async function getGroup(groupId: string): Promise<ApiResponse<any>> {
  * PUT /api/management/routing/groups/:group_id
  */
 export async function updateGroup(groupId: string, request: UpdateGroupRequest): Promise<ApiResponse<any>> {
-  const response = await axios.put(`${API_BASE}/groups/${groupId}`, request);
+  const response = await apiClient.put(`${API_BASE}/groups/${groupId}`, request);
   return response.data;
 }
 
@@ -133,7 +133,7 @@ export async function updateGroup(groupId: string, request: UpdateGroupRequest):
  * DELETE /api/management/routing/groups/:group_id
  */
 export async function deleteGroup(groupId: string): Promise<ApiResponse<any>> {
-  const response = await axios.delete(`${API_BASE}/groups/${groupId}`);
+  const response = await apiClient.delete(`${API_BASE}/groups/${groupId}`);
   return response.data;
 }
 
@@ -145,7 +145,7 @@ export async function getGroupInstances(
   groupId: string,
   query?: GetGroupInstancesQuery
 ): Promise<ApiResponse<any>> {
-  const response = await axios.get(`${API_BASE}/groups/${groupId}/instances`, {
+  const response = await apiClient.get(`${API_BASE}/groups/${groupId}/instances`, {
     params: query,
   });
   return response.data;
@@ -159,7 +159,7 @@ export async function addGroupTags(
   groupId: string,
   request: AddGroupTagsRequest
 ): Promise<ApiResponse<any>> {
-  const response = await axios.post(`${API_BASE}/groups/${groupId}/tags`, request);
+  const response = await apiClient.post(`${API_BASE}/groups/${groupId}/tags`, request);
   return response.data;
 }
 
@@ -168,7 +168,7 @@ export async function addGroupTags(
  * DELETE /api/management/routing/groups/:group_id/tags/:tag_key
  */
 export async function removeGroupTag(groupId: string, tagKey: string): Promise<ApiResponse<any>> {
-  const response = await axios.delete(`${API_BASE}/groups/${groupId}/tags/${tagKey}`);
+  const response = await apiClient.delete(`${API_BASE}/groups/${groupId}/tags/${tagKey}`);
   return response.data;
 }
 
@@ -179,7 +179,7 @@ export async function removeGroupTag(groupId: string, tagKey: string): Promise<A
  * POST /api/management/routing/rules
  */
 export async function createRule(request: CreateRuleRequest): Promise<ApiResponse<any>> {
-  const response = await axios.post(`${API_BASE}/rules`, request);
+  const response = await apiClient.post(`${API_BASE}/rules`, request);
   return response.data;
 }
 
@@ -188,7 +188,7 @@ export async function createRule(request: CreateRuleRequest): Promise<ApiRespons
  * GET /api/management/routing/rules
  */
 export async function listRules(serviceId?: string): Promise<ApiResponse<any>> {
-  const response = await axios.get(`${API_BASE}/rules`, {
+  const response = await apiClient.get(`${API_BASE}/rules`, {
     params: { service_id: serviceId },
   });
   return response.data;
@@ -199,7 +199,7 @@ export async function listRules(serviceId?: string): Promise<ApiResponse<any>> {
  * GET /api/management/routing/rules/:rule_id
  */
 export async function getRule(ruleId: string): Promise<ApiResponse<any>> {
-  const response = await axios.get(`${API_BASE}/rules/${ruleId}`);
+  const response = await apiClient.get(`${API_BASE}/rules/${ruleId}`);
   return response.data;
 }
 
@@ -208,7 +208,7 @@ export async function getRule(ruleId: string): Promise<ApiResponse<any>> {
  * PUT /api/management/routing/rules/:rule_id
  */
 export async function updateRule(ruleId: string, request: UpdateRuleRequest): Promise<ApiResponse<any>> {
-  const response = await axios.put(`${API_BASE}/rules/${ruleId}`, request);
+  const response = await apiClient.put(`${API_BASE}/rules/${ruleId}`, request);
   return response.data;
 }
 
@@ -217,7 +217,7 @@ export async function updateRule(ruleId: string, request: UpdateRuleRequest): Pr
  * DELETE /api/management/routing/rules/:rule_id
  */
 export async function deleteRule(ruleId: string): Promise<ApiResponse<any>> {
-  const response = await axios.delete(`${API_BASE}/rules/${ruleId}`);
+  const response = await apiClient.delete(`${API_BASE}/rules/${ruleId}`);
   return response.data;
 }
 
@@ -231,7 +231,7 @@ export async function addRuleGroup(
   ruleId: string,
   request: AddRuleGroupRequest
 ): Promise<ApiResponse<any>> {
-  const response = await axios.post(`${API_BASE}/rules/${ruleId}/groups`, request);
+  const response = await apiClient.post(`${API_BASE}/rules/${ruleId}/groups`, request);
   return response.data;
 }
 
@@ -240,7 +240,7 @@ export async function addRuleGroup(
  * GET /api/management/routing/rules/:rule_id/groups
  */
 export async function listRuleGroups(ruleId: string): Promise<ApiResponse<any>> {
-  const response = await axios.get(`${API_BASE}/rules/${ruleId}/groups`);
+  const response = await apiClient.get(`${API_BASE}/rules/${ruleId}/groups`);
   return response.data;
 }
 
@@ -253,7 +253,7 @@ export async function updateRuleGroup(
   groupId: string,
   request: UpdateRuleGroupRequest
 ): Promise<ApiResponse<any>> {
-  const response = await axios.put(
+  const response = await apiClient.put(
     `${API_BASE}/rules/${ruleId}/groups/${groupId}`,
     request
   );
@@ -265,6 +265,6 @@ export async function updateRuleGroup(
  * DELETE /api/management/routing/rules/:rule_id/groups/:group_id
  */
 export async function removeRuleGroup(ruleId: string, groupId: string): Promise<ApiResponse<any>> {
-  const response = await axios.delete(`${API_BASE}/rules/${ruleId}/groups/${groupId}`);
+  const response = await apiClient.delete(`${API_BASE}/rules/${ruleId}/groups/${groupId}`);
   return response.data;
 }

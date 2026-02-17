@@ -4,7 +4,7 @@
  * 提供金丝雀发布（灰度发布）配置和管理功能
  */
 
-import axios from 'axios';
+import apiClient from '@/api/client';
 
 const API_BASE = '/api/management/canary';
 
@@ -44,7 +44,7 @@ export interface ApiResponse<T> {
 export async function setCanaryConfig(
   request: SetCanaryConfigRequest
 ): Promise<ApiResponse<CanaryConfig>> {
-  const response = await axios.post(`${API_BASE}/config`, request);
+  const response = await apiClient.post(`${API_BASE}/config`, request);
   return response.data;
 }
 
@@ -53,7 +53,7 @@ export async function setCanaryConfig(
  * GET /api/management/canary/config/:service_id
  */
 export async function getCanaryConfig(serviceId: string): Promise<ApiResponse<CanaryConfig>> {
-  const response = await axios.get(`${API_BASE}/config/${serviceId}`);
+  const response = await apiClient.get(`${API_BASE}/config/${serviceId}`);
   return response.data;
 }
 
@@ -62,7 +62,7 @@ export async function getCanaryConfig(serviceId: string): Promise<ApiResponse<Ca
  * DELETE /api/management/canary/config/:service_id
  */
 export async function deleteCanaryConfig(serviceId: string): Promise<ApiResponse<any>> {
-  const response = await axios.delete(`${API_BASE}/config/${serviceId}`);
+  const response = await apiClient.delete(`${API_BASE}/config/${serviceId}`);
   return response.data;
 }
 
@@ -71,7 +71,7 @@ export async function deleteCanaryConfig(serviceId: string): Promise<ApiResponse
  * GET /api/management/canary/configs
  */
 export async function listCanaryConfigs(): Promise<ApiResponse<CanaryConfig[]>> {
-  const response = await axios.get(`${API_BASE}/configs`);
+  const response = await apiClient.get(`${API_BASE}/configs`);
   return response.data;
 }
 
@@ -84,7 +84,7 @@ export async function listCanaryConfigs(): Promise<ApiResponse<CanaryConfig[]>> 
 export async function enableCanary(
   request: EnableCanaryRequest
 ): Promise<ApiResponse<CanaryConfig>> {
-  const response = await axios.post(`${API_BASE}/enable`, request);
+  const response = await apiClient.post(`${API_BASE}/enable`, request);
   return response.data;
 }
 
@@ -93,7 +93,7 @@ export async function enableCanary(
  * POST /api/management/canary/disable
  */
 export async function disableCanary(serviceId: string): Promise<ApiResponse<CanaryConfig>> {
-  const response = await axios.post(`${API_BASE}/disable`, { service_id: serviceId });
+  const response = await apiClient.post(`${API_BASE}/disable`, { service_id: serviceId });
   return response.data;
 }
 
@@ -102,7 +102,7 @@ export async function disableCanary(serviceId: string): Promise<ApiResponse<Cana
  * GET /api/management/canary/enabled/:service_id
  */
 export async function isCanaryEnabled(serviceId: string): Promise<ApiResponse<{ enabled: boolean }>> {
-  const response = await axios.get(`${API_BASE}/enabled/${serviceId}`);
+  const response = await apiClient.get(`${API_BASE}/enabled/${serviceId}`);
   return response.data;
 }
 
@@ -116,7 +116,7 @@ export async function addIpToWhitelist(
   serviceId: string,
   ips: string[]
 ): Promise<ApiResponse<CanaryConfig>> {
-  const response = await axios.post(`${API_BASE}/${serviceId}/whitelist/add`, { ips });
+  const response = await apiClient.post(`${API_BASE}/${serviceId}/whitelist/add`, { ips });
   return response.data;
 }
 
@@ -128,7 +128,7 @@ export async function removeIpFromWhitelist(
   serviceId: string,
   ips: string[]
 ): Promise<ApiResponse<CanaryConfig>> {
-  const response = await axios.post(`${API_BASE}/${serviceId}/whitelist/remove`, { ips });
+  const response = await apiClient.post(`${API_BASE}/${serviceId}/whitelist/remove`, { ips });
   return response.data;
 }
 
@@ -137,7 +137,7 @@ export async function removeIpFromWhitelist(
  * GET /api/management/canary/:service_id/whitelist
  */
 export async function getWhitelistIps(serviceId: string): Promise<ApiResponse<string[]>> {
-  const response = await axios.get(`${API_BASE}/${serviceId}/whitelist`);
+  const response = await apiClient.get(`${API_BASE}/${serviceId}/whitelist`);
   return response.data;
 }
 
@@ -149,7 +149,7 @@ export async function checkIpInWhitelist(
   serviceId: string,
   ip: string
 ): Promise<ApiResponse<{ in_whitelist: boolean }>> {
-  const response = await axios.get(`${API_BASE}/${serviceId}/whitelist/check/${ip}`);
+  const response = await apiClient.get(`${API_BASE}/${serviceId}/whitelist/check/${ip}`);
   return response.data;
 }
 
@@ -158,7 +158,7 @@ export async function checkIpInWhitelist(
  * DELETE /api/management/canary/:service_id/whitelist
  */
 export async function clearWhitelist(serviceId: string): Promise<ApiResponse<CanaryConfig>> {
-  const response = await axios.delete(`${API_BASE}/${serviceId}/whitelist`);
+  const response = await apiClient.delete(`${API_BASE}/${serviceId}/whitelist`);
   return response.data;
 }
 
@@ -175,7 +175,7 @@ export async function getCanaryStats(): Promise<
     total_whitelisted_ips: number;
   }>
 > {
-  const response = await axios.get(`${API_BASE}/stats`);
+  const response = await apiClient.get(`${API_BASE}/stats`);
   return response.data;
 }
 
@@ -193,6 +193,6 @@ export async function getServiceCanaryStats(
     last_update: string;
   }>
 > {
-  const response = await axios.get(`${API_BASE}/${serviceId}/stats`);
+  const response = await apiClient.get(`${API_BASE}/${serviceId}/stats`);
   return response.data;
 }

@@ -4,7 +4,7 @@
  * 提供操作日志的查询和管理功能
  */
 
-import axios from 'axios';
+import apiClient from '@/api/client';
 
 const API_BASE = '/api/management/audit';
 
@@ -46,7 +46,7 @@ export interface ApiResponse<T> {
  * GET /api/management/audit/logs
  */
 export async function queryLogs(params?: QueryLogsParams): Promise<ApiResponse<AuditLog[]>> {
-  const response = await axios.get(`${API_BASE}/logs`, { params });
+  const response = await apiClient.get(`${API_BASE}/logs`, { params });
   return response.data;
 }
 
@@ -100,7 +100,7 @@ export async function queryLogsByTimeRange(
  * GET /api/management/audit/logs/:log_id
  */
 export async function getLogDetail(logId: string): Promise<ApiResponse<AuditLog>> {
-  const response = await axios.get(`${API_BASE}/logs/${logId}`);
+  const response = await apiClient.get(`${API_BASE}/logs/${logId}`);
   return response.data;
 }
 
@@ -109,7 +109,7 @@ export async function getLogDetail(logId: string): Promise<ApiResponse<AuditLog>
  * GET /api/management/audit/logs/export
  */
 export async function exportLogs(params?: QueryLogsParams): Promise<Blob> {
-  const response = await axios.get(`${API_BASE}/logs/export`, {
+  const response = await apiClient.get(`${API_BASE}/logs/export`, {
     params,
     responseType: 'blob',
   });
@@ -121,7 +121,7 @@ export async function exportLogs(params?: QueryLogsParams): Promise<Blob> {
  * DELETE /api/management/audit/logs/cleanup
  */
 export async function cleanupOldLogs(daysToKeep: number): Promise<ApiResponse<{ deleted_count: number }>> {
-  const response = await axios.delete(`${API_BASE}/logs/cleanup`, {
+  const response = await apiClient.delete(`${API_BASE}/logs/cleanup`, {
     params: { days_to_keep: daysToKeep },
   });
   return response.data;
@@ -135,7 +135,7 @@ export async function getLogStats(
   startTime?: string,
   endTime?: string
 ): Promise<ApiResponse<{ total: number; by_operation: Record<string, number> }>> {
-  const response = await axios.get(`${API_BASE}/logs/stats`, {
+  const response = await apiClient.get(`${API_BASE}/logs/stats`, {
     params: {
       start_time: startTime,
       end_time: endTime,

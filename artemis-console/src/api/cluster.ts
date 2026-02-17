@@ -4,7 +4,7 @@
  * 提供集群节点状态、健康检查和集群统计信息的查询
  */
 
-import axios from 'axios';
+import apiClient from '@/api/client';
 
 const API_BASE = '/api/status';
 
@@ -64,7 +64,7 @@ export interface ApiResponse<T> {
  * POST /api/status/cluster/node-status
  */
 export async function getClusterNodeStatusPost(): Promise<ApiResponse<ClusterNodeStatus[]>> {
-  const response = await axios.post(`${API_BASE}/cluster/node-status`);
+  const response = await apiClient.post(`${API_BASE}/cluster/node-status`);
   return response.data;
 }
 
@@ -73,7 +73,7 @@ export async function getClusterNodeStatusPost(): Promise<ApiResponse<ClusterNod
  * GET /api/status/cluster/node-status
  */
 export async function getClusterNodeStatusGet(): Promise<ApiResponse<ClusterNodeStatus[]>> {
-  const response = await axios.get(`${API_BASE}/cluster/node-status`);
+  const response = await apiClient.get(`${API_BASE}/cluster/node-status`);
   return response.data;
 }
 
@@ -91,7 +91,7 @@ export async function getClusterNodeStatus(): Promise<ApiResponse<ClusterNodeSta
  * POST /api/status/cluster/cluster-status
  */
 export async function getClusterStatusPost(): Promise<ApiResponse<ClusterStatus>> {
-  const response = await axios.post(`${API_BASE}/cluster/cluster-status`);
+  const response = await apiClient.post(`${API_BASE}/cluster/cluster-status`);
   return response.data;
 }
 
@@ -100,7 +100,7 @@ export async function getClusterStatusPost(): Promise<ApiResponse<ClusterStatus>
  * GET /api/status/cluster/cluster-status
  */
 export async function getClusterStatusGet(): Promise<ApiResponse<ClusterStatus>> {
-  const response = await axios.get(`${API_BASE}/cluster/cluster-status`);
+  const response = await apiClient.get(`${API_BASE}/cluster/cluster-status`);
   return response.data;
 }
 
@@ -118,7 +118,7 @@ export async function getClusterStatus(): Promise<ApiResponse<ClusterStatus>> {
  * POST /api/status/config/config-status
  */
 export async function getConfigStatusPost(): Promise<ApiResponse<ConfigStatus>> {
-  const response = await axios.post(`${API_BASE}/config/config-status`);
+  const response = await apiClient.post(`${API_BASE}/config/config-status`);
   return response.data;
 }
 
@@ -127,7 +127,7 @@ export async function getConfigStatusPost(): Promise<ApiResponse<ConfigStatus>> 
  * GET /api/status/config/config-status
  */
 export async function getConfigStatusGet(): Promise<ApiResponse<ConfigStatus>> {
-  const response = await axios.get(`${API_BASE}/config/config-status`);
+  const response = await apiClient.get(`${API_BASE}/config/config-status`);
   return response.data;
 }
 
@@ -145,7 +145,7 @@ export async function getConfigStatus(): Promise<ApiResponse<ConfigStatus>> {
  * POST /api/status/deployment/deployment-status
  */
 export async function getDeploymentStatusPost(): Promise<ApiResponse<DeploymentStatus>> {
-  const response = await axios.post(`${API_BASE}/deployment/deployment-status`);
+  const response = await apiClient.post(`${API_BASE}/deployment/deployment-status`);
   return response.data;
 }
 
@@ -154,7 +154,7 @@ export async function getDeploymentStatusPost(): Promise<ApiResponse<DeploymentS
  * GET /api/status/deployment/deployment-status
  */
 export async function getDeploymentStatusGet(): Promise<ApiResponse<DeploymentStatus>> {
-  const response = await axios.get(`${API_BASE}/deployment/deployment-status`);
+  const response = await apiClient.get(`${API_BASE}/deployment/deployment-status`);
   return response.data;
 }
 
@@ -172,7 +172,7 @@ export async function getDeploymentStatus(): Promise<ApiResponse<DeploymentStatu
  * POST /api/status/leases/leases-status
  */
 export async function getLeasesStatusPost(): Promise<ApiResponse<LeasesStatus>> {
-  const response = await axios.post(`${API_BASE}/leases/leases-status`);
+  const response = await apiClient.post(`${API_BASE}/leases/leases-status`);
   return response.data;
 }
 
@@ -181,7 +181,7 @@ export async function getLeasesStatusPost(): Promise<ApiResponse<LeasesStatus>> 
  * GET /api/status/leases/leases-status
  */
 export async function getLeasesStatusGet(): Promise<ApiResponse<LeasesStatus>> {
-  const response = await axios.get(`${API_BASE}/leases/leases-status`);
+  const response = await apiClient.get(`${API_BASE}/leases/leases-status`);
   return response.data;
 }
 
@@ -199,7 +199,7 @@ export async function getLeasesStatus(): Promise<ApiResponse<LeasesStatus>> {
  * GET /health
  */
 export async function healthCheck(): Promise<ApiResponse<{ status: string }>> {
-  const response = await axios.get('/health');
+  const response = await apiClient.get('/health');
   return response.data;
 }
 
@@ -208,6 +208,6 @@ export async function healthCheck(): Promise<ApiResponse<{ status: string }>> {
  * GET /ready
  */
 export async function readyCheck(): Promise<ApiResponse<{ ready: boolean }>> {
-  const response = await axios.get('/ready');
+  const response = await apiClient.get('/ready');
   return response.data;
 }
