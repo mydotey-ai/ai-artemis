@@ -1,8 +1,8 @@
-use artemis_server::config::ArtemisConfig;
 use artemis_management::auth::UserRole;
 use artemis_management::{
     AuthManager, ConfigLoader, Database, GroupManager, InstanceManager, RouteManager,
 };
+use artemis_server::config::ArtemisConfig;
 use artemis_server::{
     RegistryServiceImpl, cache::VersionedCacheManager, cluster::ClusterManager,
     discovery::DiscoveryServiceImpl, lease::LeaseManager, registry::RegistryRepository,

@@ -1,3 +1,4 @@
+use artemis_core::model::ResponseStatus;
 use artemis_management::model::status::node_status;
 use artemis_management::model::{
     GetClusterNodeStatusRequest, GetClusterNodeStatusResponse, GetClusterStatusRequest,
@@ -5,7 +6,6 @@ use artemis_management::model::{
     GetDeploymentStatusRequest, GetDeploymentStatusResponse, GetLeasesStatusRequest,
     GetLeasesStatusResponse, LeaseStatus, ServiceNode, ServiceNodeStatus,
 };
-use artemis_core::model::ResponseStatus;
 use std::collections::HashMap;
 use std::sync::Arc;
 

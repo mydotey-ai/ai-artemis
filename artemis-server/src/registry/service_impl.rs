@@ -3,6 +3,7 @@ use crate::cache::VersionedCacheManager;
 use crate::change::InstanceChangeManager;
 use crate::lease::LeaseManager;
 use crate::replication::ReplicationManager;
+use crate::traits::RegistryService;
 use artemis_core::model::{
     BatchHeartbeatRequest,
     BatchHeartbeatResponse,
@@ -31,7 +32,6 @@ use artemis_core::model::{
     UnregisterRequest,
     UnregisterResponse,
 };
-use crate::traits::RegistryService;
 use async_trait::async_trait;
 use std::sync::Arc;
 use tracing::{info, warn};

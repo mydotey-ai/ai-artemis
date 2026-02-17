@@ -1,5 +1,5 @@
-use artemis_core::model::service::ServiceGroup;
 use crate::model::GroupStatus;
+use artemis_core::model::service::ServiceGroup;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 

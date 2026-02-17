@@ -4,8 +4,8 @@
 
 use crate::state::AppState;
 use artemis_management::model::{
-    GroupInstance, GroupStatus, GroupType, RouteRule, RouteRuleGroup, RouteRuleStatus, RouteStrategy,
-    ServiceGroup,
+    GroupInstance, GroupStatus, GroupType, RouteRule, RouteRuleGroup, RouteRuleStatus,
+    RouteStrategy, ServiceGroup,
 };
 use axum::{
     Json,

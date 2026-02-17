@@ -1,5 +1,5 @@
-use anyhow::Result;
 use crate::model::{BindingType, GroupInstance};
+use anyhow::Result;
 use sea_orm::{ConnectionTrait, DatabaseBackend, DbConn, Statement};
 
 /// GroupInstance DAO - 分组实例绑定关系持久化
