@@ -361,7 +361,7 @@ const Users: React.FC = () => {
         const matchesSearch =
           user.username.toLowerCase().includes(query) ||
           user.email?.toLowerCase().includes(query) ||
-          user.id.toLowerCase().includes(query);
+          user.user_id.toLowerCase().includes(query);
         if (!matchesSearch) return false;
       }
 
@@ -519,7 +519,7 @@ const Users: React.FC = () => {
 
     // Fetch login history
     try {
-      const historyResponse = await getUserLoginHistory(user.id, 10);
+      const historyResponse = await getUserLoginHistory(user.user_id, 10);
       if (historyResponse.success && historyResponse.data) {
         setLoginHistory(historyResponse.data);
       }
@@ -547,7 +547,7 @@ const Users: React.FC = () => {
   const handleStatusToggle = async (user: UserDetails): Promise<void> => {
     try {
       const newStatus = user.status === UserStatus.ACTIVE ? UserStatus.INACTIVE : UserStatus.ACTIVE;
-      const response = await changeUserStatus(user.id, newStatus);
+      const response = await changeUserStatus(user.user_id, newStatus);
 
       if (response.success) {
         fetchUsers();
@@ -706,7 +706,7 @@ const Users: React.FC = () => {
     const csvHeaders = ['User ID', 'Username', 'Email', 'Role', 'Status', 'Last Login', 'Created Time'];
 
     const csvRows = filteredUsers.map((user) => [
-      user.id,
+      user.user_id,
       user.username,
       user.email || '',
       user.role,
@@ -964,8 +964,8 @@ const Users: React.FC = () => {
           </TableHead>
           <TableBody>
             {paginatedUsers.map((user) => (
-              <TableRow key={user.id} hover>
-                <TableCell>{user.id}</TableCell>
+              <TableRow key={user.user_id} hover>
+                <TableCell>{user.user_id}</TableCell>
                 <TableCell>
                   <Typography component="span" sx={clickableTextSx} onClick={() => handleViewDetails(user)}>
                     {user.username}
