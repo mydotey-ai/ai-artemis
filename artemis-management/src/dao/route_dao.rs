@@ -1,5 +1,5 @@
 use artemis_core::model::service::ServiceGroup;
-use artemis_core::model::{RouteRule, RouteRuleStatus, RouteStrategy};
+use crate::model::{RouteRule, RouteRuleStatus, RouteStrategy};
 use sea_orm::sea_query::Value;
 use sea_orm::{ConnectionTrait, DatabaseConnection, Statement};
 

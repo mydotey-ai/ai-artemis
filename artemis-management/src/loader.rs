@@ -105,7 +105,7 @@ impl ConfigLoader {
         for op in operations {
             // 恢复Zone操作到内存
             match op.operation {
-                artemis_core::model::ZoneOperation::PullOut => {
+                crate::model::ZoneOperation::PullOut => {
                     if let Err(e) = self.zone_manager.pull_out_zone(
                         &op.zone_id,
                         &op.region_id,
@@ -119,7 +119,7 @@ impl ConfigLoader {
                         );
                     }
                 }
-                artemis_core::model::ZoneOperation::PullIn => {
+                crate::model::ZoneOperation::PullIn => {
                     // PullIn不需要恢复,因为默认状态就是PullIn
                 }
             }

@@ -188,7 +188,6 @@ mod tests {
             instances,
             metadata: None,
             logic_instances: None,
-            route_rules: None,
         }
     }
 

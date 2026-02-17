@@ -1,12 +1,13 @@
 //! Management API endpoints for instance pull-in/pull-out operations
 
 use crate::state::AppState;
-use artemis_core::model::{
+use artemis_core::model::ResponseStatus;
+use artemis_management::model::{
     GetAllInstanceOperationsRequest, GetAllInstanceOperationsResponse,
     GetAllServerOperationsRequest, GetAllServerOperationsResponse, GetInstanceOperationsRequest,
     GetInstanceOperationsResponse, InstanceOperation, IsInstanceDownRequest,
     IsInstanceDownResponse, IsServerDownRequest, IsServerDownResponse, OperateInstanceRequest,
-    OperateInstanceResponse, OperateServerRequest, OperateServerResponse, ResponseStatus,
+    OperateInstanceResponse, OperateServerRequest, OperateServerResponse,
     ServerOperationInfo,
 };
 use axum::{
@@ -106,13 +107,13 @@ pub async fn operate_server(
     );
 
     let result = match req.operation {
-        artemis_core::model::ServerOperation::PullOut => state.instance_manager.pull_out_server(
+        artemis_management::model::ServerOperation::PullOut => state.instance_manager.pull_out_server(
             &req.server_id,
             &req.region_id,
             req.operator_id.clone(),
             req.operation_complete,
         ),
-        artemis_core::model::ServerOperation::PullIn => state.instance_manager.pull_in_server(
+        artemis_management::model::ServerOperation::PullIn => state.instance_manager.pull_in_server(
             &req.server_id,
             &req.region_id,
             req.operator_id.clone(),

@@ -1,30 +1,11 @@
-pub mod canary;
 pub mod change;
-pub mod group;
 pub mod instance;
-pub mod management;
 pub mod replication;
 pub mod request;
-pub mod route;
 pub mod service;
-pub mod status;
-pub mod zone;
 
-pub use canary::*;
 pub use change::{ChangeType, InstanceChange};
-pub use group::{GroupInstance, GroupOperation, GroupStatus, GroupTag, GroupType, ServiceGroup};
 pub use instance::{Instance, InstanceKey, InstanceStatus};
-pub use management::{
-    GetAllInstanceOperationsRequest, GetAllInstanceOperationsResponse,
-    GetAllServerOperationsRequest, GetAllServerOperationsResponse, GetInstanceOperationsRequest,
-    GetInstanceOperationsResponse, InstanceOperation, InstanceOperationRecord,
-    IsInstanceDownRequest, IsInstanceDownResponse, IsServerDownRequest, IsServerDownResponse,
-    OperateInstanceRequest, OperateInstanceResponse, OperateServerRequest, OperateServerResponse,
-    ServerOperation, ServerOperationInfo, ServerOperationRecord,
-};
 pub use replication::*;
 pub use request::*;
-pub use route::{Group, RouteRule, RouteRuleGroup, RouteRuleStatus, RouteStrategy};
 pub use service::Service;
-pub use status::*;
-pub use zone::*;

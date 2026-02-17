@@ -1,6 +1,7 @@
 //! 路由引擎 - 统一入口
 
-use artemis_core::model::{Instance, RouteRule, RouteStrategy as RouteStrategyEnum};
+use artemis_core::model::Instance;
+use artemis_management::model::{RouteRule, RouteStrategy as RouteStrategyEnum};
 use std::sync::Arc;
 use tracing::{debug, warn};
 
@@ -85,11 +86,11 @@ impl RouteEngine {
     fn convert_service_groups_to_route_groups(
         &self,
         rule: &RouteRule,
-    ) -> Vec<artemis_core::model::RouteRuleGroup> {
+    ) -> Vec<artemis_management::model::RouteRuleGroup> {
         rule.groups
             .iter()
             .map(|sg| {
-                artemis_core::model::RouteRuleGroup {
+                artemis_management::model::RouteRuleGroup {
                     route_rule_id: rule.route_id.clone(),
                     group_id: sg.group_key.clone(),
                     weight: sg.weight.unwrap_or(100),

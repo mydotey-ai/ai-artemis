@@ -2,7 +2,7 @@
 
 use crate::dao::CanaryConfigDao;
 use crate::db::Database;
-use artemis_core::model::CanaryConfig;
+use crate::model::CanaryConfig;
 use dashmap::DashMap;
 use std::sync::Arc;
 use tracing::info;

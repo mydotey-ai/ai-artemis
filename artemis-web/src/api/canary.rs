@@ -1,7 +1,7 @@
 //! Canary release HTTP API
 
 use crate::state::AppState;
-use artemis_core::model::{CanaryConfig, EnableCanaryRequest, SetCanaryConfigRequest};
+use artemis_management::model::{CanaryConfig, EnableCanaryRequest, SetCanaryConfigRequest};
 use axum::{
     Json,
     extract::{Path, State},
@@ -145,7 +145,7 @@ mod tests {
 
     #[test]
     fn test_canary_config() {
-        use artemis_core::model::CanaryConfig;
+        use artemis_management::model::CanaryConfig;
         let config = CanaryConfig {
             service_id: "service1".to_string(),
             ip_whitelist: vec!["192.168.1.1".to_string(), "10.0.0.1".to_string()],
@@ -158,7 +158,7 @@ mod tests {
 
     #[test]
     fn test_canary_config_disabled() {
-        use artemis_core::model::CanaryConfig;
+        use artemis_management::model::CanaryConfig;
         let config = CanaryConfig {
             service_id: "service2".to_string(),
             ip_whitelist: vec![],

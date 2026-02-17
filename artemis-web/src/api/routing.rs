@@ -3,9 +3,9 @@
 //! 提供分组和路由规则管理的 REST API
 
 use crate::state::AppState;
-use artemis_core::model::group::GroupInstance;
-use artemis_core::model::{
-    GroupStatus, GroupType, RouteRule, RouteRuleGroup, RouteRuleStatus, RouteStrategy, ServiceGroup,
+use artemis_management::model::{
+    GroupInstance, GroupStatus, GroupType, RouteRule, RouteRuleGroup, RouteRuleStatus, RouteStrategy,
+    ServiceGroup,
 };
 use axum::{
     Json,
@@ -70,7 +70,7 @@ pub struct UpdateRuleGroupRequest {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AddGroupTagsRequest {
-    pub tags: Vec<artemis_core::model::GroupTag>,
+    pub tags: Vec<artemis_management::model::GroupTag>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -244,7 +244,7 @@ pub async fn get_group_tags(
         }
         None => (
             StatusCode::NOT_FOUND,
-            Json(ApiResponse::<Vec<artemis_core::model::GroupTag>>::error(format!(
+            Json(ApiResponse::<Vec<artemis_management::model::GroupTag>>::error(format!(
                 "Group {} not found",
                 group_key
             ))),
@@ -865,7 +865,7 @@ mod tests {
 
     #[test]
     fn test_batch_add_service_instances_request() {
-        use artemis_core::model::group::BindingType;
+        use artemis_management::model::BindingType;
         let instances = vec![GroupInstance {
             id: None,
             group_id: 1,
@@ -890,7 +890,7 @@ mod tests {
 
     #[test]
     fn test_batch_add_service_instances_request_multiple() {
-        use artemis_core::model::group::BindingType;
+        use artemis_management::model::BindingType;
         let instances = vec![
             GroupInstance {
                 id: None,

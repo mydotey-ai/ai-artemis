@@ -8,8 +8,8 @@
 
 use crate::dao::{GroupDao, GroupInstanceDao};
 use crate::db::Database;
-use artemis_core::model::group::{BindingType, GroupInstance};
-use artemis_core::model::{GroupOperation, GroupTag, ServiceGroup};
+use crate::model::{BindingType, GroupInstance};
+use crate::model::{GroupOperation, GroupTag, ServiceGroup};
 use dashmap::DashMap;
 use std::sync::Arc;
 use tracing::info;
@@ -482,7 +482,7 @@ impl Default for GroupManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use artemis_core::model::{GroupStatus, GroupType};
+    use crate::model::{GroupStatus, GroupType};
 
     fn create_test_group(name: &str) -> ServiceGroup {
         ServiceGroup {

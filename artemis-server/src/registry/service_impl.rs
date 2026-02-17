@@ -202,7 +202,6 @@ impl RegistryServiceImpl {
                 metadata: None,
                 instances,
                 logic_instances: None,
-                route_rules: None,
             };
             self.cache.update_service(service);
         }

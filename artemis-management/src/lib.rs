@@ -7,6 +7,7 @@ pub mod db;
 pub mod group;
 pub mod instance;
 pub mod loader;
+pub mod model;
 pub mod route;
 pub mod zone;
 

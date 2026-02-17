@@ -2,7 +2,7 @@
 
 use crate::dao::ZoneOperationDao;
 use crate::db::Database;
-use artemis_core::model::{ZoneOperation, ZoneOperationRecord};
+use crate::model::{ZoneOperation, ZoneOperationRecord};
 use chrono::Utc;
 use dashmap::DashMap;
 use std::sync::Arc;

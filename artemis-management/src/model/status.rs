@@ -1,4 +1,4 @@
-use super::ResponseStatus;
+use artemis_core::model::ResponseStatus;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 

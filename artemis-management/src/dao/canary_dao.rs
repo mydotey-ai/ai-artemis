@@ -1,4 +1,4 @@
-use artemis_core::model::CanaryConfig;
+use crate::model::CanaryConfig;
 use sea_orm::sea_query::Value;
 use sea_orm::{ConnectionTrait, DatabaseConnection, Statement};
 

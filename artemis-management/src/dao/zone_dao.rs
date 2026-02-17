@@ -1,4 +1,4 @@
-use artemis_core::model::{ZoneOperation, ZoneOperationRecord};
+use crate::model::{ZoneOperation, ZoneOperationRecord};
 use sea_orm::sea_query::Value;
 use sea_orm::{ConnectionTrait, DatabaseConnection, Statement};
 

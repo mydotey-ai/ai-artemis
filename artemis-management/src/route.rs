@@ -7,7 +7,7 @@
 
 use crate::dao::RouteRuleDao;
 use crate::db::Database;
-use artemis_core::model::{RouteRule, RouteRuleGroup, RouteRuleStatus};
+use crate::model::{RouteRule, RouteRuleGroup, RouteRuleStatus};
 use dashmap::DashMap;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicI64, Ordering};
@@ -248,7 +248,7 @@ impl Default for RouteManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use artemis_core::model::{RouteRuleStatus, RouteStrategy};
+    use crate::model::{RouteRuleStatus, RouteStrategy};
 
     fn create_test_rule(rule_id: &str, service_id: &str) -> RouteRule {
         RouteRule {

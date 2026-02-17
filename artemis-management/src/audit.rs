@@ -1,6 +1,6 @@
 //! Operation audit log management
 
-use artemis_core::model::{InstanceOperationRecord, ServerOperationRecord};
+use crate::model::{InstanceOperationRecord, ServerOperationRecord};
 use chrono::Utc;
 use dashmap::DashMap;
 use serde::{Deserialize, Serialize};
@@ -529,7 +529,7 @@ impl AuditManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use artemis_core::model::{InstanceKey, InstanceOperation, ServerOperation};
+    use crate::model::{InstanceKey, InstanceOperation, ServerOperation};
 
     // ========== 基础功能测试 ==========
 

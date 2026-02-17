@@ -1,5 +1,4 @@
 use super::instance::Instance;
-use super::route::RouteRule;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -11,8 +10,8 @@ pub struct Service {
     pub instances: Vec<Instance>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub logic_instances: Option<Vec<Instance>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub route_rules: Option<Vec<RouteRule>>,
+    // Note: route_rules removed as it was never populated (always None)
+    // If needed in future, can be added back or accessed through RouteManager
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

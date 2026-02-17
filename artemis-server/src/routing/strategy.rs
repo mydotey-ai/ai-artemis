@@ -1,6 +1,6 @@
 //! 路由策略实现
 
-use artemis_core::model::RouteRuleGroup;
+use artemis_management::model::RouteRuleGroup;
 use dashmap::DashMap;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -142,7 +142,7 @@ impl RouteStrategy for CloseByVisitStrategy {
 #[cfg(test)]
 mod weighted_round_robin_tests {
     use super::*;
-    use artemis_core::model::RouteRuleGroup;
+    use artemis_management::model::RouteRuleGroup;
     use std::collections::HashMap;
 
     #[test]
@@ -301,7 +301,7 @@ mod weighted_round_robin_tests {
 #[cfg(test)]
 mod close_by_visit_tests {
     use super::*;
-    use artemis_core::model::RouteRuleGroup;
+    use artemis_management::model::RouteRuleGroup;
 
     #[test]
     fn test_close_by_visit_same_region() {

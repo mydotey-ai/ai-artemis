@@ -93,7 +93,6 @@ impl RegistryRepository {
                 metadata: None,
                 instances,
                 logic_instances: None,
-                route_rules: None,
             })
             .collect()
     }

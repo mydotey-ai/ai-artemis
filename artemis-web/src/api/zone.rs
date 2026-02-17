@@ -1,7 +1,7 @@
 //! Zone management HTTP API
 
 use crate::state::AppState;
-use artemis_core::model::OperateZoneRequest;
+use artemis_management::model::OperateZoneRequest;
 use axum::{
     Json,
     extract::{Path, Query, State},
@@ -110,7 +110,7 @@ pub async fn delete_zone_operation(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use artemis_core::model::OperateZoneRequest;
+    use artemis_management::model::OperateZoneRequest;
 
     #[test]
     fn test_api_response_success() {
@@ -148,7 +148,7 @@ mod tests {
 
     #[test]
     fn test_operate_zone_request() {
-        use artemis_core::model::ZoneOperation;
+        use artemis_management::model::ZoneOperation;
         let request = OperateZoneRequest {
             zone_id: "zone-1".to_string(),
             region_id: "us-east".to_string(),
@@ -162,7 +162,7 @@ mod tests {
 
     #[test]
     fn test_operate_zone_request_pull_in() {
-        use artemis_core::model::ZoneOperation;
+        use artemis_management::model::ZoneOperation;
         let request = OperateZoneRequest {
             zone_id: "zone-2".to_string(),
             region_id: "eu-west".to_string(),

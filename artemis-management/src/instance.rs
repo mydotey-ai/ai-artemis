@@ -4,9 +4,8 @@
 //! These operations allow operators to manually control instance availability without
 //! affecting the registration state.
 
-use artemis_core::model::{
-    InstanceKey, InstanceOperation, InstanceOperationRecord, ServerOperation,
-};
+use artemis_core::model::InstanceKey;
+use crate::model::{InstanceOperation, InstanceOperationRecord, ServerOperation};
 use dashmap::DashMap;
 use std::sync::Arc;
 use tracing::info;

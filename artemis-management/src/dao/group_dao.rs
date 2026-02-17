@@ -1,4 +1,4 @@
-use artemis_core::model::{GroupStatus, GroupTag, GroupType, ServiceGroup};
+use crate::model::{GroupStatus, GroupTag, GroupType, ServiceGroup};
 use sea_orm::sea_query::Value;
 use sea_orm::{ConnectionTrait, DatabaseConnection, Statement};
 
