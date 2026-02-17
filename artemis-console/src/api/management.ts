@@ -383,12 +383,12 @@ export interface GetAllInstanceOperationsResponse {
  * @returns 所有实例操作记录
  *
  * @example
- * const result = await getAllInstanceOperations('us-east');
+ * const result = await getAllInstanceOperationsPost('us-east');
  * result.instance_operation_records.forEach(record => {
  *   console.log(`${record.instance_key.instance_id}: ${record.operation}`);
  * });
  */
-export async function getAllInstanceOperations(
+export async function getAllInstanceOperationsPost(
   region_id?: string
 ): Promise<GetAllInstanceOperationsResponse> {
   const request: GetAllInstanceOperationsRequest = {
@@ -408,7 +408,7 @@ export async function getAllInstanceOperations(
 }
 
 /**
- * 查询所有实例操作 (GET 版本)
+ * 查询所有实例操作
  *
  * GET /api/management/all-instance-operations.json?regionId=X
  *
@@ -418,9 +418,9 @@ export async function getAllInstanceOperations(
  * @returns 所有实例操作记录
  *
  * @example
- * const result = await getAllInstanceOperationsGet('us-east');
+ * const result = await getAllInstanceOperations('us-east');
  */
-export async function getAllInstanceOperationsGet(
+export async function getAllInstanceOperations(
   region_id?: string
 ): Promise<GetAllInstanceOperationsResponse> {
   try {
@@ -466,12 +466,12 @@ export interface GetAllServerOperationsResponse {
  * @returns 所有服务器操作记录
  *
  * @example
- * const result = await getAllServerOperations('us-east');
+ * const result = await getAllServerOperationsPost('us-east');
  * result.server_operation_records.forEach(record => {
  *   console.log(`${record.server_id}: ${record.operation}`);
  * });
  */
-export async function getAllServerOperations(
+export async function getAllServerOperationsPost(
   region_id?: string
 ): Promise<GetAllServerOperationsResponse> {
   const request: GetAllServerOperationsRequest = {
@@ -491,7 +491,7 @@ export async function getAllServerOperations(
 }
 
 /**
- * 查询所有服务器操作 (GET 版本)
+ * 查询所有服务器操作
  *
  * GET /api/management/all-server-operations.json?regionId=X
  *
@@ -501,9 +501,9 @@ export async function getAllServerOperations(
  * @returns 所有服务器操作记录
  *
  * @example
- * const result = await getAllServerOperationsGet('us-east');
+ * const result = await getAllServerOperations('us-east');
  */
-export async function getAllServerOperationsGet(
+export async function getAllServerOperations(
   region_id?: string
 ): Promise<GetAllServerOperationsResponse> {
   try {

@@ -59,6 +59,8 @@ import {
   operateInstance,
   InstanceOperationType,
   type InstanceKey,
+  getAllInstanceOperations,
+  type InstanceOperationRecord,
 } from '@/api/management';
 import type { Service, Instance, InstanceStatus } from '@/api/types';
 import { useWebSocket } from '@/hooks/useWebSocket';
@@ -73,6 +75,7 @@ interface InstanceRow {
   ip: string;
   port: number;
   status: InstanceStatus;
+  displayStatus: InstanceStatus | 'out';
   regionId: string;
   zoneId: string;
   metadata: Record<string, string>;
@@ -80,17 +83,19 @@ interface InstanceRow {
   url: string;
   healthCheckUrl?: string;
   instance: Instance;
+  isPulledOut: boolean;
 }
 
 /**
  * Status color mapping
  */
-const STATUS_COLORS: Record<InstanceStatus, 'success' | 'error' | 'info' | 'warning' | 'default'> = {
+const STATUS_COLORS: Record<InstanceStatus | 'out', 'success' | 'error' | 'info' | 'warning' | 'default'> = {
   up: 'success',
   down: 'error',
   starting: 'info',
   unhealthy: 'warning',
   unknown: 'default',
+  out: 'default',
 };
 
 /**
@@ -119,7 +124,7 @@ function exportToCSV(instances: InstanceRow[]): void {
     inst.instanceId,
     inst.serviceId,
     `${inst.ip}:${inst.port}`,
-    inst.status,
+    inst.isPulledOut ? 'OUT' : inst.status,
     inst.regionId,
     inst.zoneId,
     JSON.stringify(inst.metadata),
@@ -194,22 +199,40 @@ const Instances: React.FC = () => {
 
       // Fetch all services from all regions/zones
       // For simplicity, using default region/zone. In production, you'd loop through all.
-      const response = await getAllServices('default', 'default');
+      const [servicesResponse, operationsResponse] = await Promise.all([
+        getAllServices('default', 'default'),
+        getAllInstanceOperations('default'),
+      ]);
 
-      if (response.response_status.error_code !== 'success') {
-        throw new Error(response.response_status.error_message || 'Failed to fetch services');
+      if (servicesResponse.response_status.error_code !== 'success') {
+        throw new Error(servicesResponse.response_status.error_message || 'Failed to fetch services');
+      }
+
+      // Build a map of pulled out instances
+      const pulledOutInstances = new Set<string>();
+      if (operationsResponse.status.error_code === 'success') {
+        operationsResponse.instance_operation_records.forEach((record: InstanceOperationRecord) => {
+          if (record.operation === 'pullout' && record.operation_complete) {
+            const key = `${record.instance_key.service_id}:${record.instance_key.instance_id}:${record.instance_key.ip}:${record.instance_key.port}`;
+            pulledOutInstances.add(key);
+          }
+        });
       }
 
       // Extract all instances from all services
       const allInstances: InstanceRow[] = [];
-      response.services.forEach((service: Service) => {
+      servicesResponse.services.forEach((service: Service) => {
         service.instances.forEach((instance: Instance) => {
+          const key = `${instance.service_id}:${instance.instance_id}:${instance.ip}:${instance.port}`;
+          const isPulledOut = pulledOutInstances.has(key);
+
           allInstances.push({
             instanceId: instance.instance_id,
             serviceId: instance.service_id,
             ip: instance.ip,
             port: instance.port,
             status: instance.status,
+            displayStatus: isPulledOut ? 'out' : instance.status,
             regionId: instance.region_id,
             zoneId: instance.zone_id,
             metadata: instance.metadata || {},
@@ -217,6 +240,7 @@ const Instances: React.FC = () => {
             url: instance.url,
             healthCheckUrl: instance.health_check_url,
             instance,
+            isPulledOut,
           });
         });
       });
@@ -317,8 +341,11 @@ const Instances: React.FC = () => {
       }
 
       // Status filter
-      if (statusFilter.length > 0 && !statusFilter.includes(inst.status)) {
-        return false;
+      if (statusFilter.length > 0) {
+        const effectiveStatus = inst.isPulledOut ? 'out' as InstanceStatus : inst.status;
+        if (!statusFilter.includes(effectiveStatus)) {
+          return false;
+        }
       }
 
       return true;
@@ -611,6 +638,7 @@ const Instances: React.FC = () => {
                 <MenuItem value="down">DOWN</MenuItem>
                 <MenuItem value="starting">STARTING</MenuItem>
                 <MenuItem value="unhealthy">UNHEALTHY</MenuItem>
+                <MenuItem value="out">OUT</MenuItem>
               </Select>
             </FormControl>
           </Box>
@@ -714,9 +742,10 @@ const Instances: React.FC = () => {
                       <TableCell>{`${instance.ip}:${instance.port}`}</TableCell>
                       <TableCell>
                         <Chip
-                          label={instance.status.toUpperCase()}
-                          color={STATUS_COLORS[instance.status]}
+                          label={instance.isPulledOut ? 'OUT' : instance.status.toUpperCase()}
+                          color={STATUS_COLORS[instance.displayStatus]}
                           size="small"
+                          variant={instance.isPulledOut ? 'outlined' : 'filled'}
                         />
                       </TableCell>
                       <TableCell>{instance.regionId}</TableCell>
