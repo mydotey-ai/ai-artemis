@@ -1,5 +1,6 @@
 use artemis_core::config::ArtemisConfig;
-use artemis_management::{GroupManager, InstanceManager, RouteManager, Database, ConfigLoader};
+use artemis_management::{AuthManager, GroupManager, InstanceManager, RouteManager, Database, ConfigLoader};
+use artemis_management::auth::UserRole;
 use artemis_server::{
     cache::VersionedCacheManager, cluster::ClusterManager, discovery::DiscoveryServiceImpl,
     lease::LeaseManager, registry::RegistryRepository, replication::ReplicationManager,
@@ -182,6 +183,25 @@ async fn start_server(config_path: Option<String>, addr_override: Option<String>
     let audit_manager = Arc::new(artemis_management::AuditManager::new());
     let route_engine = Arc::new(RouteEngine::new());
 
+    // Initialize authentication manager
+    let jwt_secret = std::env::var("JWT_SECRET")
+        .unwrap_or_else(|_| "artemis-default-secret-change-in-production".to_string());
+    let auth_manager = Arc::new(AuthManager::with_database(database.clone(), jwt_secret));
+
+    // Create default admin user if database is empty
+    if auth_manager.list_users().is_empty() {
+        println!("Creating default admin user (username: admin, password: admin123)");
+        match auth_manager.create_user(
+            "admin",
+            Some("admin@artemis.local".to_string()),
+            "admin123",
+            UserRole::Admin,
+        ) {
+            Ok(_) => println!("Default admin user created successfully"),
+            Err(e) => println!("Warning: Failed to create default admin user: {}", e),
+        }
+    }
+
     // 7a. Load persisted configurations from database
     if let Some(ref db) = database {
         println!("Loading persisted configurations from database...");
@@ -241,6 +261,7 @@ async fn start_server(config_path: Option<String>, addr_override: Option<String>
         zone_manager,
         canary_manager,
         audit_manager,
+        auth_manager,
         load_balancer,
         status_service,
     };

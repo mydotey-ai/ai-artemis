@@ -106,3 +106,7 @@ criterion = { version = "0.8", features = ["async_tokio"] }
 
 # 随机数生成
 rand = "0.8"
+
+# 认证
+jsonwebtoken = "9"
+bcrypt = "0.15"

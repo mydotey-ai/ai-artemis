@@ -1,4 +1,5 @@
 pub mod audit;
+pub mod auth;
 pub mod canary;
 pub mod discovery;
 pub mod management;

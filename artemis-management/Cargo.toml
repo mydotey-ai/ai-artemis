@@ -16,3 +16,5 @@ tracing = { workspace = true }
 axum = { workspace = true }
 anyhow = { workspace = true }
 dashmap = { workspace = true }
+jsonwebtoken = { workspace = true }
+bcrypt = { workspace = true }

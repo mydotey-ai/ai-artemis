@@ -92,14 +92,39 @@ impl Database {
 
     /// 运行数据库迁移
     ///
-    /// 注意: SeaORM使用自己的migration系统
-    /// 需要将现有SQL migrations转换为SeaORM migrations
+    /// 执行 migrations/ 目录下的所有 SQL 迁移文件
     pub async fn run_migrations(&self) -> anyhow::Result<()> {
         tracing::info!("Running database migrations for {:?}", self.db_type);
 
-        // TODO: 实现SeaORM migrations
-        // 临时方案: 使用raw SQL执行现有migrations
-        tracing::warn!("Migration system needs to be migrated to SeaORM");
+        // 迁移1: 初始Schema (实例操作、服务分组、路由规则等)
+        let migration_001 = include_str!("../../migrations/001_initial_schema.sql");
+        self.execute_migration("001_initial_schema", migration_001).await?;
+
+        // 迁移2: 认证系统 (用户、会话、登录历史)
+        let migration_002 = include_str!("../../migrations/002_auth_schema.sql");
+        self.execute_migration("002_auth_schema", migration_002).await?;
+
+        tracing::info!("All database migrations completed successfully");
+
+        Ok(())
+    }
+
+    /// 执行单个迁移
+    async fn execute_migration(&self, name: &str, sql: &str) -> anyhow::Result<()> {
+        use sea_orm::ConnectionTrait;
+
+        tracing::debug!("Executing migration: {}", name);
+
+        // 按分号分割SQL语句并逐个执行
+        for statement in sql.split(';') {
+            let trimmed = statement.trim();
+            if !trimmed.is_empty() && !trimmed.starts_with("--") {
+                self.conn.execute_unprepared(trimmed).await
+                    .map_err(|e| anyhow::anyhow!("Failed to execute migration {}: {}", name, e))?;
+            }
+        }
+
+        tracing::debug!("Migration {} completed", name);
 
         Ok(())
     }
