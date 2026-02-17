@@ -33,7 +33,7 @@ impl AuthManager {
 
     /// 创建带数据库持久化的 AuthManager
     pub fn with_database(database: Option<Arc<Database>>, jwt_secret: String) -> Self {
-        let manager = Self {
+        Self {
             users: Arc::new(DashMap::new()),
             username_map: Arc::new(DashMap::new()),
             sessions: Arc::new(DashMap::new()),
@@ -46,22 +46,12 @@ impl AuthManager {
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(3600), // 默认1小时
             database,
-        };
-
-        // 从数据库加载数据
-        if let Some(db) = &manager.database {
-            if let Err(e) = manager.load_from_database(db) {
-                tracing::error!("Failed to load auth data from database: {:?}", e);
-            }
         }
-
-        manager
     }
 
-    /// 从数据库加载数据
-    fn load_from_database(&self, database: &Database) -> anyhow::Result<()> {
-        let rt = tokio::runtime::Handle::current();
-        rt.block_on(async {
+    /// 从数据库加载数据(异步方法)
+    pub async fn load_from_database(&self) -> anyhow::Result<()> {
+        if let Some(database) = &self.database {
             let user_dao = UserDao::new(database.conn().clone());
             let session_dao = SessionDao::new(database.conn().clone());
 
@@ -89,9 +79,9 @@ impl AuthManager {
 
             tracing::info!("Loaded {} users and {} active sessions from database",
                 self.users.len(), self.sessions.len());
+        }
 
-            Ok(())
-        })
+        Ok(())
     }
 
     /// 用户认证

@@ -188,6 +188,11 @@ async fn start_server(config_path: Option<String>, addr_override: Option<String>
         .unwrap_or_else(|_| "artemis-default-secret-change-in-production".to_string());
     let auth_manager = Arc::new(AuthManager::with_database(database.clone(), jwt_secret));
 
+    // Load auth data from database
+    if let Err(e) = auth_manager.load_from_database().await {
+        println!("Warning: Failed to load auth data from database: {:?}", e);
+    }
+
     // Create default admin user if database is empty
     if auth_manager.list_users().is_empty() {
         println!("Creating default admin user (username: admin, password: admin123)");
