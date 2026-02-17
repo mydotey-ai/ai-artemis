@@ -48,6 +48,8 @@ async fn start_test_server(port: u16) -> tokio::task::JoinHandle<()> {
             "test-app".to_string(),               // app_id
         ));
 
+        let auth_manager = Arc::new(artemis_management::auth::AuthManager::new());
+
         let app_state = AppState {
             registry_service,
             discovery_service,
@@ -63,6 +65,7 @@ async fn start_test_server(port: u16) -> tokio::task::JoinHandle<()> {
             audit_manager,
             load_balancer,
             status_service,
+            auth_manager,
         };
 
         let addr: SocketAddr = format!("127.0.0.1:{}", port).parse().unwrap();

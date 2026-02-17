@@ -55,6 +55,8 @@ fn create_test_app_state() -> AppState {
         "test-app".to_string(), // app_id
     ));
 
+    let auth_manager = Arc::new(artemis_management::auth::AuthManager::new());
+
     AppState {
         registry_service,
         discovery_service,
@@ -70,6 +72,7 @@ fn create_test_app_state() -> AppState {
         audit_manager,
         load_balancer,
         status_service,
+        auth_manager,
     }
 }
 

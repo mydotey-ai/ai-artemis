@@ -351,7 +351,7 @@ fn test_list_user_sessions() {
 #[test]
 fn test_revoke_session() {
     let manager = AuthManager::new();
-    let user = manager.create_user("user1", None, "password123", UserRole::Viewer).unwrap();
+    manager.create_user("user1", None, "password123", UserRole::Viewer).unwrap();
 
     let token = manager.authenticate("user1", "password123", None, None).unwrap();
     let session = manager.validate_token(&token).unwrap();
