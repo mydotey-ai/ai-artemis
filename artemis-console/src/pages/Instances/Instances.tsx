@@ -201,7 +201,7 @@ const Instances: React.FC = () => {
       // For simplicity, using default region/zone. In production, you'd loop through all.
       const [servicesResponse, operationsResponse] = await Promise.all([
         getAllServices('default', 'default'),
-        getAllInstanceOperations('default'),
+        getAllInstanceOperations(), // No region filter - get all
       ]);
 
       if (servicesResponse.response_status.error_code !== 'success') {
@@ -213,7 +213,7 @@ const Instances: React.FC = () => {
       if (operationsResponse.status.error_code === 'success') {
         operationsResponse.instance_operation_records.forEach((record: InstanceOperationRecord) => {
           if (record.operation === 'pullout' && record.operation_complete) {
-            const key = `${record.instance_key.service_id}:${record.instance_key.instance_id}:${record.instance_key.ip}:${record.instance_key.port}`;
+            const key = `${record.instance_key.service_id}:${record.instance_key.instance_id}:${record.instance_key.region_id}`;
             pulledOutInstances.add(key);
           }
         });
@@ -223,7 +223,7 @@ const Instances: React.FC = () => {
       const allInstances: InstanceRow[] = [];
       servicesResponse.services.forEach((service: Service) => {
         service.instances.forEach((instance: Instance) => {
-          const key = `${instance.service_id}:${instance.instance_id}:${instance.ip}:${instance.port}`;
+          const key = `${instance.service_id}:${instance.instance_id}:${instance.region_id}`;
           const isPulledOut = pulledOutInstances.has(key);
 
           allInstances.push({
