@@ -199,6 +199,7 @@ async fn start_server(config_path: Option<String>, addr_override: Option<String>
         match auth_manager.create_user(
             "admin",
             Some("admin@artemis.local".to_string()),
+            Some("Default administrator account".to_string()),
             "admin123",
             UserRole::Admin,
         ) {

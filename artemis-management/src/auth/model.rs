@@ -59,6 +59,7 @@ pub struct User {
     pub user_id: String,
     pub username: String,
     pub email: Option<String>,
+    pub description: Option<String>,
     #[serde(skip_serializing)]
     pub password_hash: String,
     pub role: UserRole,
@@ -71,6 +72,7 @@ impl User {
     pub fn new(
         username: String,
         email: Option<String>,
+        description: Option<String>,
         password_hash: String,
         role: UserRole,
     ) -> Self {
@@ -79,6 +81,7 @@ impl User {
             user_id: uuid::Uuid::new_v4().to_string(),
             username,
             email,
+            description,
             password_hash,
             role,
             status: UserStatus::Active,
@@ -93,6 +96,7 @@ impl User {
             user_id: self.user_id.clone(),
             username: self.username.clone(),
             email: self.email.clone(),
+            description: self.description.clone(),
             role: self.role.clone(),
             status: self.status.clone(),
             created_at: self.created_at,
@@ -107,6 +111,7 @@ pub struct UserResponse {
     pub user_id: String,
     pub username: String,
     pub email: Option<String>,
+    pub description: Option<String>,
     pub role: UserRole,
     pub status: UserStatus,
     pub created_at: i64,

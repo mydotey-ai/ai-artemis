@@ -224,6 +224,7 @@ impl AuthManager {
         &self,
         username: &str,
         email: Option<String>,
+        description: Option<String>,
         password: &str,
         role: UserRole,
     ) -> Result<User, String> {
@@ -236,7 +237,7 @@ impl AuthManager {
         let password_hash = self.hash_password(password)?;
 
         // 创建用户
-        let user = User::new(username.to_string(), email, password_hash, role);
+        let user = User::new(username.to_string(), email, description, password_hash, role);
 
         // 存储
         self.username_map.insert(user.username.clone(), user.user_id.clone());
@@ -261,6 +262,7 @@ impl AuthManager {
         &self,
         user_id: &str,
         email: Option<String>,
+        description: Option<String>,
         role: Option<UserRole>,
     ) -> Result<User, String> {
         let mut user = self.users.get_mut(user_id)
@@ -268,6 +270,9 @@ impl AuthManager {
 
         if let Some(e) = email {
             user.email = Some(e);
+        }
+        if let Some(d) = description {
+            user.description = Some(d);
         }
         if let Some(r) = role {
             user.role = r;

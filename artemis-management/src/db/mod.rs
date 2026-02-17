@@ -112,6 +112,10 @@ impl Database {
         let migration_002 = include_str!("../../migrations/002_auth_schema.sql");
         self.execute_migration("002_auth_schema", migration_002).await?;
 
+        // 迁移3: 添加用户描述字段
+        let migration_003 = include_str!("../../migrations/003_add_user_description.sql");
+        self.execute_migration("003_add_user_description", migration_003).await?;
+
         tracing::info!("All database migrations completed successfully");
 
         Ok(())

@@ -44,6 +44,7 @@ pub struct ResetPasswordRequest {
 pub struct CreateUserRequest {
     pub username: String,
     pub email: Option<String>,
+    pub description: Option<String>,
     pub password: String,
     pub role: String, // "admin", "operator", "viewer"
 }
@@ -51,6 +52,7 @@ pub struct CreateUserRequest {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UpdateUserRequest {
     pub email: Option<String>,
+    pub description: Option<String>,
     pub role: Option<String>,
 }
 
@@ -305,7 +307,7 @@ pub async fn create_user(
         }
     };
 
-    match state.auth_manager.create_user(&req.username, req.email, &req.password, role) {
+    match state.auth_manager.create_user(&req.username, req.email, req.description, &req.password, role) {
         Ok(user) => (StatusCode::CREATED, Json(ApiResponse::success(user.to_response()))),
         Err(e) => (StatusCode::BAD_REQUEST, Json(ApiResponse::<UserResponse>::error(e))),
     }
@@ -345,7 +347,7 @@ pub async fn update_user(
         None
     };
 
-    match state.auth_manager.update_user(&user_id, req.email, role) {
+    match state.auth_manager.update_user(&user_id, req.email, req.description, role) {
         Ok(user) => (StatusCode::OK, Json(ApiResponse::success(user.to_response()))),
         Err(e) => (StatusCode::BAD_REQUEST, Json(ApiResponse::<UserResponse>::error(e))),
     }

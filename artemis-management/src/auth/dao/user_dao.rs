@@ -16,13 +16,14 @@ impl UserDao {
         let stmt = Statement::from_sql_and_values(
             self.conn.get_database_backend(),
             r#"
-            INSERT INTO auth_users (user_id, username, email, password_hash, role, status, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO auth_users (user_id, username, email, description, password_hash, role, status, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             "#,
             vec![
                 Value::from(&user.user_id),
                 Value::from(&user.username),
                 Value::from(user.email.as_deref().unwrap_or("")),
+                Value::from(user.description.as_deref().unwrap_or("")),
                 Value::from(&user.password_hash),
                 Value::from(user.role.as_str()),
                 Value::from(user.status.as_str()),
@@ -41,11 +42,12 @@ impl UserDao {
             self.conn.get_database_backend(),
             r#"
             UPDATE auth_users
-            SET email = ?, password_hash = ?, role = ?, status = ?, updated_at = ?
+            SET email = ?, description = ?, password_hash = ?, role = ?, status = ?, updated_at = ?
             WHERE user_id = ?
             "#,
             vec![
                 Value::from(user.email.as_deref().unwrap_or("")),
+                Value::from(user.description.as_deref().unwrap_or("")),
                 Value::from(&user.password_hash),
                 Value::from(user.role.as_str()),
                 Value::from(user.status.as_str()),
@@ -74,7 +76,7 @@ impl UserDao {
     pub async fn get_user(&self, user_id: &str) -> anyhow::Result<Option<User>> {
         let stmt = Statement::from_sql_and_values(
             self.conn.get_database_backend(),
-            "SELECT user_id, username, email, password_hash, role, status, created_at, updated_at FROM auth_users WHERE user_id = ?",
+            "SELECT user_id, username, email, description, password_hash, role, status, created_at, updated_at FROM auth_users WHERE user_id = ?",
             vec![Value::from(user_id)],
         );
 
@@ -91,7 +93,7 @@ impl UserDao {
     pub async fn get_user_by_username(&self, username: &str) -> anyhow::Result<Option<User>> {
         let stmt = Statement::from_sql_and_values(
             self.conn.get_database_backend(),
-            "SELECT user_id, username, email, password_hash, role, status, created_at, updated_at FROM auth_users WHERE username = ?",
+            "SELECT user_id, username, email, description, password_hash, role, status, created_at, updated_at FROM auth_users WHERE username = ?",
             vec![Value::from(username)],
         );
 
@@ -108,7 +110,7 @@ impl UserDao {
     pub async fn list_users(&self) -> anyhow::Result<Vec<User>> {
         let stmt = Statement::from_sql_and_values(
             self.conn.get_database_backend(),
-            "SELECT user_id, username, email, password_hash, role, status, created_at, updated_at FROM auth_users ORDER BY created_at DESC",
+            "SELECT user_id, username, email, description, password_hash, role, status, created_at, updated_at FROM auth_users ORDER BY created_at DESC",
             vec![],
         );
 
@@ -126,7 +128,7 @@ impl UserDao {
     pub async fn list_users_by_role(&self, role: UserRole) -> anyhow::Result<Vec<User>> {
         let stmt = Statement::from_sql_and_values(
             self.conn.get_database_backend(),
-            "SELECT user_id, username, email, password_hash, role, status, created_at, updated_at FROM auth_users WHERE role = ? ORDER BY created_at DESC",
+            "SELECT user_id, username, email, description, password_hash, role, status, created_at, updated_at FROM auth_users WHERE role = ? ORDER BY created_at DESC",
             vec![Value::from(role.as_str())],
         );
 
@@ -144,7 +146,7 @@ impl UserDao {
     pub async fn list_users_by_status(&self, status: UserStatus) -> anyhow::Result<Vec<User>> {
         let stmt = Statement::from_sql_and_values(
             self.conn.get_database_backend(),
-            "SELECT user_id, username, email, password_hash, role, status, created_at, updated_at FROM auth_users WHERE status = ? ORDER BY created_at DESC",
+            "SELECT user_id, username, email, description, password_hash, role, status, created_at, updated_at FROM auth_users WHERE status = ? ORDER BY created_at DESC",
             vec![Value::from(status.as_str())],
         );
 
@@ -162,8 +164,10 @@ impl UserDao {
     fn row_to_user(&self, row: sea_orm::QueryResult) -> anyhow::Result<User> {
         let user_id: String = row.try_get("", "user_id")?;
         let username: String = row.try_get("", "username")?;
-        let email_str: String = row.try_get("", "email")?;
+        let email_str: String = row.try_get("", "email").unwrap_or_default();
         let email = if email_str.is_empty() { None } else { Some(email_str) };
+        let description_str: String = row.try_get("", "description").unwrap_or_default();
+        let description = if description_str.is_empty() { None } else { Some(description_str) };
         let password_hash: String = row.try_get("", "password_hash")?;
         let role_str: String = row.try_get("", "role")?;
         let status_str: String = row.try_get("", "status")?;
@@ -179,6 +183,7 @@ impl UserDao {
             user_id,
             username,
             email,
+            description,
             password_hash,
             role,
             status,

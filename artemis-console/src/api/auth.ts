@@ -220,6 +220,7 @@ export interface UserDetails {
   user_id: string;
   username: string;
   email?: string;
+  description?: string;
   role: string;
   status: string;
   created_at: number;
@@ -244,6 +245,7 @@ export interface LoginHistory {
 export interface CreateUserRequest {
   username: string;
   email?: string;
+  description?: string;
   password: string;
   role: string;
 }
@@ -253,6 +255,7 @@ export interface CreateUserRequest {
  */
 export interface UpdateUserRequest {
   email?: string;
+  description?: string;
   role?: string;
 }
 

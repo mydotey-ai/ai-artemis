@@ -326,11 +326,8 @@ const Users: React.FC = () => {
         const totalUsers = response.data.length;
         const activeUsers = response.data.filter((u) => u.status === UserStatus.ACTIVE).length;
         const adminUsers = response.data.filter((u) => u.role === UserRole.ADMIN).length;
-        // Simulate online users (users who logged in within last hour)
-        const oneHourAgo = Date.now() - 60 * 60 * 1000;
-        const onlineNow = response.data.filter(
-          (u) => u.last_login && new Date(u.last_login).getTime() > oneHourAgo
-        ).length;
+        // Online users count (not available without last_login data)
+        const onlineNow = 0;
 
         setStatistics({ totalUsers, activeUsers, adminUsers, onlineNow });
       } else {
@@ -621,7 +618,7 @@ const Users: React.FC = () => {
           description: formData.description,
         };
 
-        const response = await updateUser(selectedUser.id, updateRequest);
+        const response = await updateUser(selectedUser.user_id, updateRequest);
         if (response.success) {
           setAddEditDialogOpen(false);
           fetchUsers();
@@ -657,7 +654,7 @@ const Users: React.FC = () => {
     if (!selectedUser) return;
 
     try {
-      const response = await deleteUser(selectedUser.id);
+      const response = await deleteUser(selectedUser.user_id);
       if (response.success) {
         setDeleteDialogOpen(false);
         fetchUsers();
@@ -686,7 +683,7 @@ const Users: React.FC = () => {
     }
 
     try {
-      const response = await resetUserPassword(selectedUser.id, newPassword);
+      const response = await resetUserPassword(selectedUser.user_id, newPassword);
       if (response.success) {
         setResetPasswordDialogOpen(false);
         setNewPassword('');
@@ -703,7 +700,7 @@ const Users: React.FC = () => {
    * Handle export CSV
    */
   const handleExportCsv = (): void => {
-    const csvHeaders = ['User ID', 'Username', 'Email', 'Role', 'Status', 'Last Login', 'Created Time'];
+    const csvHeaders = ['User ID', 'Username', 'Email', 'Role', 'Status', 'Created Time'];
 
     const csvRows = filteredUsers.map((user) => [
       user.user_id,
@@ -711,7 +708,6 @@ const Users: React.FC = () => {
       user.email || '',
       user.role,
       user.status,
-      user.last_login || '',
       user.created_at || '',
     ]);
 
@@ -988,7 +984,7 @@ const Users: React.FC = () => {
                     size="small"
                   />
                 </TableCell>
-                <TableCell>{formatLastLogin(user.last_login)}</TableCell>
+                <TableCell>-</TableCell>
                 <TableCell>
                   {user.created_at ? new Date(user.created_at).toLocaleDateString() : '-'}
                 </TableCell>
@@ -1252,7 +1248,7 @@ const Users: React.FC = () => {
                   <Typography variant="body2" color="text.secondary">
                     User ID
                   </Typography>
-                  <Typography variant="body1">{selectedUser.id}</Typography>
+                  <Typography variant="body1">{selectedUser.user_id}</Typography>
                 </Grid>
                 <Grid size={{ xs: 6 }}>
                   <Typography variant="body2" color="text.secondary">
@@ -1287,25 +1283,7 @@ const Users: React.FC = () => {
                     size="small"
                   />
                 </Grid>
-                <Grid size={{ xs: 6 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Last Login
-                  </Typography>
-                  <Typography variant="body1">{formatLastLogin(selectedUser.last_login)}</Typography>
-                </Grid>
               </Grid>
-            </Box>
-
-            {/* Permissions */}
-            <Box>
-              <Typography variant="h6" gutterBottom>
-                Permissions
-              </Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {selectedUser.permissions.map((permission) => (
-                  <Chip key={permission} label={permission} size="small" variant="outlined" />
-                ))}
-              </Box>
             </Box>
 
             {/* Login History */}
