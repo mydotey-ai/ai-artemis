@@ -61,19 +61,19 @@ export interface ApiResponse<T> {
 
 /**
  * 获取集群节点状态 (POST)
- * POST /api/status/cluster/node-status
+ * POST /api/status/node.json
  */
 export async function getClusterNodeStatusPost(): Promise<ApiResponse<ClusterNodeStatus[]>> {
-  const response = await apiClient.post(`${API_BASE}/cluster/node-status`);
+  const response = await apiClient.post(`${API_BASE}/node.json`);
   return response.data;
 }
 
 /**
  * 获取集群节点状态 (GET)
- * GET /api/status/cluster/node-status
+ * GET /api/status/node.json
  */
 export async function getClusterNodeStatusGet(): Promise<ApiResponse<ClusterNodeStatus[]>> {
-  const response = await apiClient.get(`${API_BASE}/cluster/node-status`);
+  const response = await apiClient.get(`${API_BASE}/node.json`);
   return response.data;
 }
 
@@ -88,19 +88,19 @@ export async function getClusterNodeStatus(): Promise<ApiResponse<ClusterNodeSta
 
 /**
  * 获取集群状态 (POST)
- * POST /api/status/cluster/cluster-status
+ * POST /api/status/cluster.json
  */
 export async function getClusterStatusPost(): Promise<ApiResponse<ClusterStatus>> {
-  const response = await apiClient.post(`${API_BASE}/cluster/cluster-status`);
+  const response = await apiClient.post(`${API_BASE}/cluster.json`);
   return response.data;
 }
 
 /**
  * 获取集群状态 (GET)
- * GET /api/status/cluster/cluster-status
+ * GET /api/status/cluster.json
  */
 export async function getClusterStatusGet(): Promise<ApiResponse<ClusterStatus>> {
-  const response = await apiClient.get(`${API_BASE}/cluster/cluster-status`);
+  const response = await apiClient.get(`${API_BASE}/cluster.json`);
   return response.data;
 }
 
@@ -115,19 +115,19 @@ export async function getClusterStatus(): Promise<ApiResponse<ClusterStatus>> {
 
 /**
  * 获取配置状态 (POST)
- * POST /api/status/config/config-status
+ * POST /api/status/config.json
  */
 export async function getConfigStatusPost(): Promise<ApiResponse<ConfigStatus>> {
-  const response = await apiClient.post(`${API_BASE}/config/config-status`);
+  const response = await apiClient.post(`${API_BASE}/config.json`);
   return response.data;
 }
 
 /**
  * 获取配置状态 (GET)
- * GET /api/status/config/config-status
+ * GET /api/status/config.json
  */
 export async function getConfigStatusGet(): Promise<ApiResponse<ConfigStatus>> {
-  const response = await apiClient.get(`${API_BASE}/config/config-status`);
+  const response = await apiClient.get(`${API_BASE}/config.json`);
   return response.data;
 }
 
@@ -142,19 +142,19 @@ export async function getConfigStatus(): Promise<ApiResponse<ConfigStatus>> {
 
 /**
  * 获取部署状态 (POST)
- * POST /api/status/deployment/deployment-status
+ * POST /api/status/deployment.json
  */
 export async function getDeploymentStatusPost(): Promise<ApiResponse<DeploymentStatus>> {
-  const response = await apiClient.post(`${API_BASE}/deployment/deployment-status`);
+  const response = await apiClient.post(`${API_BASE}/deployment.json`);
   return response.data;
 }
 
 /**
  * 获取部署状态 (GET)
- * GET /api/status/deployment/deployment-status
+ * GET /api/status/deployment.json
  */
 export async function getDeploymentStatusGet(): Promise<ApiResponse<DeploymentStatus>> {
-  const response = await apiClient.get(`${API_BASE}/deployment/deployment-status`);
+  const response = await apiClient.get(`${API_BASE}/deployment.json`);
   return response.data;
 }
 
@@ -169,19 +169,19 @@ export async function getDeploymentStatus(): Promise<ApiResponse<DeploymentStatu
 
 /**
  * 获取租约状态 (POST)
- * POST /api/status/leases/leases-status
+ * POST /api/status/leases.json
  */
 export async function getLeasesStatusPost(): Promise<ApiResponse<LeasesStatus>> {
-  const response = await apiClient.post(`${API_BASE}/leases/leases-status`);
+  const response = await apiClient.post(`${API_BASE}/leases.json`);
   return response.data;
 }
 
 /**
  * 获取租约状态 (GET)
- * GET /api/status/leases/leases-status
+ * GET /api/status/leases.json
  */
 export async function getLeasesStatusGet(): Promise<ApiResponse<LeasesStatus>> {
-  const response = await apiClient.get(`${API_BASE}/leases/leases-status`);
+  const response = await apiClient.get(`${API_BASE}/leases.json`);
   return response.data;
 }
 

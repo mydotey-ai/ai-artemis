@@ -133,7 +133,7 @@ export class WebSocketManager {
       this.state === 'connected' ||
       this.state === 'connecting'
     ) {
-      console.warn('[WebSocket] Already connected or connecting');
+      // This is normal in React StrictMode (dev), just return silently
       return;
     }
 

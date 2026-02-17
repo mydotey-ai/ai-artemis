@@ -72,8 +72,11 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     // Subscribe to state changes
     wsManager.onStateChange(handleStateChange);
 
-    // Connect to WebSocket
-    wsManager.connect();
+    // Connect to WebSocket (only if not already connected/connecting)
+    const currentState = wsManager.getState();
+    if (currentState === 'disconnected' || currentState === 'failed') {
+      wsManager.connect();
+    }
 
     // Cleanup on unmount
     return () => {

@@ -6,7 +6,7 @@
 
 import apiClient from '@/api/client';
 
-const API_BASE = '/api/management/routing';
+const API_BASE = '/api/routing';
 
 // ===== 请求/响应类型定义 =====
 
