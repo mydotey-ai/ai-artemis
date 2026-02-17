@@ -40,7 +40,7 @@
 
 ---
 
-## 🔧 Phase 26: artemis-core 架构重构 (2026-02-17)
+## 🔧 Phase 28: artemis-core 架构重构 (2026-02-17)
 
 **重构目标**: 精简 artemis-core 为核心协议层，让 client 只依赖必需的部分
 
@@ -94,13 +94,13 @@ artemis-management (新增模块)
 - ✅ `artemis-management` → 包含所有管理功能模型
 - ✅ 无循环依赖，依赖关系清晰
 
-**Phase 文档**: [`docs/plans/phases/phase-26-artemis-core-refactoring.md`](phases/phase-26-artemis-core-refactoring.md)
+**Phase 文档**: [`docs/plans/phases/phase-28-artemis-core-refactoring.md`](phases/phase-28-artemis-core-refactoring.md)
 
 **提交记录**: 16 个重构提交，108 个文件变更，已合并到 main 分支
 
 ---
 
-## 📋 Phase 27: 客户端企业级功能 (计划中)
+## 📋 Phase 26: 客户端企业级功能 (计划中)
 
 **实施状态**: 📋 **计划中** - 未实施
 
@@ -126,13 +126,13 @@ artemis-management (新增模块)
 - 50+ 单元测试 + 集成测试
 - 生产级别的可靠性和可观测性
 
-**Phase 文档**: [`docs/plans/phases/phase-27-client-enterprise-features.md`](phases/phase-27-client-enterprise-features.md)
+**Phase 文档**: [`docs/plans/phases/phase-26-client-enterprise-features.md`](phases/phase-26-client-enterprise-features.md)
 
 **预计实施时间**: 12-15 个工作日
 
 ---
 
-## 🎨 Phase 28: Web 控制台 (2026-02-16 至 2026-02-17)
+## 🎨 Phase 27: Web 控制台 (2026-02-16 至 2026-02-17)
 
 **实施状态**: ✅ **已完成** - 生产就绪
 
@@ -161,7 +161,7 @@ artemis-management (新增模块)
 - 完整的 WebSocket 实时推送
 - 完整的用户认证系统
 
-**Phase 文档**: [`docs/plans/phases/phase-28-web-console.md`](phases/phase-28-web-console.md)
+**Phase 文档**: [`docs/plans/phases/phase-27-web-console.md`](phases/phase-27-web-console.md)
 
 **详细文档**: [`docs/web-console/project-summary.md`](../web-console/project-summary.md)
 
