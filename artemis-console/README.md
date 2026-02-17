@@ -24,8 +24,15 @@ npm install
 # Start dev server (with HMR)
 npm run dev
 
-# Access at http://localhost:3000
+# Access at http://localhost:5173
 ```
+
+**Default Login Credentials**:
+- Username: `admin`
+- Password: `admin123`
+- Role: Administrator
+
+> **Security Note**: Change the default password immediately after first login. For production deployments, use strong passwords and configure via environment variables.
 
 ### Production Build
 

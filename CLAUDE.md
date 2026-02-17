@@ -28,6 +28,14 @@
 ./scripts/dev.sh stop
 ```
 
+**访问地址**:
+- **Web 控制台**: http://localhost:5173
+- **后端 API**: http://localhost:8080
+
+**默认登录凭据**:
+- 用户名: `admin`
+- 密码: `admin123`
+
 详见: [开发指南](docs/development.md)
 
 ### 单节点启动

@@ -4,14 +4,38 @@
 
 ### 1. 启动服务
 
-**当前状态**: ✅ 服务已启动
-- 后端: http://localhost:8080 (单节点,PID: 554961)
-- 前端: http://localhost:3002 (Vite 开发服务器)
-- 测试数据: ✅ 已准备 (3 个服务, 6 个实例)
+```bash
+# 一键启动开发环境 (推荐)
+./scripts/dev.sh start
 
-### 2. 访问 Web Console
+# 或手动启动
+# 后端: cargo run --release --bin artemis -- server
+# 前端: cd artemis-console && npm run dev
+```
 
-在浏览器中打开: **http://localhost:3002/**
+**服务地址**:
+- 后端 API: http://localhost:8080
+- Web 控制台: http://localhost:5173
+- 健康检查: http://localhost:8080/health
+
+### 2. 登录 Web Console
+
+在浏览器中打开: **http://localhost:5173**
+
+**默认登录凭据**:
+- 用户名: `admin`
+- 密码: `admin123`
+- 角色: 管理员
+
+> ⚠️ **首次登录后请立即修改密码！**
+
+### 3. 准备测试数据（可选）
+
+运行测试脚本注册服务实例：
+
+```bash
+./scripts/test-all-operations.sh
+```
 
 ---
 
