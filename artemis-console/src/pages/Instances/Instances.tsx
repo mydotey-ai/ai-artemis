@@ -53,6 +53,7 @@ import {
   MoreVert as MoreVertIcon,
   Close as CloseIcon,
   ContentCopy as ContentCopyIcon,
+  Circle as CircleIcon,
 } from '@mui/icons-material';
 import { getAllServices } from '@/api/discovery';
 import {
@@ -134,6 +135,7 @@ const Instances: React.FC = () => {
   // ===== State Management =====
   const [instances, setInstances] = useState<InstanceRow[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   // Filters
@@ -173,9 +175,14 @@ const Instances: React.FC = () => {
   const showNotification = useUIStore((state) => state.showNotification);
 
   // ===== Data Fetching =====
-  const fetchInstances = useCallback(async () => {
+  const fetchInstances = useCallback(async (isBackgroundRefresh = false) => {
     try {
-      setLoading(true);
+      // Only set loading on initial load, not on background refresh
+      if (!isBackgroundRefresh) {
+        setLoading(true);
+      } else {
+        setIsRefreshing(true);
+      }
       setError(null);
 
       // Fetch all services from all regions/zones
@@ -230,15 +237,19 @@ const Instances: React.FC = () => {
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
       console.error('Failed to fetch instances:', err);
     } finally {
-      setLoading(false);
+      if (!isBackgroundRefresh) {
+        setLoading(false);
+      } else {
+        setIsRefreshing(false);
+      }
     }
   }, []);
 
   useEffect(() => {
-    fetchInstances();
+    fetchInstances(false);
 
-    // Auto-refresh every 10 seconds
-    const interval = setInterval(fetchInstances, 10000);
+    // Auto-refresh every 10 seconds (background refresh without loading skeleton)
+    const interval = setInterval(() => fetchInstances(true), 10000);
     return () => clearInterval(interval);
   }, [fetchInstances]);
 
@@ -269,8 +280,8 @@ const Instances: React.FC = () => {
         duration: 4000,
       });
 
-      // Refresh instances list
-      fetchInstances();
+      // Refresh instances list (background refresh)
+      fetchInstances(true);
     },
     [showNotification, fetchInstances]
   );
@@ -418,7 +429,7 @@ const Instances: React.FC = () => {
       await operateInstance(instanceKey, InstanceOperationType.PullIn, 'admin', true);
       showSnackbar(`Instance ${instance.instanceId} pulled in successfully`, 'success');
       handleCloseActionMenu();
-      fetchInstances();
+      fetchInstances(true);
     } catch (err) {
       showSnackbar(`Failed to pull in instance: ${err instanceof Error ? err.message : 'Unknown error'}`, 'error');
     }
@@ -430,7 +441,7 @@ const Instances: React.FC = () => {
       await operateInstance(instanceKey, InstanceOperationType.PullOut, 'admin', true);
       showSnackbar(`Instance ${instance.instanceId} pulled out successfully`, 'success');
       handleCloseActionMenu();
-      fetchInstances();
+      fetchInstances(true);
     } catch (err) {
       showSnackbar(`Failed to pull out instance: ${err instanceof Error ? err.message : 'Unknown error'}`, 'error');
     }
@@ -456,7 +467,7 @@ const Instances: React.FC = () => {
       // For now, we'll simulate the operation
       showSnackbar(`Instance ${instanceToUnregister.instanceId} unregistered successfully`, 'success');
       handleCloseUnregisterDialog();
-      fetchInstances();
+      fetchInstances(true);
     } catch (err) {
       showSnackbar(`Failed to unregister instance: ${err instanceof Error ? err.message : 'Unknown error'}`, 'error');
     }
@@ -471,7 +482,7 @@ const Instances: React.FC = () => {
       ));
       showSnackbar(`${selected.size} instances pulled in successfully`, 'success');
       setSelected(new Set());
-      fetchInstances();
+      fetchInstances(true);
     } catch (err) {
       showSnackbar(`Failed to pull in instances: ${err instanceof Error ? err.message : 'Unknown error'}`, 'error');
     }
@@ -485,7 +496,7 @@ const Instances: React.FC = () => {
       ));
       showSnackbar(`${selected.size} instances pulled out successfully`, 'success');
       setSelected(new Set());
-      fetchInstances();
+      fetchInstances(true);
     } catch (err) {
       showSnackbar(`Failed to pull out instances: ${err instanceof Error ? err.message : 'Unknown error'}`, 'error');
     }
@@ -496,7 +507,7 @@ const Instances: React.FC = () => {
       // Simulate batch unregister
       showSnackbar(`${selected.size} instances unregistered successfully`, 'success');
       setSelected(new Set());
-      fetchInstances();
+      fetchInstances(true);
     } catch (err) {
       showSnackbar(`Failed to unregister instances: ${err instanceof Error ? err.message : 'Unknown error'}`, 'error');
     }
@@ -505,14 +516,39 @@ const Instances: React.FC = () => {
   // ===== Render =====
   return (
     <Box>
+      {/* Global styles for refresh animation */}
+      <style>
+        {`
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+          @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+          }
+        `}
+      </style>
       {/* Page Header */}
-      <Box sx={{ marginBottom: 3 }}>
-        <Typography variant="h4" component="h1" gutterBottom fontWeight={600}>
-          Instances
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Manage service instances
-        </Typography>
+      <Box sx={{ marginBottom: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Box>
+          <Typography variant="h4" component="h1" gutterBottom fontWeight={600} sx={{ marginBottom: 0.5 }}>
+            Instances
+            {isRefreshing && (
+              <CircleIcon
+                sx={{
+                  fontSize: 12,
+                  marginLeft: 1,
+                  color: 'primary.main',
+                  animation: 'pulse 1.5s ease-in-out infinite',
+                }}
+              />
+            )}
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Manage service instances
+          </Typography>
+        </Box>
       </Box>
 
       {/* Error Alert */}
@@ -541,9 +577,9 @@ const Instances: React.FC = () => {
             {/* Refresh Button */}
             <Button
               variant="outlined"
-              startIcon={<RefreshIcon />}
-              onClick={fetchInstances}
-              disabled={loading}
+              startIcon={<RefreshIcon sx={isRefreshing ? { animation: 'spin 1s linear infinite' } : {}} />}
+              onClick={() => fetchInstances(true)}
+              disabled={loading || isRefreshing}
             >
               Refresh
             </Button>
