@@ -8,7 +8,12 @@ use axum::{
     http::StatusCode,
     response::IntoResponse,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Deserialize)]
+pub struct UpdateWhitelistRequest {
+    pub ips: Vec<String>,
+}
 
 #[derive(Debug, Serialize)]
 pub struct ApiResponse<T> {
@@ -102,6 +107,69 @@ pub async fn delete_canary_config(
 pub async fn list_canary_configs(State(state): State<ManagementState>) -> impl IntoResponse {
     let configs = state.canary_manager.list_configs();
     (StatusCode::OK, Json(ApiResponse::success(configs)))
+}
+
+/// POST /api/management/canary/disable - 禁用金丝雀配置
+pub async fn disable_canary(
+    State(state): State<ManagementState>,
+    Json(req): Json<serde_json::Value>,
+) -> impl IntoResponse {
+    let service_id = match req.get("service_id").and_then(|s| s.as_str()) {
+        Some(id) => id.to_string(),
+        None => {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(ApiResponse::<CanaryConfig>::error("service_id is required".to_string())),
+            );
+        }
+    };
+
+    match state.canary_manager.set_enabled(&service_id, false) {
+        Ok(_) => {
+            if let Some(config) = state.canary_manager.get_config(&service_id) {
+                (StatusCode::OK, Json(ApiResponse::success(config)))
+            } else {
+                (
+                    StatusCode::NOT_FOUND,
+                    Json(ApiResponse::<CanaryConfig>::error("Canary config not found".to_string())),
+                )
+            }
+        }
+        Err(e) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ApiResponse::<CanaryConfig>::error(e.to_string())),
+        ),
+    }
+}
+
+/// POST /api/management/canary/:service_id/whitelist/add - 添加 IP 到白名单
+pub async fn add_ip_to_whitelist(
+    State(state): State<ManagementState>,
+    Path(service_id): Path<String>,
+    Json(req): Json<UpdateWhitelistRequest>,
+) -> impl IntoResponse {
+    match state.canary_manager.add_ips_to_whitelist(&service_id, req.ips) {
+        Ok(config) => (StatusCode::OK, Json(ApiResponse::success(config))),
+        Err(e) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ApiResponse::<CanaryConfig>::error(e.to_string())),
+        ),
+    }
+}
+
+/// POST /api/management/canary/:service_id/whitelist/remove - 从白名单移除 IP
+pub async fn remove_ip_from_whitelist(
+    State(state): State<ManagementState>,
+    Path(service_id): Path<String>,
+    Json(req): Json<UpdateWhitelistRequest>,
+) -> impl IntoResponse {
+    match state.canary_manager.remove_ips_from_whitelist(&service_id, req.ips) {
+        Ok(config) => (StatusCode::OK, Json(ApiResponse::success(config))),
+        Err(e) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ApiResponse::<CanaryConfig>::error(e.to_string())),
+        ),
+    }
 }
 
 #[cfg(test)]

@@ -121,6 +121,58 @@ impl CanaryManager {
     pub fn list_configs(&self) -> Vec<CanaryConfig> {
         self.configs.iter().map(|entry| entry.value().clone()).collect()
     }
+
+    /// 添加 IP 到白名单
+    pub fn add_ips_to_whitelist(&self, service_id: &str, ips: Vec<String>) -> anyhow::Result<CanaryConfig> {
+        if let Some(mut config) = self.configs.get_mut(service_id) {
+            for ip in ips {
+                if !config.ip_whitelist.contains(&ip) {
+                    config.ip_whitelist.push(ip);
+                }
+            }
+            let result = config.clone();
+            info!("Added IPs to whitelist for service: {}", service_id);
+
+            // 持久化到数据库
+            if let Some(db) = &self.database {
+                let dao = CanaryConfigDao::new(db.conn().clone());
+                let config_clone = result.clone();
+                tokio::spawn(async move {
+                    if let Err(e) = dao.upsert_config(&config_clone).await {
+                        tracing::error!("Failed to persist canary config to database: {}", e);
+                    }
+                });
+            }
+
+            Ok(result)
+        } else {
+            anyhow::bail!("Canary config not found for service: {}", service_id)
+        }
+    }
+
+    /// 从白名单移除 IP
+    pub fn remove_ips_from_whitelist(&self, service_id: &str, ips: Vec<String>) -> anyhow::Result<CanaryConfig> {
+        if let Some(mut config) = self.configs.get_mut(service_id) {
+            config.ip_whitelist.retain(|ip| !ips.contains(ip));
+            let result = config.clone();
+            info!("Removed IPs from whitelist for service: {}", service_id);
+
+            // 持久化到数据库
+            if let Some(db) = &self.database {
+                let dao = CanaryConfigDao::new(db.conn().clone());
+                let config_clone = result.clone();
+                tokio::spawn(async move {
+                    if let Err(e) = dao.upsert_config(&config_clone).await {
+                        tracing::error!("Failed to persist canary config to database: {}", e);
+                    }
+                });
+            }
+
+            Ok(result)
+        } else {
+            anyhow::bail!("Canary config not found for service: {}", service_id)
+        }
+    }
 }
 
 #[cfg(test)]

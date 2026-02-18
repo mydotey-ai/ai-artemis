@@ -121,6 +121,15 @@ pub fn management_routes(state: ManagementState) -> Router {
             "/api/management/canary/configs",
             get(canary::list_canary_configs),
         )
+        .route("/api/management/canary/disable", post(canary::disable_canary))
+        .route(
+            "/api/management/canary/{service_id}/whitelist/add",
+            post(canary::add_ip_to_whitelist),
+        )
+        .route(
+            "/api/management/canary/{service_id}/whitelist/remove",
+            post(canary::remove_ip_from_whitelist),
+        )
         // ===== 审计日志 API =====
         .route("/api/management/audit/logs", get(audit::query_logs))
         .route(

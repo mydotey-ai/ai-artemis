@@ -1,6 +1,6 @@
 use crate::state::AppState;
 use artemis_management::{management_routes, ManagementState};
-use axum::{routing::get, routing::post, Router};
+use axum::{routing::delete, routing::get, routing::patch, routing::post, routing::put, Router};
 use std::net::SocketAddr;
 use tower_http::cors::CorsLayer;
 
@@ -83,17 +83,21 @@ pub async fn run_server(state: AppState, addr: SocketAddr) -> anyhow::Result<()>
         .route("/api/routing/groups/by-id/{group_id}", get(crate::api::routing::get_group))
         .route(
             "/api/routing/groups/{group_key}",
-            axum::routing::delete(crate::api::routing::delete_group),
+            delete(crate::api::routing::delete_group),
         )
         .route(
             "/api/routing/groups/{group_key}",
-            axum::routing::patch(crate::api::routing::update_group),
+            put(crate::api::routing::update_group),
+        )
+        .route(
+            "/api/routing/groups/{group_key}",
+            patch(crate::api::routing::update_group),
         )
         .route("/api/routing/groups/{group_key}/tags", post(crate::api::routing::add_group_tags))
         .route("/api/routing/groups/{group_key}/tags", get(crate::api::routing::get_group_tags))
         .route(
             "/api/routing/groups/{group_key}/tags/{tag_key}",
-            axum::routing::delete(crate::api::routing::remove_group_tag),
+            delete(crate::api::routing::remove_group_tag),
         )
         .route(
             "/api/routing/groups/{group_key}/instances",
@@ -105,7 +109,7 @@ pub async fn run_server(state: AppState, addr: SocketAddr) -> anyhow::Result<()>
         )
         .route(
             "/api/routing/groups/{group_key}/instances/{instance_id}",
-            axum::routing::delete(crate::api::routing::remove_instance_from_group),
+            delete(crate::api::routing::remove_instance_from_group),
         )
         .route(
             "/api/routing/services/{service_id}/instances",
@@ -117,11 +121,15 @@ pub async fn run_server(state: AppState, addr: SocketAddr) -> anyhow::Result<()>
         .route("/api/routing/rules/{rule_id}", get(crate::api::routing::get_rule))
         .route(
             "/api/routing/rules/{rule_id}",
-            axum::routing::delete(crate::api::routing::delete_rule),
+            delete(crate::api::routing::delete_rule),
         )
         .route(
             "/api/routing/rules/{rule_id}",
-            axum::routing::patch(crate::api::routing::update_rule),
+            put(crate::api::routing::update_rule),
+        )
+        .route(
+            "/api/routing/rules/{rule_id}",
+            patch(crate::api::routing::update_rule),
         )
         .route("/api/routing/rules/{rule_id}/publish", post(crate::api::routing::publish_rule))
         .route(
@@ -133,11 +141,15 @@ pub async fn run_server(state: AppState, addr: SocketAddr) -> anyhow::Result<()>
         .route("/api/routing/rules/{rule_id}/groups", get(crate::api::routing::get_rule_groups))
         .route(
             "/api/routing/rules/{rule_id}/groups/{group_id}",
-            axum::routing::delete(crate::api::routing::remove_rule_group),
+            delete(crate::api::routing::remove_rule_group),
         )
         .route(
             "/api/routing/rules/{rule_id}/groups/{group_id}",
-            axum::routing::patch(crate::api::routing::update_rule_group),
+            put(crate::api::routing::update_rule_group),
+        )
+        .route(
+            "/api/routing/rules/{rule_id}/groups/{group_id}",
+            patch(crate::api::routing::update_rule_group),
         )
         // Status endpoints
         .route("/api/status/node.json", post(crate::api::status::get_cluster_node_status_post))
