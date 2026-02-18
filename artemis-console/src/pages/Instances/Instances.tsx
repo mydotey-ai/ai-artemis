@@ -79,7 +79,6 @@ interface InstanceRow {
   regionId: string;
   zoneId: string;
   metadata: Record<string, string>;
-  lastHeartbeat: number;
   url: string;
   healthCheckUrl?: string;
   instance: Instance;
@@ -99,29 +98,10 @@ const STATUS_COLORS: Record<InstanceStatus | 'out', 'success' | 'error' | 'info'
 };
 
 /**
- * Format relative time
- */
-function formatRelativeTime(timestamp: number): string {
-  if (timestamp === 0) return 'N/A';
-
-  const now = Date.now();
-  const diff = now - timestamp;
-  const seconds = Math.floor(diff / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-
-  if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
-  if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-  if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-  return `${seconds} second${seconds !== 1 ? 's' : ''} ago`;
-}
-
-/**
  * Convert instances to CSV
  */
 function exportToCSV(instances: InstanceRow[]): void {
-  const headers = ['Instance ID', 'Service ID', 'IP:Port', 'Status', 'Region', 'Zone', 'Metadata', 'Last Heartbeat'];
+  const headers = ['Instance ID', 'Service ID', 'IP:Port', 'Status', 'Region', 'Zone', 'Metadata'];
   const rows = instances.map(inst => [
     inst.instanceId,
     inst.serviceId,
@@ -130,7 +110,6 @@ function exportToCSV(instances: InstanceRow[]): void {
     inst.regionId,
     inst.zoneId,
     JSON.stringify(inst.metadata),
-    inst.lastHeartbeat === 0 ? 'N/A' : new Date(inst.lastHeartbeat).toISOString(),
   ]);
 
   const csvContent = [
@@ -238,7 +217,6 @@ const Instances: React.FC = () => {
             regionId: instance.region_id,
             zoneId: instance.zone_id,
             metadata: instance.metadata || {},
-            lastHeartbeat: 0, // TODO: 从后端 API 获取真实心跳时间
             url: instance.url,
             healthCheckUrl: instance.health_check_url,
             instance,
@@ -687,7 +665,6 @@ const Instances: React.FC = () => {
                 <TableCell>Region</TableCell>
                 <TableCell>Zone</TableCell>
                 <TableCell>Metadata</TableCell>
-                <TableCell>Last Heartbeat</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -701,7 +678,6 @@ const Instances: React.FC = () => {
                     <TableCell><Skeleton /></TableCell>
                     <TableCell><Skeleton /></TableCell>
                     <TableCell><Skeleton width={80} /></TableCell>
-                    <TableCell><Skeleton /></TableCell>
                     <TableCell><Skeleton /></TableCell>
                     <TableCell><Skeleton /></TableCell>
                     <TableCell><Skeleton /></TableCell>
@@ -759,7 +735,6 @@ const Instances: React.FC = () => {
                             : 'None'}
                         </Typography>
                       </TableCell>
-                      <TableCell>{formatRelativeTime(instance.lastHeartbeat)}</TableCell>
                       <TableCell>
                         <IconButton
                           size="small"
