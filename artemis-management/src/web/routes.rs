@@ -41,7 +41,6 @@ pub fn management_routes(state: ManagementState) -> Router {
         .route("/api/auth/users", post(auth::create_user))
         .route("/api/auth/users/{user_id}", get(auth::get_user))
         .route("/api/auth/users/{user_id}", put(auth::update_user))
-        .route("/api/auth/users/{user_id}", patch(auth::update_user))
         .route("/api/auth/users/{user_id}", delete(auth::delete_user))
         .route(
             "/api/auth/users/{user_id}/status",
