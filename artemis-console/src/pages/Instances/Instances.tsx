@@ -102,6 +102,8 @@ const STATUS_COLORS: Record<InstanceStatus | 'out', 'success' | 'error' | 'info'
  * Format relative time
  */
 function formatRelativeTime(timestamp: number): string {
+  if (timestamp === 0) return 'N/A';
+
   const now = Date.now();
   const diff = now - timestamp;
   const seconds = Math.floor(diff / 1000);
@@ -128,7 +130,7 @@ function exportToCSV(instances: InstanceRow[]): void {
     inst.regionId,
     inst.zoneId,
     JSON.stringify(inst.metadata),
-    new Date(inst.lastHeartbeat).toISOString(),
+    inst.lastHeartbeat === 0 ? 'N/A' : new Date(inst.lastHeartbeat).toISOString(),
   ]);
 
   const csvContent = [
@@ -236,7 +238,7 @@ const Instances: React.FC = () => {
             regionId: instance.region_id,
             zoneId: instance.zone_id,
             metadata: instance.metadata || {},
-            lastHeartbeat: Date.now() - Math.floor(Math.random() * 600000), // Mock heartbeat
+            lastHeartbeat: 0, // TODO: 从后端 API 获取真实心跳时间
             url: instance.url,
             healthCheckUrl: instance.health_check_url,
             instance,
