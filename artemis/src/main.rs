@@ -9,12 +9,14 @@ use artemis_management::{
     AuthManager, ConfigLoader, Database, GroupManager, GroupRoutingFilter, InstanceManager,
     ManagementDiscoveryFilter, RouteEngine, RouteManager,
 };
+use artemis_core::model::Service;
 use artemis_server::config::ArtemisConfig;
 use artemis_server::{
     RegistryServiceImpl, cache::VersionedCacheManager, cluster::ClusterManager,
     discovery::DiscoveryServiceImpl, lease::LeaseManager, registry::RegistryRepository,
     replication::ReplicationManager,
 };
+use tracing::info;
 use artemis_web::{server::run_server, state::AppState};
 use clap::{Parser, Subcommand};
 use std::net::SocketAddr;
@@ -165,9 +167,50 @@ async fn start_server(
         repository.clone(),
         lease_manager.clone(),
         cache.clone(),
-        change_manager,
+        change_manager.clone(),
         replication_manager.clone(),
     ));
+
+    // 5a. Start lease eviction task (清理过期实例)
+    {
+        let repository = repository.clone();
+        let cache = cache.clone();
+        let change_manager = change_manager.clone();
+        let replication_manager = replication_manager.clone();
+        let cleanup_interval = Duration::from_secs(config.lease.cleanup_interval_secs);
+
+        lease_manager.clone().start_eviction_task(cleanup_interval, move |key| {
+            info!("Evicting expired instance: {:?}", key);
+            let service_id = key.service_id.clone();
+
+            // 从 repository 移除实例
+            if let Some(instance) = repository.remove(&key) {
+                // 更新缓存
+                let instances = repository.get_instances_by_service(&service_id);
+                if instances.is_empty() {
+                    // 没有实例，删除缓存
+                    cache.remove_service(&service_id);
+                } else {
+                    // 有实例，更新缓存
+                    let service = Service {
+                        service_id: service_id.clone(),
+                        metadata: None,
+                        instances,
+                        logic_instances: None,
+                    };
+                    cache.update_service(service);
+                }
+
+                // 发布变更事件
+                change_manager.publish_unregister(&key, &instance);
+
+                // 触发复制
+                if let Some(ref repl_mgr) = replication_manager {
+                    repl_mgr.publish_unregister(key.clone());
+                }
+            }
+        });
+    }
 
     // 6. Initialize management components
     let instance_manager = Arc::new(InstanceManager::new());

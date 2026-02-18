@@ -69,7 +69,7 @@ async fn test_eviction_task_automatically_removes_expired_leases() {
 
     // 启动清理任务
     let counter = evicted_count.clone();
-    manager.clone().start_eviction_task(Duration::from_millis(50), move |_key| {
+    Arc::new(manager.clone()).start_eviction_task(Duration::from_millis(50), move |_key| {
         counter.fetch_add(1, Ordering::SeqCst);
     });
 
@@ -90,7 +90,7 @@ async fn test_eviction_task_does_not_remove_renewed_leases() {
 
     // 启动清理任务
     let counter = evicted_count.clone();
-    manager.clone().start_eviction_task(Duration::from_millis(50), move |_key| {
+    Arc::new(manager.clone()).start_eviction_task(Duration::from_millis(50), move |_key| {
         counter.fetch_add(1, Ordering::SeqCst);
     });
 
@@ -375,7 +375,7 @@ async fn test_eviction_callback_receives_correct_key() {
 
     // 启动清理任务
     let keys = evicted_keys.clone();
-    manager.clone().start_eviction_task(Duration::from_millis(50), move |key| {
+    Arc::new(manager.clone()).start_eviction_task(Duration::from_millis(50), move |key| {
         let keys = keys.clone();
         tokio::spawn(async move {
             keys.lock().await.push(key);

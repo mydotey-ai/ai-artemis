@@ -56,6 +56,32 @@ impl LeaseManager {
 
     /// 启动后台清理任务
     pub fn start_eviction_task(
+        self: Arc<Self>,
+        eviction_interval: Duration,
+        on_evict: impl Fn(InstanceKey) + Send + Sync + 'static,
+    ) {
+        tokio::spawn(async move {
+            let mut interval = time::interval(eviction_interval);
+            loop {
+                interval.tick().await;
+                let expired_keys = self.get_expired_keys();
+
+                if !expired_keys.is_empty() {
+                    info!("Evicting {} expired leases", expired_keys.len());
+                    for key in expired_keys {
+                        if let Some(lease) = self.remove_lease(&key) {
+                            lease.mark_evicted();
+                            on_evict(key);
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    /// 启动后台清理任务（用于测试，接受 self）
+    #[cfg(test)]
+    pub fn start_eviction_task_test(
         self,
         eviction_interval: Duration,
         on_evict: impl Fn(InstanceKey) + Send + Sync + 'static,
