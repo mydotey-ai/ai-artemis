@@ -124,7 +124,7 @@ artemis-console/src/pages/Cluster/Cluster.tsx
 ## 测试建议
 
 1. 启动集群：`./scripts/cluster.sh start`
-2. 访问 Console: `http://localhost:3000/cluster`
+2. 访问 Console: `http://localhost:5173/cluster`
 3. 验证功能：
    - 查看统计卡片是否正确显示
    - 拓扑图是否正确渲染节点和连接线

@@ -35,7 +35,7 @@ resolver = "2"
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.93"
 authors = ["Artemis Contributors"]
 license = "MIT OR Apache-2.0"
 
@@ -103,7 +103,7 @@ futures = "0.3"
 ```toml
 # rust-toolchain.toml
 [toolchain]
-channel = "1.85"
+channel = "1.93"
 edition = "2024"
 components = ["rustfmt", "clippy"]
 ```

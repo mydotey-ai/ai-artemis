@@ -63,7 +63,7 @@ resolver = "2"
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.93"
 authors = ["Artemis Contributors"]
 license = "MIT OR Apache-2.0"
 
@@ -92,7 +92,7 @@ reqwest = { version = "0.12", features = ["json"] }
 tokio-tungstenite = "0.24"
 
 # 数据库
-sqlx = { version = "0.8", features = ["runtime-tokio", "mysql", "chrono", "json"] }
+sea-orm = { version = "1.1", features = ["runtime-tokio-rustls", "sqlx-sqlite", "sqlx-mysql"] }
 
 # 时间处理
 chrono = { version = "0.4", features = ["serde"] }
@@ -315,7 +315,7 @@ artemis/
 
 ```toml
 [toolchain]
-channel = "1.85"
+channel = "1.93"
 edition = "2024"
 components = ["rustfmt", "clippy"]
 ```
@@ -816,12 +816,12 @@ max_connections = 10
 
 | 组件 | 选型 | 版本 | 用途 |
 |------|------|------|------|
-| Rust Edition | 2024 | 1.85+ | 语言版本 |
+| Rust Edition | 2024 | 1.93+ | 语言版本 |
 | Tokio | tokio | 1.41 | 异步运行时 |
 | Axum | axum | 0.7 | Web框架 |
 | DashMap | dashmap | 6.1 | 并发HashMap |
 | parking_lot | parking_lot | 0.12 | 高性能锁 |
-| SQLx | sqlx | 0.8 | 数据库ORM |
+| SeaORM | sea-orm | 1.1 | 数据库ORM |
 | Governor | governor | 0.7 | 限流器 |
 | Serde | serde | 1.0 | 序列化 |
 
