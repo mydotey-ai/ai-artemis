@@ -1,5 +1,9 @@
+use crate::cache::VersionedCacheManager;
+use crate::change::InstanceChangeManager;
 use crate::model::Lease;
-use artemis_core::model::InstanceKey;
+use crate::registry::repository::RegistryRepository;
+use crate::replication::ReplicationManager;
+use artemis_core::model::{InstanceKey, Service};
 use dashmap::DashMap;
 use std::sync::Arc;
 use std::time::Duration;
@@ -57,11 +61,14 @@ impl LeaseManager {
     /// 启动后台清理任务
     pub fn start_eviction_task(
         self: Arc<Self>,
-        eviction_interval: Duration,
-        on_evict: impl Fn(InstanceKey) + Send + Sync + 'static,
+        cleanup_interval: Duration,
+        repository: RegistryRepository,
+        cache: Arc<VersionedCacheManager>,
+        change_manager: Arc<InstanceChangeManager>,
+        replication_manager: Option<Arc<ReplicationManager>>,
     ) {
         tokio::spawn(async move {
-            let mut interval = time::interval(eviction_interval);
+            let mut interval = time::interval(cleanup_interval);
             loop {
                 interval.tick().await;
                 let expired_keys = self.get_expired_keys();
@@ -69,35 +76,34 @@ impl LeaseManager {
                 if !expired_keys.is_empty() {
                     info!("Evicting {} expired leases", expired_keys.len());
                     for key in expired_keys {
-                        if let Some(lease) = self.remove_lease(&key) {
-                            lease.mark_evicted();
-                            on_evict(key);
-                        }
-                    }
-                }
-            }
-        });
-    }
+                        // 从租约管理器移除
+                        self.remove_lease(&key);
 
-    /// 启动后台清理任务（用于测试，接受 self）
-    #[cfg(test)]
-    pub fn start_eviction_task_test(
-        self,
-        eviction_interval: Duration,
-        on_evict: impl Fn(InstanceKey) + Send + Sync + 'static,
-    ) {
-        tokio::spawn(async move {
-            let mut interval = time::interval(eviction_interval);
-            loop {
-                interval.tick().await;
-                let expired_keys = self.get_expired_keys();
+                        let service_id = key.service_id.clone();
 
-                if !expired_keys.is_empty() {
-                    info!("Evicting {} expired leases", expired_keys.len());
-                    for key in expired_keys {
-                        if let Some(lease) = self.remove_lease(&key) {
-                            lease.mark_evicted();
-                            on_evict(key);
+                        // 从 repository 移除实例
+                        if let Some(instance) = repository.remove(&key) {
+                            // 更新缓存
+                            let instances = repository.get_instances_by_service(&service_id);
+                            if instances.is_empty() {
+                                cache.remove_service(&service_id);
+                            } else {
+                                let service = Service {
+                                    service_id: service_id.clone(),
+                                    metadata: None,
+                                    instances,
+                                    logic_instances: None,
+                                };
+                                cache.update_service(service);
+                            }
+
+                            // 发布变更事件
+                            change_manager.publish_unregister(&key, &instance);
+
+                            // 触发复制
+                            if let Some(ref repl_mgr) = replication_manager {
+                                repl_mgr.publish_unregister(key.clone());
+                            }
                         }
                     }
                 }

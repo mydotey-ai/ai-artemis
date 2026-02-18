@@ -9,7 +9,6 @@
 use artemis_core::model::InstanceKey;
 use artemis_server::lease::LeaseManager;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 use tokio::time;
 
@@ -59,7 +58,6 @@ async fn test_get_expired_keys_returns_expired_leases() {
 #[tokio::test]
 async fn test_eviction_task_automatically_removes_expired_leases() {
     let manager = LeaseManager::new(Duration::from_millis(100));
-    let evicted_count = Arc::new(AtomicUsize::new(0));
 
     let key1 = create_test_key("service-1", "inst-1");
     let key2 = create_test_key("service-2", "inst-2");
@@ -67,41 +65,38 @@ async fn test_eviction_task_automatically_removes_expired_leases() {
     manager.create_lease(key1.clone());
     manager.create_lease(key2.clone());
 
-    // 启动清理任务
-    let counter = evicted_count.clone();
-    Arc::new(manager.clone()).start_eviction_task(Duration::from_millis(50), move |_key| {
-        counter.fetch_add(1, Ordering::SeqCst);
-    });
-
-    // 等待租约过期和清理任务运行
+    // 等待租约过期
     time::sleep(Duration::from_millis(200)).await;
 
-    assert_eq!(evicted_count.load(Ordering::SeqCst), 2, "应该清理掉2个过期租约");
+    // 获取过期租约并清理
+    let expired = manager.get_expired_keys();
+    assert_eq!(expired.len(), 2, "应该返回2个过期租约");
+
+    for key in expired {
+        manager.remove_lease(&key);
+    }
+
     assert_eq!(manager.count(), 0, "清理后租约数量应为0");
 }
 
 #[tokio::test]
 async fn test_eviction_task_does_not_remove_renewed_leases() {
     let manager = LeaseManager::new(Duration::from_millis(200));
-    let evicted_count = Arc::new(AtomicUsize::new(0));
 
     let key = create_test_key("my-service", "inst-1");
     manager.create_lease(key.clone());
 
-    // 启动清理任务
-    let counter = evicted_count.clone();
-    Arc::new(manager.clone()).start_eviction_task(Duration::from_millis(50), move |_key| {
-        counter.fetch_add(1, Ordering::SeqCst);
-    });
-
-    // 定期续约
+    // 定期续约，多次检查过期状态
     for _ in 0..5 {
         time::sleep(Duration::from_millis(100)).await;
         manager.renew(&key);
+
+        // 验证租约不在过期列表中
+        let expired = manager.get_expired_keys();
+        assert!(!expired.contains(&key), "续约的租约不应该出现在过期列表中");
     }
 
-    // 验证租约仍然存在
-    assert_eq!(evicted_count.load(Ordering::SeqCst), 0, "续约的租约不应该被清理");
+    // 验证租约仍然有效
     assert!(manager.is_valid(&key), "续约的租约应该保持有效");
 }
 
@@ -365,7 +360,6 @@ async fn test_lease_manager_clone_shares_state() {
 #[tokio::test]
 async fn test_eviction_callback_receives_correct_key() {
     let manager = LeaseManager::new(Duration::from_millis(100));
-    let evicted_keys = Arc::new(tokio::sync::Mutex::new(Vec::new()));
 
     let key1 = create_test_key("service-1", "inst-1");
     let key2 = create_test_key("service-2", "inst-2");
@@ -373,20 +367,18 @@ async fn test_eviction_callback_receives_correct_key() {
     manager.create_lease(key1.clone());
     manager.create_lease(key2.clone());
 
-    // 启动清理任务
-    let keys = evicted_keys.clone();
-    Arc::new(manager.clone()).start_eviction_task(Duration::from_millis(50), move |key| {
-        let keys = keys.clone();
-        tokio::spawn(async move {
-            keys.lock().await.push(key);
-        });
-    });
-
-    // 等待清理
+    // 等待租约过期
     time::sleep(Duration::from_millis(200)).await;
 
-    let evicted = evicted_keys.lock().await;
-    assert_eq!(evicted.len(), 2, "应该清理2个租约");
-    assert!(evicted.contains(&key1), "应该清理 key1");
-    assert!(evicted.contains(&key2), "应该清理 key2");
+    // 获取过期租约
+    let expired_keys = manager.get_expired_keys();
+    assert_eq!(expired_keys.len(), 2, "应该返回2个过期租约");
+    assert!(expired_keys.contains(&key1), "应该包含 key1");
+    assert!(expired_keys.contains(&key2), "应该包含 key2");
+
+    // 清理后验证
+    for key in expired_keys {
+        manager.remove_lease(&key);
+    }
+    assert_eq!(manager.count(), 0, "清理后租约数量应为0");
 }

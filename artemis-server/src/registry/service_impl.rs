@@ -58,44 +58,13 @@ impl RegistryServiceImpl {
 
     /// 启动租约过期清理任务
     pub fn start_eviction_task(&self, cleanup_interval: std::time::Duration) {
-        use artemis_core::model::Service;
-
-        let repository = self.repository.clone();
-        let cache = self.cache.clone();
-        let change_manager = self.change_manager.clone();
-        let replication_manager = self.replication_manager.clone();
-
-        self.lease_manager.clone().start_eviction_task(cleanup_interval, move |key| {
-            info!("Evicting expired instance: {:?}", key);
-            let service_id = key.service_id.clone();
-
-            // 从 repository 移除实例
-            if let Some(instance) = repository.remove(&key) {
-                // 更新缓存
-                let instances = repository.get_instances_by_service(&service_id);
-                if instances.is_empty() {
-                    // 没有实例，删除缓存
-                    cache.remove_service(&service_id);
-                } else {
-                    // 有实例，更新缓存
-                    let service = Service {
-                        service_id: service_id.clone(),
-                        metadata: None,
-                        instances,
-                        logic_instances: None,
-                    };
-                    cache.update_service(service);
-                }
-
-                // 发布变更事件
-                change_manager.publish_unregister(&key, &instance);
-
-                // 触发复制
-                if let Some(ref repl_mgr) = replication_manager {
-                    repl_mgr.publish_unregister(key.clone());
-                }
-            }
-        });
+        self.lease_manager.clone().start_eviction_task(
+            cleanup_interval,
+            self.repository.clone(),
+            self.cache.clone(),
+            self.change_manager.clone(),
+            self.replication_manager.clone(),
+        );
     }
 
     // ===== Phase 23: 批量复制 API (独立方法,不属于 trait) =====
