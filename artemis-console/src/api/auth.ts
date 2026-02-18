@@ -316,13 +316,13 @@ export async function deleteUser(userId: string): Promise<ApiResponse<string>> {
 
 /**
  * 更改用户状态
- * PATCH /api/auth/users/:user_id/status
+ * PUT /api/auth/users/:user_id/status
  */
 export async function changeUserStatus(
   userId: string,
   status: string
 ): Promise<ApiResponse<UserDetails>> {
-  const response = await apiClient.patch(`/api/auth/users/${userId}/status`, { status });
+  const response = await apiClient.put(`/api/auth/users/${userId}/status`, { status });
   return response.data;
 }
 
