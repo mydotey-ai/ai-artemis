@@ -5,7 +5,7 @@ use crate::web::middleware;
 use crate::web::state::ManagementState;
 use axum::{
     middleware as axum_middleware,
-    routing::{delete, get, patch, post},
+    routing::{delete, get, patch, post, put},
     Router,
 };
 use tower_http::cors::CorsLayer;
@@ -40,6 +40,7 @@ pub fn management_routes(state: ManagementState) -> Router {
         .route("/api/auth/users", get(auth::list_users))
         .route("/api/auth/users", post(auth::create_user))
         .route("/api/auth/users/{user_id}", get(auth::get_user))
+        .route("/api/auth/users/{user_id}", put(auth::update_user))
         .route("/api/auth/users/{user_id}", patch(auth::update_user))
         .route("/api/auth/users/{user_id}", delete(auth::delete_user))
         .route(
