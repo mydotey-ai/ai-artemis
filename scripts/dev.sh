@@ -106,13 +106,23 @@ start_backend() {
         return 1
     fi
 
+    # 先编译后端（避免启动时才编译导致超时）
+    log_info "正在编译 Rust 后端 (这可能需要几分钟)..."
+    cd "${PROJECT_ROOT}"
+    if ! cargo build --release --bin artemis; then
+        log_error "Rust 编译失败"
+        cd "${SCRIPT_DIR}"
+        return 1
+    fi
+    cd "${SCRIPT_DIR}"
+
     # 启动集群
     log_info "启动 ${node_count} 节点后端集群 (端口: ${base_port}, 数据库: ${DB_TYPE})..."
     DB_TYPE="${DB_TYPE}" "${CLUSTER_SCRIPT}" start "${node_count}" "${base_port}"
 
     # 等待后端启动
     log_info "等待后端服务就绪..."
-    local max_attempts=30
+    local max_attempts=120
     local attempt=0
 
     while [ ${attempt} -lt ${max_attempts} ]; do
@@ -121,10 +131,14 @@ start_backend() {
             return 0
         fi
         attempt=$((attempt + 1))
+        if [ $((attempt % 10)) -eq 0 ]; then
+            log_info "仍在等待... (${attempt}/${max_attempts})"
+        fi
         sleep 1
     done
 
-    log_error "后端服务启动超时"
+    log_error "后端服务启动超时 (${max_attempts}秒)"
+    log_error "请查看日志: ${SCRIPT_DIR}/.cluster/logs/"
     return 1
 }
 

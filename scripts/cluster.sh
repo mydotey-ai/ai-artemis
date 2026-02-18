@@ -257,11 +257,20 @@ start_node() {
 
     log_info "启动节点 ${node_id} (端口: ${port})..."
 
-    # 构建并启动 Artemis
+    # 使用已编译的二进制启动 Artemis (避免重复编译)
     cd "${SCRIPT_DIR}"
 
+    # 检查二进制是否已存在
+    local artemis_binary="${SCRIPT_DIR}/../target/release/artemis"
+    if [ ! -f "${artemis_binary}" ]; then
+        log_warn "二进制文件不存在，正在编译..."
+        cd "${SCRIPT_DIR}/.."
+        cargo build --release --bin artemis
+        cd "${SCRIPT_DIR}"
+    fi
+
     # 使用配置文件启动服务器
-    RUST_LOG=info cargo run --release --bin artemis -- server --config "${config_file}" \
+    RUST_LOG=info "${artemis_binary}" server --config "${config_file}" \
         > "${log_file}" 2>&1 &
 
     local pid=$!
