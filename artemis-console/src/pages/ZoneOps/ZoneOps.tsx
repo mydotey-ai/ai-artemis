@@ -60,6 +60,7 @@ import {
   Info as InfoIcon,
   Cancel as CancelIcon,
   Replay as ReplayIcon,
+  Circle as CircleIcon,
 } from '@mui/icons-material';
 import type {
   ZoneOperationRecord,
@@ -198,6 +199,7 @@ const ZoneOps: React.FC = () => {
   // State
   const [operations, setOperations] = useState<ZoneOperationRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -226,9 +228,13 @@ const ZoneOps: React.FC = () => {
   });
 
   // Load operations
-  const loadOperations = useCallback(async () => {
+  const loadOperations = useCallback(async (isBackgroundRefresh = false) => {
     try {
-      setLoading(true);
+      if (!isBackgroundRefresh) {
+        setLoading(true);
+      } else {
+        setIsRefreshing(true);
+      }
       setError(null);
 
       const response = await zoneApi.queryZoneOperations(
@@ -253,14 +259,18 @@ const ZoneOps: React.FC = () => {
       console.error('Failed to load zone operations:', err);
       setError('Failed to load zone operations');
     } finally {
-      setLoading(false);
+      if (!isBackgroundRefresh) {
+        setLoading(false);
+      } else {
+        setIsRefreshing(false);
+      }
     }
   }, [regionFilter]);
 
   // Auto-refresh every 5 seconds
   useEffect(() => {
-    loadOperations();
-    const interval = setInterval(loadOperations, 5000);
+    loadOperations(false);
+    const interval = setInterval(() => loadOperations(true), 5000);
     return () => clearInterval(interval);
   }, [loadOperations]);
 
@@ -442,10 +452,34 @@ const ZoneOps: React.FC = () => {
   // Render
   return (
     <Box>
+      {/* Global styles for refresh animation */}
+      <style>
+        {`
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+          @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+          }
+        `}
+      </style>
+
       {/* Header */}
       <Box sx={{ marginBottom: 3 }}>
         <Typography variant="h4" component="h1" gutterBottom fontWeight={600}>
           Zone Operations
+          {isRefreshing && (
+            <CircleIcon
+              sx={{
+                fontSize: 12,
+                marginLeft: 1,
+                color: 'primary.main',
+                animation: 'pulse 1.5s ease-in-out infinite',
+              }}
+            />
+          )}
         </Typography>
         <Typography variant="body1" color="text.secondary">
           Manage zone-level batch operations (pull in/out entire zones)
@@ -579,8 +613,8 @@ const ZoneOps: React.FC = () => {
           <Box sx={{ display: 'flex', gap: 1 }}>
             <Tooltip title="Refresh">
               <span>
-                <IconButton onClick={loadOperations} disabled={loading}>
-                  <RefreshIcon />
+                <IconButton onClick={() => loadOperations(true)} disabled={loading || isRefreshing}>
+                  <RefreshIcon sx={isRefreshing ? { animation: 'spin 1s linear infinite' } : {}} />
                 </IconButton>
               </span>
             </Tooltip>

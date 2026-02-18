@@ -56,6 +56,7 @@ import {
   ExpandLess as ExpandLessIcon,
   ContentCopy as ContentCopyIcon,
   FilterList as FilterListIcon,
+  Circle as CircleIcon,
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
@@ -179,6 +180,7 @@ const AuditLog: React.FC = () => {
   // ===== State Management =====
   const [logs, setLogs] = useState<AuditLogType[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdateTime, setLastUpdateTime] = useState<Date>(new Date());
 
@@ -219,9 +221,13 @@ const AuditLog: React.FC = () => {
   /**
    * Fetch audit logs from API
    */
-  const fetchLogs = useCallback(async (): Promise<void> => {
+  const fetchLogs = useCallback(async (isBackgroundRefresh = false): Promise<void> => {
     try {
-      setLoading(true);
+      if (!isBackgroundRefresh) {
+        setLoading(true);
+      } else {
+        setIsRefreshing(true);
+      }
       setError(null);
 
       // Build query parameters
@@ -259,7 +265,11 @@ const AuditLog: React.FC = () => {
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
       console.error('Failed to fetch audit logs:', err);
     } finally {
-      setLoading(false);
+      if (!isBackgroundRefresh) {
+        setLoading(false);
+      } else {
+        setIsRefreshing(false);
+      }
     }
   }, [timeRangePreset, customStartTime, customEndTime, operatorFilter, resourceTypeFilter]);
 
@@ -299,7 +309,7 @@ const AuditLog: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchLogs();
+    fetchLogs(false);
   }, [fetchLogs]);
 
   // Auto-refresh every 30 seconds
@@ -307,7 +317,7 @@ const AuditLog: React.FC = () => {
     if (!autoRefresh) return;
 
     const interval = setInterval(() => {
-      fetchLogs();
+      fetchLogs(true);
     }, 30000);
 
     return () => clearInterval(interval);
@@ -475,7 +485,7 @@ const AuditLog: React.FC = () => {
    * Handle refresh button click
    */
   const handleRefresh = (): void => {
-    fetchLogs();
+    fetchLogs(false);
   };
 
   /**
@@ -934,10 +944,34 @@ const AuditLog: React.FC = () => {
 
   return (
     <Box>
+      {/* Global styles for refresh animation */}
+      <style>
+        {`
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+          @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+          }
+        `}
+      </style>
+
       {/* Page Header */}
       <Box sx={headerBoxSx}>
         <Typography variant="h4" component="h1" gutterBottom fontWeight={600}>
           Audit Log
+          {isRefreshing && (
+            <CircleIcon
+              sx={{
+                fontSize: 12,
+                marginLeft: 1,
+                color: 'primary.main',
+                animation: 'pulse 1.5s ease-in-out infinite',
+              }}
+            />
+          )}
         </Typography>
         <Typography variant="body1" color="text.secondary">
           View system operation logs and audit trails
@@ -983,8 +1017,8 @@ const AuditLog: React.FC = () => {
               </Tooltip>
               <Tooltip title="Refresh now">
                 <span>
-                  <IconButton color="primary" onClick={handleRefresh} disabled={loading}>
-                    <RefreshIcon />
+                  <IconButton color="primary" onClick={handleRefresh} disabled={loading || isRefreshing}>
+                    <RefreshIcon sx={isRefreshing ? { animation: 'spin 1s linear infinite' } : {}} />
                   </IconButton>
                 </span>
               </Tooltip>

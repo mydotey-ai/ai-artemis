@@ -43,6 +43,7 @@ import {
   AddCircleOutline as AddIcon,
   Assessment as AssessmentIcon,
   Article as ArticleIcon,
+  Circle as CircleIcon,
 } from '@mui/icons-material';
 import {
   LineChart,
@@ -135,6 +136,7 @@ const Dashboard: React.FC = () => {
   const [recentServices, setRecentServices] = useState<Service[]>([]);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [loading, setLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Default region and zone (can be configurable)
@@ -147,8 +149,12 @@ const Dashboard: React.FC = () => {
   /**
    * Fetch all dashboard data
    */
-  const fetchDashboardData = useCallback(async () => {
-    setLoading(true);
+  const fetchDashboardData = useCallback(async (isBackgroundRefresh = false) => {
+    if (!isBackgroundRefresh) {
+      setLoading(true);
+    } else {
+      setIsRefreshing(true);
+    }
     setError(null);
 
     try {
@@ -257,7 +263,11 @@ const Dashboard: React.FC = () => {
       console.error('Failed to fetch dashboard data:', err);
       setError('Failed to load dashboard data. Please try again.');
     } finally {
-      setLoading(false);
+      if (!isBackgroundRefresh) {
+        setLoading(false);
+      } else {
+        setIsRefreshing(false);
+      }
     }
   }, []);
 
@@ -265,11 +275,11 @@ const Dashboard: React.FC = () => {
    * Initial data load and auto-refresh setup
    */
   useEffect(() => {
-    fetchDashboardData();
+    fetchDashboardData(false);
 
     // Auto-refresh every 30 seconds
     const interval = setInterval(() => {
-      fetchDashboardData();
+      fetchDashboardData(true);
     }, 30000);
 
     return () => clearInterval(interval);
@@ -279,7 +289,7 @@ const Dashboard: React.FC = () => {
    * Handle manual refresh
    */
   const handleRefresh = () => {
-    fetchDashboardData();
+    fetchDashboardData(false);
   };
 
   // ===== WebSocket Event Handlers =====
@@ -295,8 +305,8 @@ const Dashboard: React.FC = () => {
         message: `New service registered: ${JSON.stringify(data)}`,
         duration: 5000,
       });
-      // Refresh dashboard data
-      fetchDashboardData();
+      // Refresh dashboard data (background refresh)
+      fetchDashboardData(true);
     },
     [showNotification, fetchDashboardData]
   );
@@ -312,8 +322,8 @@ const Dashboard: React.FC = () => {
         message: `Service unregistered: ${JSON.stringify(data)}`,
         duration: 5000,
       });
-      // Refresh dashboard data
-      fetchDashboardData();
+      // Refresh dashboard data (background refresh)
+      fetchDashboardData(true);
     },
     [showNotification, fetchDashboardData]
   );
@@ -329,8 +339,8 @@ const Dashboard: React.FC = () => {
         message: `New instance registered`,
         duration: 3000,
       });
-      // Refresh dashboard data
-      fetchDashboardData();
+      // Refresh dashboard data (background refresh)
+      fetchDashboardData(true);
     },
     [showNotification, fetchDashboardData]
   );
@@ -346,8 +356,8 @@ const Dashboard: React.FC = () => {
         message: `Instance unregistered`,
         duration: 3000,
       });
-      // Refresh dashboard data
-      fetchDashboardData();
+      // Refresh dashboard data (background refresh)
+      fetchDashboardData(true);
     },
     [showNotification, fetchDashboardData]
   );
@@ -364,8 +374,8 @@ const Dashboard: React.FC = () => {
         message: `Instance status changed: ${statusData.instance_id || 'unknown'} → ${statusData.status || 'unknown'}`,
         duration: 4000,
       });
-      // Refresh dashboard data
-      fetchDashboardData();
+      // Refresh dashboard data (background refresh)
+      fetchDashboardData(true);
     },
     [showNotification, fetchDashboardData]
   );
@@ -381,8 +391,8 @@ const Dashboard: React.FC = () => {
         message: `Cluster node added: ${JSON.stringify(data)}`,
         duration: 5000,
       });
-      // Refresh dashboard data
-      fetchDashboardData();
+      // Refresh dashboard data (background refresh)
+      fetchDashboardData(true);
     },
     [showNotification, fetchDashboardData]
   );
@@ -398,8 +408,8 @@ const Dashboard: React.FC = () => {
         message: `Cluster node removed: ${JSON.stringify(data)}`,
         duration: 5000,
       });
-      // Refresh dashboard data
-      fetchDashboardData();
+      // Refresh dashboard data (background refresh)
+      fetchDashboardData(true);
     },
     [showNotification, fetchDashboardData]
   );
@@ -468,11 +478,35 @@ const Dashboard: React.FC = () => {
 
   return (
     <Box>
+      {/* Global styles for refresh animation */}
+      <style>
+        {`
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+          @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+          }
+        `}
+      </style>
+
       {/* Page Header */}
       <Box sx={headerBoxSx}>
         <Box>
           <Typography variant="h4" component="h1" gutterBottom fontWeight={600}>
             Dashboard
+            {isRefreshing && (
+              <CircleIcon
+                sx={{
+                  fontSize: 12,
+                  marginLeft: 1,
+                  color: 'primary.main',
+                  animation: 'pulse 1.5s ease-in-out infinite',
+                }}
+              />
+            )}
           </Typography>
           <Typography variant="body2" color="text.secondary">
             Last updated: {lastUpdate.toLocaleTimeString()}
@@ -480,8 +514,8 @@ const Dashboard: React.FC = () => {
         </Box>
         <Tooltip title="Refresh">
           <span>
-            <IconButton onClick={handleRefresh} disabled={loading}>
-              <RefreshIcon />
+            <IconButton onClick={handleRefresh} disabled={loading || isRefreshing}>
+              <RefreshIcon sx={isRefreshing ? { animation: 'spin 1s linear infinite' } : {}} />
             </IconButton>
           </span>
         </Tooltip>
