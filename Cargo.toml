@@ -95,7 +95,7 @@ hostname = "0.4"
 humantime-serde = "1.1"
 
 # 监控和指标
-prometheus = "0.13"
+prometheus = "0.14"
 lazy_static = "1.5"
 
 # 配置解析
