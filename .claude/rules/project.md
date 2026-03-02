@@ -4,7 +4,7 @@
 
 **Artemis** 是一个使用 Rust 重写的微服务注册中心，完全兼容 10 年前在携程(ctrip.com)开发的 Java 版本。
 
-- **原始项目**: [artemis](https://github.com/mydotey/artemis) (Java 1.5.16)
+- **原始项目**: [artemis](https://github.com/mydotey/artemis) (Java 2.0.1)
 - **类似产品**: Netflix Eureka, Consul, Nacos
 - **核心目标**: 解决 Java 版本在托管大量服务实例时的严重 GC 停顿问题
 

@@ -688,7 +688,7 @@ cargo bench --package artemis-service
 - [架构设计](docs/plans/web-console-design.md) - Web Console 架构设计
 
 ### 原始项目
-- [Java 版本](https://github.com/mydotey/artemis) - 原始 Java 实现（1.5.16）
+- [Java 版本](https://github.com/mydotey/artemis) - 原始 Java 实现（2.0.1）
 - [本地 Java 代码](artemis-java/) - Java 版本本地副本（API 参考）
 
 ## 许可证
