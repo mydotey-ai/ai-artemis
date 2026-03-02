@@ -100,7 +100,7 @@ artemis-management/src/auth/
 
 **API 层** (3 个):
 ```
-artemis-web/src/
+artemis-server/src/
 ├── api/auth.rs               # 认证 API handlers
 └── middleware/
     ├── mod.rs                # 中间件模块
@@ -118,9 +118,9 @@ artemis-management/migrations/
 - `artemis-management/Cargo.toml` - 添加依赖
 - `artemis-management/src/lib.rs` - 导出模块
 - `artemis-management/src/db/mod.rs` - 迁移执行
-- `artemis-web/src/api/mod.rs` - 导出模块
-- `artemis-web/src/state.rs` - AppState 集成
-- `artemis-web/src/server.rs` - 路由配置
+- `artemis-server/src/api/mod.rs` - 导出模块
+- `artemis-server/src/state.rs` - AppState 集成
+- `artemis-server/src/server.rs` - 路由配置
 - `artemis/src/main.rs` - AuthManager 初始化
 
 ---

@@ -26,7 +26,7 @@
 
 ### Task 1: 操作日志数据模型
 
-**文件**: `artemis-core/src/model/audit.rs`
+**文件**: `artemis-common/src/model/audit.rs`
 
 ```rust
 #[derive(Debug, Clone, Serialize, Deserialize)]

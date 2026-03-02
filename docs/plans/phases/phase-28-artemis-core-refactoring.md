@@ -1,4 +1,4 @@
-# Phase 28: artemis-core 架构重构
+# Phase 28: artemis-common 架构重构
 
 **优先级**: P1 (架构优化)
 **状态**: ✅ **已完成** (2026-02-17)
@@ -9,11 +9,11 @@
 
 ## 📋 目标
 
-精简 artemis-core 为纯粹的核心协议层,将 server/management 特有功能迁移到对应 crate,实现清晰的模块职责划分和依赖关系优化。
+精简 artemis-common 为纯粹的核心协议层,将 server/management 特有功能迁移到对应 crate,实现清晰的模块职责划分和依赖关系优化。
 
 ### 核心目标
 
-1. **代码精简** - artemis-core 从 2193 行减少到 ~500 行 (78.5% 减少)
+1. **代码精简** - artemis-common 从 2193 行减少到 ~500 行 (78.5% 减少)
 2. **职责清晰** - core 只包含 client/server 共享的核心协议
 3. **依赖优化** - artemis-client 只依赖精简后的 core (编译更快)
 4. **架构优化** - 消除循环依赖,建立清晰的依赖层次
@@ -25,7 +25,7 @@
 ### Task 0: 基线验证和备份 ✅
 
 **验证内容**:
-- ✅ 创建重构分支 `refactor/artemis-core`
+- ✅ 创建重构分支 `refactor/artemis-common`
 - ✅ 验证编译状态 (零警告)
 - ✅ 验证测试状态 (756 个测试全部通过)
 - ✅ 记录当前代码行数 (2193 行)
@@ -34,9 +34,9 @@
 
 ### Task 1-2: 创建目标模块目录结构 ✅
 
-**artemis-server 新增模块**:
+**artemis-service 新增模块**:
 ```rust
-artemis-server/src/
+artemis-service/src/
 ├── model/
 │   ├── mod.rs
 │   ├── lease.rs
@@ -67,39 +67,39 @@ artemis-management/src/
 
 ---
 
-### Task 3-7: 迁移到 artemis-server ✅
+### Task 3-7: 迁移到 artemis-service ✅
 
 **迁移内容**:
 1. **config 模块** - 服务器配置管理
    ```bash
-   artemis-core/src/config/ -> artemis-server/src/config/
+   artemis-common/src/config/ -> artemis-service/src/config/
    ```
 
 2. **telemetry 模块** - 遥测和监控
    ```bash
-   artemis-core/src/telemetry/ -> artemis-server/src/telemetry/
+   artemis-common/src/telemetry/ -> artemis-service/src/telemetry/
    ```
 
 3. **utils.rs** - 工具函数
    ```bash
-   artemis-core/src/utils.rs -> artemis-server/src/utils.rs
+   artemis-common/src/utils.rs -> artemis-service/src/utils.rs
    ```
 
 4. **traits 模块** - RegistryService, DiscoveryService
    ```bash
-   artemis-core/src/traits/ -> artemis-server/src/traits/
+   artemis-common/src/traits/ -> artemis-service/src/traits/
    ```
 
 5. **model/lease.rs** - 租约管理模型
    ```bash
-   artemis-core/src/model/lease.rs -> artemis-server/src/model/lease.rs
+   artemis-common/src/model/lease.rs -> artemis-service/src/model/lease.rs
    ```
 
 **注意**: `model/replication.rs` 保留在 core (是 API 契约)
 
 **导入路径更新**:
-- artemis-server 内部: `use artemis_core::config` → `use crate::config`
-- artemis-web: `use artemis_core::traits` → `use artemis_server::traits`
+- artemis-service 内部: `use artemis_common::config` → `use crate::config`
+- artemis-server: `use artemis_common::traits` → `use artemis_server::traits`
 
 **状态**: ✅ 完成 - 所有编译错误已修复
 
@@ -109,12 +109,12 @@ artemis-management/src/
 
 **迁移内容**:
 ```bash
-artemis-core/src/model/management.rs -> artemis-management/src/model/management.rs
-artemis-core/src/model/group.rs      -> artemis-management/src/model/group.rs
-artemis-core/src/model/route.rs      -> artemis-management/src/model/route.rs
-artemis-core/src/model/zone.rs       -> artemis-management/src/model/zone.rs
-artemis-core/src/model/canary.rs     -> artemis-management/src/model/canary.rs
-artemis-core/src/model/status.rs     -> artemis-management/src/model/status.rs
+artemis-common/src/model/management.rs -> artemis-management/src/model/management.rs
+artemis-common/src/model/group.rs      -> artemis-management/src/model/group.rs
+artemis-common/src/model/route.rs      -> artemis-management/src/model/route.rs
+artemis-common/src/model/zone.rs       -> artemis-management/src/model/zone.rs
+artemis-common/src/model/canary.rs     -> artemis-management/src/model/canary.rs
+artemis-common/src/model/status.rs     -> artemis-management/src/model/status.rs
 ```
 
 **类型迁移**:
@@ -126,19 +126,19 @@ artemis-core/src/model/status.rs     -> artemis-management/src/model/status.rs
 - 所有管理相关的状态类型 (status.rs)
 
 **导入路径更新**:
-- artemis-management 内部: `use artemis_core::model::ServiceGroup` → `use crate::model::ServiceGroup`
-- artemis-server: `use artemis_core::model::RouteRule` → `use artemis_management::model::RouteRule`
-- artemis-web: `use artemis_core::model::ZoneOperation` → `use artemis_management::model::ZoneOperation`
+- artemis-management 内部: `use artemis_common::model::ServiceGroup` → `use crate::model::ServiceGroup`
+- artemis-service: `use artemis_common::model::RouteRule` → `use artemis_management::model::RouteRule`
+- artemis-server: `use artemis_common::model::ZoneOperation` → `use artemis_management::model::ZoneOperation`
 
 **状态**: ✅ 完成 - 6 个模型文件成功迁移
 
 ---
 
-### Task 9-11: 精简 artemis-core ✅
+### Task 9-11: 精简 artemis-common ✅
 
-**精简后的 artemis-core**:
+**精简后的 artemis-common**:
 ```rust
-artemis-core/
+artemis-common/
 ├── src/
 │   ├── lib.rs               # 只导出 error 和 model
 │   ├── error.rs             # ArtemisError (共享错误类型)
@@ -173,11 +173,11 @@ artemis-core/
 **编译验证**:
 ```bash
 # 按依赖顺序编译
-cargo build -p artemis-core          # ✅ 成功
-cargo build -p artemis-server        # ✅ 成功
+cargo build -p artemis-common          # ✅ 成功
+cargo build -p artemis-service        # ✅ 成功
 cargo build -p artemis-management    # ✅ 成功
 cargo build -p artemis-client        # ✅ 成功
-cargo build -p artemis-web           # ✅ 成功
+cargo build -p artemis-server           # ✅ 成功
 cargo build --workspace              # ✅ 成功,零警告
 ```
 
@@ -207,10 +207,10 @@ cargo fmt --all -- --check           # ✅ 格式正确
 
 **最终提交消息**:
 ```
-refactor: 完成 artemis-core 重构
+refactor: 完成 artemis-common 重构
 
-- artemis-core 精简为核心协议层 (~500 行)
-- server 特有功能迁移到 artemis-server
+- artemis-common 精简为核心协议层 (~500 行)
+- server 特有功能迁移到 artemis-service
 - management 模型迁移到 artemis-management
 - 所有测试通过,零编译警告
 
@@ -227,15 +227,15 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 
 | 指标 | 重构前 | 重构后 | 改进 |
 |------|--------|--------|------|
-| **artemis-core 代码行数** | 2193 行 | 471 行 | **-78.5%** |
-| **artemis-core 文件数** | 21 个文件 | 8 个文件 | **-62%** |
+| **artemis-common 代码行数** | 2193 行 | 471 行 | **-78.5%** |
+| **artemis-common 文件数** | 21 个文件 | 8 个文件 | **-62%** |
 | **编译速度** | 基准 | 更快 | Client 编译提速 |
 | **测试数量** | 756 个 | 811 个 | +55 个 |
 | **编译警告** | 0 | 0 | 保持零警告 |
 
 ### 模块重组
 
-**artemis-core (精简后 - 471 行)**:
+**artemis-common (精简后 - 471 行)**:
 ```
 ├── error.rs              # 错误类型定义
 ├── lib.rs                # 库入口
@@ -248,22 +248,22 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
     └── mod.rs
 ```
 
-**artemis-server (新增模块)**:
+**artemis-service (新增模块)**:
 ```
-├── config/               # 从 artemis-core 迁移
-├── telemetry/            # 从 artemis-core 迁移
-├── utils.rs              # 从 artemis-core 迁移
-├── traits/               # 从 artemis-core 迁移
+├── config/               # 从 artemis-common 迁移
+├── telemetry/            # 从 artemis-common 迁移
+├── utils.rs              # 从 artemis-common 迁移
+├── traits/               # 从 artemis-common 迁移
 │   ├── discovery.rs
 │   └── registry.rs
-└── model/                # 从 artemis-core 迁移
+└── model/                # 从 artemis-common 迁移
     ├── lease.rs
     └── replication.rs (已移回 core)
 ```
 
 **artemis-management (新增模块)**:
 ```
-└── model/                # 从 artemis-core 迁移
+└── model/                # 从 artemis-common 迁移
     ├── management.rs     # InstanceOperation, ServerOperation
     ├── group.rs          # ServiceGroup, GroupInstance
     ├── route.rs          # RouteRule, RouteStrategy
@@ -276,24 +276,24 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 
 **重构前**:
 ```
-artemis-client → artemis-core (2193 行,依赖过重)
-artemis-server → artemis-core (耦合严重)
-artemis-management → artemis-core (耦合严重)
+artemis-client → artemis-common (2193 行,依赖过重)
+artemis-service → artemis-common (耦合严重)
+artemis-management → artemis-common (耦合严重)
 ```
 
 **重构后**:
 ```
-artemis-client → artemis-core (471 行,依赖轻量)
-artemis-server → artemis-core
-artemis-management → artemis-core
-artemis-web → artemis-core + artemis-server + artemis-management
+artemis-client → artemis-common (471 行,依赖轻量)
+artemis-service → artemis-common
+artemis-management → artemis-common
+artemis-server → artemis-common + artemis-service + artemis-management
 ```
 
 **设计保证**:
 - ✅ 无循环依赖
 - ✅ 依赖关系清晰
-- ✅ artemis-core 是最底层,不依赖其他 artemis crate
-- ✅ artemis-management 不依赖 artemis-server
+- ✅ artemis-common 是最底层,不依赖其他 artemis crate
+- ✅ artemis-management 不依赖 artemis-service
 
 ---
 
@@ -301,12 +301,12 @@ artemis-web → artemis-core + artemis-server + artemis-management
 
 ### 1. 职责清晰化
 
-**artemis-core (核心协议层)**:
+**artemis-common (核心协议层)**:
 - 只包含 client/server 共享的核心数据模型
 - Instance, Service, RegisterRequest 等基础类型
 - 作为 API 契约,保持稳定
 
-**artemis-server (服务端基础设施)**:
+**artemis-service (服务端基础设施)**:
 - config: 服务器配置管理
 - telemetry: 遥测和监控
 - traits: 业务逻辑 trait (RegistryService, DiscoveryService)
@@ -350,12 +350,12 @@ artemis-web → artemis-core + artemis-server + artemis-management
 **重构后**:
 ```rust
 // artemis-client 只需要核心协议
-use artemis_core::{Instance, RegisterRequest, Service};
-use artemis_core::ArtemisError;
+use artemis_common::{Instance, RegisterRequest, Service};
+use artemis_common::ArtemisError;
 
 // 不再依赖 server 特有类型
-// use artemis_core::config::ServerConfig;  // ❌ 不可用
-// use artemis_core::traits::RegistryService;  // ❌ 不可用
+// use artemis_common::config::ServerConfig;  // ❌ 不可用
+// use artemis_common::traits::RegistryService;  // ❌ 不可用
 ```
 
 **收益**:
@@ -369,8 +369,8 @@ use artemis_core::ArtemisError;
 
 **重构后**:
 ```rust
-// artemis-server 使用自己的模块
-use artemis_core::model::{Instance, Service};
+// artemis-service 使用自己的模块
+use artemis_common::model::{Instance, Service};
 use crate::config::ServerConfig;           // 本地 config
 use crate::traits::RegistryService;        // 本地 traits
 use crate::model::Lease;                   // 本地 model
@@ -388,7 +388,7 @@ use crate::model::Lease;                   // 本地 model
 **重构后**:
 ```rust
 // artemis-management 使用自己的模型
-use artemis_core::model::Instance;        // 核心协议
+use artemis_common::model::Instance;        // 核心协议
 use crate::model::{                       // 管理模型
     ServiceGroup,
     RouteRule,
@@ -422,8 +422,8 @@ use crate::model::{                       // 管理模型
 
 ### 1. replication.rs 的位置
 
-**初始计划**: 移到 artemis-server
-**最终决策**: 保留在 artemis-core
+**初始计划**: 移到 artemis-service
+**最终决策**: 保留在 artemis-common
 
 **理由**:
 - replication 是 server 间的 API 契约
@@ -446,9 +446,9 @@ use crate::model::{                       // 管理模型
 ### 4. 依赖关系设计
 
 **原则**:
-- artemis-core 是最底层,不依赖任何其他 artemis crate
-- artemis-management 不依赖 artemis-server,保持依赖简单
-- artemis-web 整合所有功能,依赖 core/server/management
+- artemis-common 是最底层,不依赖任何其他 artemis crate
+- artemis-management 不依赖 artemis-service,保持依赖简单
+- artemis-server 整合所有功能,依赖 core/server/management
 
 ---
 
@@ -482,8 +482,8 @@ use crate::model::{                       // 管理模型
 
 ## 📚 相关文档
 
-- **设计文档**: `docs/plans/2026-02-17-artemis-core-refactoring-design.md` (可归档)
-- **实施计划**: `docs/plans/2026-02-17-artemis-core-refactoring.md` (可归档)
+- **设计文档**: `docs/plans/2026-02-17-artemis-common-refactoring-design.md` (可归档)
+- **实施计划**: `docs/plans/2026-02-17-artemis-common-refactoring.md` (可归档)
 - **实施路线图**: `docs/plans/implementation-roadmap.md` (已更新重构成果)
 - **项目规范**: `.claude/rules/dev-standards.md`
 
@@ -493,15 +493,15 @@ use crate::model::{                       // 管理模型
 
 - [x] 创建备份分支和基线验证
 - [x] 创建新模块目录结构
-- [x] 迁移 config 模块到 artemis-server
-- [x] 迁移 telemetry 模块到 artemis-server
-- [x] 迁移 utils.rs 到 artemis-server
-- [x] 迁移 traits 模块到 artemis-server
-- [x] 迁移 model/lease.rs 到 artemis-server
+- [x] 迁移 config 模块到 artemis-service
+- [x] 迁移 telemetry 模块到 artemis-service
+- [x] 迁移 utils.rs 到 artemis-service
+- [x] 迁移 traits 模块到 artemis-service
+- [x] 迁移 model/lease.rs 到 artemis-service
 - [x] 迁移 management 模型到 artemis-management
-- [x] 精简 artemis-core/src/model/request.rs
-- [x] 更新 artemis-core/src/model/mod.rs
-- [x] 更新 artemis-core/src/lib.rs
+- [x] 精简 artemis-common/src/model/request.rs
+- [x] 更新 artemis-common/src/model/mod.rs
+- [x] 更新 artemis-common/src/lib.rs
 - [x] 验证所有 crate 编译成功
 - [x] 验证所有测试通过
 - [x] 验证功能正常运行

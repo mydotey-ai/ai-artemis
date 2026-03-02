@@ -26,7 +26,7 @@
 
 ### Task 1: 标签数据模型
 
-**文件**: `artemis-core/src/model/group.rs`
+**文件**: `artemis-common/src/model/group.rs`
 
 ```rust
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -110,7 +110,7 @@ impl TagManager {
 
 ### Task 3: 分组标签 API (5个端点)
 
-**文件**: `artemis-web/src/api/management/group_tags.rs`
+**文件**: `artemis-server/src/api/management/group_tags.rs`
 
 #### API 端点
 

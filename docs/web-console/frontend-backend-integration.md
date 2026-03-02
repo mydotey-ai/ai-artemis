@@ -33,9 +33,9 @@ server: {
 - ✅ Token 读取和清除
 - ✅ Axios 请求拦截器自动添加 Authorization header
 
-### 后端部分 (artemis-web)
+### 后端部分 (artemis-server)
 
-**认证 API 端点**: `artemis-web/src/api/auth.rs`
+**认证 API 端点**: `artemis-server/src/api/auth.rs`
 - ✅ 18 个 HTTP handlers 全部实现
 - ✅ JWT 中间件保护受保护端点
 - ✅ 统一响应格式 `ApiResponse<T>`

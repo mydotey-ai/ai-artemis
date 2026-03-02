@@ -8,7 +8,7 @@
 //! - 错误率统计
 //! - 实时进度显示
 
-use artemis_core::model::{
+use artemis_common::model::{
     HeartbeatRequest, Instance, InstanceKey, InstanceStatus, RegisterRequest,
 };
 use clap::Parser;

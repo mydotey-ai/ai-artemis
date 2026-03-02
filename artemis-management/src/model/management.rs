@@ -1,4 +1,4 @@
-use artemis_core::model::{InstanceKey, ResponseStatus};
+use artemis_common::model::{InstanceKey, ResponseStatus};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 

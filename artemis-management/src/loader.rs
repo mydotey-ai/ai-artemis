@@ -75,7 +75,7 @@ impl ConfigLoader {
             for (group_id, weight) in group_ids {
                 if let Some(group) = self.group_manager.get_group(&group_id) {
                     // 创建service.rs的ServiceGroup (用于RouteRule.groups)
-                    let service_group = artemis_core::model::service::ServiceGroup {
+                    let service_group = artemis_common::model::service::ServiceGroup {
                         group_key: group.name.clone(),
                         weight: Some(weight),
                         instance_ids: None,

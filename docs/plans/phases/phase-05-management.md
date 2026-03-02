@@ -365,7 +365,7 @@ pub use management_filter::ManagementDiscoveryFilter;
 ```rust
 // artemis-management/src/filter/management_filter.rs
 use crate::dao::InstanceOperationDao;
-use artemis_core::model::{DiscoveryConfig, Service};
+use artemis_common::model::{DiscoveryConfig, Service};
 use async_trait::async_trait;
 use std::collections::HashSet;
 use std::sync::Arc;
@@ -434,7 +434,7 @@ impl artemis_server::discovery::DiscoveryFilter for ManagementDiscoveryFilter {
 mod tests {
     use super::*;
     use crate::dao::instance_operation::InstanceOperation;
-    use artemis_core::model::{Instance, InstanceStatus};
+    use artemis_common::model::{Instance, InstanceStatus};
     use chrono::Utc;
     use sqlx::MySqlPool;
 
@@ -501,14 +501,14 @@ pub use filter::ManagementDiscoveryFilter;
 pub use instance::InstanceOperationsManager;
 ```
 
-**Step 3: 添加artemis-server依赖**
+**Step 3: 添加artemis-service依赖**
 
 更新 `artemis-management/Cargo.toml`:
 
 ```toml
 [dependencies]
-artemis-core = { path = "../artemis-core" }
-artemis-server = { path = "../artemis-server" }  # 新增
+artemis-common = { path = "../artemis-common" }
+artemis-service = { path = "../artemis-service" }  # 新增
 sqlx = { workspace = true }
 # ... 其他依赖 ...
 ```

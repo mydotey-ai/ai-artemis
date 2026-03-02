@@ -19,13 +19,13 @@
 ```rust
 // tests/e2e_test.rs
 use artemis_client::{ClientConfig, DiscoveryClient, RegistryClient};
-use artemis_core::config::ArtemisConfig;
-use artemis_core::model::{Instance, InstanceStatus};
+use artemis_common::config::ArtemisConfig;
+use artemis_common::model::{Instance, InstanceStatus};
 use artemis_server::{
     cache::VersionedCacheManager, discovery::DiscoveryServiceImpl, lease::LeaseManager,
     ratelimiter::RateLimiter, registry::RegistryRepository, registry::RegistryServiceImpl,
 };
-use artemis_web::{AppState, WebServer};
+use artemis_server::{AppState, WebServer};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time;
@@ -33,18 +33,18 @@ use tokio::time;
 async fn start_test_server(port: u16) -> tokio::task::JoinHandle<()> {
     tokio::spawn(async move {
         let config = ArtemisConfig {
-            server: artemis_core::config::ServerConfig {
+            server: artemis_common::config::ServerConfig {
                 host: "127.0.0.1".to_string(),
                 port,
                 region_id: "test".to_string(),
                 zone_id: "zone".to_string(),
             },
-            registry: artemis_core::config::RegistryConfig {
+            registry: artemis_common::config::RegistryConfig {
                 lease_ttl: Duration::from_secs(30),
                 eviction_interval: Duration::from_secs(10),
                 rate_limit_rps: 1000,
             },
-            cluster: artemis_core::config::ClusterConfig {
+            cluster: artemis_common::config::ClusterConfig {
                 enabled: false,
                 peer_nodes: None,
             },
@@ -100,7 +100,7 @@ async fn test_full_lifecycle() {
     let reg_resp = registry_client.register(vec![instance.clone()]).await.unwrap();
     assert_eq!(
         reg_resp.response_status.error_code,
-        artemis_core::model::ErrorCode::Success
+        artemis_common::model::ErrorCode::Success
     );
 
     // 2. 服务发现
@@ -120,7 +120,7 @@ async fn test_full_lifecycle() {
         .unwrap();
     assert_eq!(
         hb_resp.response_status.error_code,
-        artemis_core::model::ErrorCode::Success
+        artemis_common::model::ErrorCode::Success
     );
 
     // 4. 注销
@@ -130,7 +130,7 @@ async fn test_full_lifecycle() {
         .unwrap();
     assert_eq!(
         unreg_resp.response_status.error_code,
-        artemis_core::model::ErrorCode::Success
+        artemis_common::model::ErrorCode::Success
     );
 }
 
@@ -222,8 +222,8 @@ criterion = { version = "0.5", features = ["async_tokio"] }
 
 ```rust
 // benches/performance.rs
-use artemis_core::model::{Instance, InstanceStatus, RegisterRequest};
-use artemis_core::traits::RegistryService;
+use artemis_common::model::{Instance, InstanceStatus, RegisterRequest};
+use artemis_common::traits::RegistryService;
 use artemis_server::{
     lease::LeaseManager, registry::RegistryRepository, registry::RegistryServiceImpl,
 };
@@ -315,15 +315,15 @@ name = "performance"
 harness = false
 ```
 
-**Step 4: 添加artemis-server依赖到bench**
+**Step 4: 添加artemis-service依赖到bench**
 
 创建 `Cargo.toml` 在workspace根目录（如果还没有bench配置）:
 
 ```toml
 [dev-dependencies]
 criterion = { workspace = true }
-artemis-core = { path = "artemis-core" }
-artemis-server = { path = "artemis-server" }
+artemis-common = { path = "artemis-common" }
+artemis-service = { path = "artemis-service" }
 tokio = { workspace = true }
 ```
 
@@ -353,13 +353,13 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 8.3: 添加健康检查和指标
 
 **Files:**
-- Update: `artemis-web/Cargo.toml`
-- Create: `artemis-web/src/api/metrics.rs`
+- Update: `artemis-server/Cargo.toml`
+- Create: `artemis-server/src/api/metrics.rs`
 
 **Step 1: 添加prometheus依赖**
 
 ```toml
-# artemis-web/Cargo.toml
+# artemis-server/Cargo.toml
 [dependencies]
 # ... existing dependencies ...
 prometheus = "0.13"
@@ -369,7 +369,7 @@ lazy_static = "1.4"
 **Step 2: 实现指标收集**
 
 ```rust
-// artemis-web/src/api/metrics.rs
+// artemis-server/src/api/metrics.rs
 use axum::{http::StatusCode, response::IntoResponse};
 use lazy_static::lazy_static;
 use prometheus::{register_int_counter, register_int_gauge, Encoder, IntCounter, IntGauge, TextEncoder};
@@ -404,7 +404,7 @@ pub async fn metrics() -> impl IntoResponse {
 
 **Step 3: 更新路由添加metrics端点**
 
-更新 `artemis-web/src/server.rs`:
+更新 `artemis-server/src/server.rs`:
 
 ```rust
 // 在路由中添加
@@ -414,7 +414,7 @@ pub async fn metrics() -> impl IntoResponse {
 **Step 4: 更新api/mod.rs**
 
 ```rust
-// artemis-web/src/api/mod.rs
+// artemis-server/src/api/mod.rs
 pub mod discovery;
 pub mod health;
 pub mod metrics;
@@ -424,7 +424,7 @@ pub mod registry;
 **Step 5: 提交**
 
 ```bash
-git add artemis-web/
+git add artemis-server/
 git commit -m "feat(web): add Prometheus metrics
 
 - Add register/heartbeat/discovery request counters
@@ -483,7 +483,7 @@ pub async fn run_server(config_path: &str) -> Result<()> {
 
 **Step 2: 更新WebServer支持优雅关闭**
 
-修改 `artemis-web/src/server.rs`:
+修改 `artemis-server/src/server.rs`:
 
 ```rust
 pub async fn run(self) -> anyhow::Result<()> {
@@ -529,7 +529,7 @@ async fn shutdown_signal() {
 **Step 3: 提交**
 
 ```bash
-git add artemis/src/commands/server.rs artemis-web/src/server.rs
+git add artemis/src/commands/server.rs artemis-server/src/server.rs
 git commit -m "feat: add graceful shutdown support
 
 - Handle CTRL+C and SIGTERM signals

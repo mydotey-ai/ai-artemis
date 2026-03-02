@@ -1,6 +1,6 @@
-# 阶段4: artemis-web实现
+# 阶段4: artemis-server实现
 
-> **For Claude:** HTTP/WebSocket API层，使用Axum框架。参考Java实现: `artemis-java/artemis-server/`
+> **For Claude:** HTTP/WebSocket API层，使用Axum框架。参考Java实现: `artemis-java/artemis-service/`
 
 **优先级**: P0 (必须完成)
 **状态**: ✅ **已完成** (2026-02-13)
@@ -12,14 +12,14 @@
 ## Task 4.1: 实现Web Server和路由
 
 **Files:**
-- Create: `artemis-web/src/server.rs`
-- Create: `artemis-web/src/state.rs`
-- Update: `artemis-web/src/lib.rs`
+- Create: `artemis-server/src/server.rs`
+- Create: `artemis-server/src/state.rs`
+- Update: `artemis-server/src/lib.rs`
 
 **Step 1: 实现AppState**
 
 ```rust
-// artemis-web/src/state.rs
+// artemis-server/src/state.rs
 use artemis_server::{
     cache::VersionedCacheManager, discovery::DiscoveryServiceImpl,
     ratelimiter::RateLimiter, registry::RegistryServiceImpl,
@@ -54,7 +54,7 @@ impl AppState {
 **Step 2: 实现Web Server**
 
 ```rust
-// artemis-web/src/server.rs
+// artemis-server/src/server.rs
 use crate::api;
 use crate::middleware::rate_limit_middleware;
 use crate::state::AppState;
@@ -118,7 +118,7 @@ impl WebServer {
 **Step 3: 更新lib.rs**
 
 ```rust
-// artemis-web/src/lib.rs
+// artemis-server/src/lib.rs
 //! Artemis Web - HTTP/WebSocket API层
 
 pub mod api;
@@ -134,7 +134,7 @@ pub use state::AppState;
 **Step 4: 提交**
 
 ```bash
-git add artemis-web/src/server.rs artemis-web/src/state.rs artemis-web/src/lib.rs
+git add artemis-server/src/server.rs artemis-server/src/state.rs artemis-server/src/lib.rs
 git commit -m "feat(web): implement WebServer and AppState
 
 - Add AppState with all service dependencies
@@ -150,13 +150,13 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 4.2: 实现Registry API Handlers
 
 **Files:**
-- Create: `artemis-web/src/api/mod.rs`
-- Create: `artemis-web/src/api/registry.rs`
+- Create: `artemis-server/src/api/mod.rs`
+- Create: `artemis-server/src/api/registry.rs`
 
 **Step 1: 创建api模块**
 
 ```rust
-// artemis-web/src/api/mod.rs
+// artemis-server/src/api/mod.rs
 pub mod discovery;
 pub mod health;
 pub mod registry;
@@ -165,10 +165,10 @@ pub mod registry;
 **Step 2: 实现Registry Handlers**
 
 ```rust
-// artemis-web/src/api/registry.rs
+// artemis-server/src/api/registry.rs
 use crate::state::AppState;
-use artemis_core::model::{HeartbeatRequest, RegisterRequest, UnregisterRequest};
-use artemis_core::traits::RegistryService;
+use artemis_common::model::{HeartbeatRequest, RegisterRequest, UnregisterRequest};
+use artemis_common::traits::RegistryService;
 use axum::{extract::State, http::StatusCode, Json};
 
 pub async fn register(
@@ -177,7 +177,7 @@ pub async fn register(
 ) -> (StatusCode, Json<serde_json::Value>) {
     let response = state.registry_service.register(request).await;
     let status = match response.response_status.error_code {
-        artemis_core::model::ErrorCode::Success => StatusCode::OK,
+        artemis_common::model::ErrorCode::Success => StatusCode::OK,
         _ => StatusCode::BAD_REQUEST,
     };
     (status, Json(serde_json::to_value(response).unwrap()))
@@ -189,7 +189,7 @@ pub async fn heartbeat(
 ) -> (StatusCode, Json<serde_json::Value>) {
     let response = state.registry_service.heartbeat(request).await;
     let status = match response.response_status.error_code {
-        artemis_core::model::ErrorCode::Success => StatusCode::OK,
+        artemis_common::model::ErrorCode::Success => StatusCode::OK,
         _ => StatusCode::BAD_REQUEST,
     };
     (status, Json(serde_json::to_value(response).unwrap()))
@@ -210,7 +210,7 @@ pub async fn unregister(
 **Step 3: 验证编译**
 
 ```bash
-cargo check -p artemis-web
+cargo check -p artemis-server
 ```
 
 Expected: 编译成功
@@ -218,7 +218,7 @@ Expected: 编译成功
 **Step 4: 提交**
 
 ```bash
-git add artemis-web/src/api/
+git add artemis-server/src/api/
 git commit -m "feat(web): implement Registry API handlers
 
 - Add register/heartbeat/unregister endpoints
@@ -233,18 +233,18 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 4.3: 实现Discovery API Handlers
 
 **Files:**
-- Create: `artemis-web/src/api/discovery.rs`
-- Create: `artemis-web/src/api/health.rs`
+- Create: `artemis-server/src/api/discovery.rs`
+- Create: `artemis-server/src/api/health.rs`
 
 **Step 1: 实现Discovery Handlers**
 
 ```rust
-// artemis-web/src/api/discovery.rs
+// artemis-server/src/api/discovery.rs
 use crate::state::AppState;
-use artemis_core::model::{
+use artemis_common::model::{
     GetServiceRequest, GetServicesDeltaRequest, GetServicesRequest,
 };
-use artemis_core::traits::DiscoveryService;
+use artemis_common::traits::DiscoveryService;
 use axum::{extract::State, http::StatusCode, Json};
 
 pub async fn get_service(
@@ -253,7 +253,7 @@ pub async fn get_service(
 ) -> (StatusCode, Json<serde_json::Value>) {
     let response = state.discovery_service.get_service(request).await;
     let status = match response.response_status.error_code {
-        artemis_core::model::ErrorCode::Success => StatusCode::OK,
+        artemis_common::model::ErrorCode::Success => StatusCode::OK,
         _ => StatusCode::NOT_FOUND,
     };
     (status, Json(serde_json::to_value(response).unwrap()))
@@ -285,7 +285,7 @@ pub async fn get_services_delta(
 **Step 2: 实现Health Check**
 
 ```rust
-// artemis-web/src/api/health.rs
+// artemis-server/src/api/health.rs
 use axum::{http::StatusCode, Json};
 use serde_json::json;
 
@@ -297,7 +297,7 @@ pub async fn health_check() -> (StatusCode, Json<serde_json::Value>) {
 **Step 3: 提交**
 
 ```bash
-git add artemis-web/src/api/
+git add artemis-server/src/api/
 git commit -m "feat(web): implement Discovery API and health check
 
 - Add get_service/get_services/get_services_delta endpoints
@@ -312,12 +312,12 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 4.4: 实现Middleware（限流和日志）
 
 **Files:**
-- Create: `artemis-web/src/middleware/mod.rs`
+- Create: `artemis-server/src/middleware/mod.rs`
 
 **Step 1: 实现Middleware**
 
 ```rust
-// artemis-web/src/middleware/mod.rs
+// artemis-server/src/middleware/mod.rs
 use crate::state::AppState;
 use axum::{
     extract::State,
@@ -342,7 +342,7 @@ pub async fn rate_limit_middleware<B>(
 **Step 2: 提交**
 
 ```bash
-git add artemis-web/src/middleware/
+git add artemis-server/src/middleware/
 git commit -m "feat(web): implement rate limiting middleware
 
 - Check rate limiter before processing requests
@@ -356,12 +356,12 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 4.5: 实现WebSocket支持（占位）
 
 **Files:**
-- Create: `artemis-web/src/websocket/mod.rs`
+- Create: `artemis-server/src/websocket/mod.rs`
 
 **Step 1: 创建WebSocket模块占位**
 
 ```rust
-// artemis-web/src/websocket/mod.rs
+// artemis-server/src/websocket/mod.rs
 //! WebSocket实时推送模块
 //!
 //! 用于向客户端实时推送服务变更
@@ -379,7 +379,7 @@ Expected: 所有crate编译成功
 **Step 3: 提交**
 
 ```bash
-git add artemis-web/src/websocket/
+git add artemis-server/src/websocket/
 git commit -m "feat(web): add WebSocket module placeholder
 
 - Create module structure for future real-time push
@@ -399,4 +399,4 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 - ✅ Health check实现
 - ✅ 限流中间件
 - ✅ WebSocket占位
-- ✅ `cargo check -p artemis-web` 通过
+- ✅ `cargo check -p artemis-server` 通过

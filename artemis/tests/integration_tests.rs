@@ -1,14 +1,14 @@
 // End-to-end integration tests for Artemis service registry
 use artemis_client::{ClientConfig, DiscoveryClient, RegistryClient};
-use artemis_core::model::{
+use artemis_common::model::{
     DiscoveryConfig, GetServiceRequest, HeartbeatRequest, Instance, InstanceStatus,
     RegisterRequest, UnregisterRequest,
 };
-use artemis_server::{
+use artemis_service::{
     RegistryServiceImpl, cache::VersionedCacheManager, change::InstanceChangeManager,
     discovery::DiscoveryServiceImpl, lease::LeaseManager, registry::RegistryRepository,
 };
-use artemis_web::state::AppState;
+use artemis_server::state::AppState;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
@@ -30,15 +30,15 @@ async fn start_test_server(port: u16) -> tokio::task::JoinHandle<()> {
         ));
         let discovery_service = Arc::new(DiscoveryServiceImpl::new(repository, cache.clone()));
 
-        let session_manager = Arc::new(artemis_web::websocket::SessionManager::new());
+        let session_manager = Arc::new(artemis_server::websocket::SessionManager::new());
         let instance_manager = Arc::new(artemis_management::InstanceManager::new());
         let group_manager = Arc::new(artemis_management::GroupManager::new());
         let route_manager = Arc::new(artemis_management::RouteManager::new());
         let zone_manager = Arc::new(artemis_management::ZoneManager::new());
         let canary_manager = Arc::new(artemis_management::CanaryManager::new());
         let audit_manager = Arc::new(artemis_management::AuditManager::new());
-        let load_balancer = Arc::new(artemis_server::discovery::LoadBalancer::new());
-        let status_service = Arc::new(artemis_server::StatusService::new(
+        let load_balancer = Arc::new(artemis_service::discovery::LoadBalancer::new());
+        let status_service = Arc::new(artemis_service::StatusService::new(
             None, // cluster_manager
             lease_manager.clone(),
             format!("test-node-{}", port),        // node_id
@@ -69,7 +69,7 @@ async fn start_test_server(port: u16) -> tokio::task::JoinHandle<()> {
         };
 
         let addr: SocketAddr = format!("127.0.0.1:{}", port).parse().unwrap();
-        let _ = artemis_web::server::run_server(app_state, addr).await;
+        let _ = artemis_server::server::run_server(app_state, addr).await;
     })
 }
 
@@ -106,7 +106,7 @@ async fn test_full_lifecycle() {
 
     let reg_req = RegisterRequest { instances: vec![instance.clone()] };
     let reg_resp = registry_client.register(reg_req).await.unwrap();
-    assert_eq!(reg_resp.response_status.error_code, artemis_core::model::ErrorCode::Success);
+    assert_eq!(reg_resp.response_status.error_code, artemis_common::model::ErrorCode::Success);
 
     // 2. 服务发现
     let discovery_client = Arc::new(DiscoveryClient::new(config));
@@ -130,12 +130,12 @@ async fn test_full_lifecycle() {
     // 3. 心跳
     let hb_req = HeartbeatRequest { instance_keys: vec![instance.key()] };
     let hb_resp = registry_client.heartbeat(hb_req).await.unwrap();
-    assert_eq!(hb_resp.response_status.error_code, artemis_core::model::ErrorCode::Success);
+    assert_eq!(hb_resp.response_status.error_code, artemis_common::model::ErrorCode::Success);
 
     // 4. 注销
     let unreg_req = UnregisterRequest { instance_keys: vec![instance.key()] };
     let unreg_resp = registry_client.unregister(unreg_req).await.unwrap();
-    assert_eq!(unreg_resp.response_status.error_code, artemis_core::model::ErrorCode::Success);
+    assert_eq!(unreg_resp.response_status.error_code, artemis_common::model::ErrorCode::Success);
 }
 
 #[tokio::test]
@@ -227,7 +227,7 @@ async fn test_heartbeat_keeps_instance_alive() {
     // 发送心跳
     let hb_req = HeartbeatRequest { instance_keys: vec![instance.key()] };
     let hb_resp = registry_client.heartbeat(hb_req).await.unwrap();
-    assert_eq!(hb_resp.response_status.error_code, artemis_core::model::ErrorCode::Success);
+    assert_eq!(hb_resp.response_status.error_code, artemis_common::model::ErrorCode::Success);
 
     // 验证实例仍然活跃
     let discovery_client = Arc::new(DiscoveryClient::new(config));

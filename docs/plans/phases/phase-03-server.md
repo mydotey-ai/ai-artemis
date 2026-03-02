@@ -1,4 +1,4 @@
-# 阶段3: artemis-server实现
+# 阶段3: artemis-service实现
 
 > **For Claude:** 业务逻辑核心，包括注册中心、服务发现、租约管理、缓存、限流等。参考Java实现: `artemis-java/artemis-service/`
 
@@ -12,13 +12,13 @@
 ## Task 3.1: 实现RegistryRepository（内存存储）
 
 **Files:**
-- Create: `artemis-server/src/registry/mod.rs`
-- Create: `artemis-server/src/registry/repository.rs`
+- Create: `artemis-service/src/registry/mod.rs`
+- Create: `artemis-service/src/registry/repository.rs`
 
 **Step 1: 创建registry模块**
 
 ```rust
-// artemis-server/src/registry/mod.rs
+// artemis-service/src/registry/mod.rs
 pub mod repository;
 pub mod service_impl;
 
@@ -31,8 +31,8 @@ pub use service_impl::RegistryServiceImpl;
 参考Java: `RegistryRepository.java`
 
 ```rust
-// artemis-server/src/registry/repository.rs
-use artemis_core::model::{Instance, InstanceKey};
+// artemis-service/src/registry/repository.rs
+use artemis_common::model::{Instance, InstanceKey};
 use dashmap::DashMap;
 use std::sync::Arc;
 
@@ -99,7 +99,7 @@ impl Default for RegistryRepository {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use artemis_core::model::InstanceStatus;
+    use artemis_common::model::InstanceStatus;
 
     fn create_test_instance(service_id: &str, instance_id: &str) -> Instance {
         Instance {
@@ -160,7 +160,7 @@ mod tests {
 **Step 3: 运行测试**
 
 ```bash
-cargo test -p artemis-server
+cargo test -p artemis-service
 ```
 
 Expected: 3 tests passed
@@ -168,7 +168,7 @@ Expected: 3 tests passed
 **Step 4: 提交**
 
 ```bash
-git add artemis-server/src/registry/
+git add artemis-service/src/registry/
 git commit -m "feat(server): implement RegistryRepository
 
 - Use DashMap for lock-free concurrent access
@@ -184,13 +184,13 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 3.2: 实现LeaseManager（租约管理）
 
 **Files:**
-- Create: `artemis-server/src/lease/mod.rs`
-- Create: `artemis-server/src/lease/manager.rs`
+- Create: `artemis-service/src/lease/mod.rs`
+- Create: `artemis-service/src/lease/manager.rs`
 
 **Step 1: 创建lease模块**
 
 ```rust
-// artemis-server/src/lease/mod.rs
+// artemis-service/src/lease/mod.rs
 pub mod manager;
 
 pub use manager::LeaseManager;
@@ -201,8 +201,8 @@ pub use manager::LeaseManager;
 参考Java: `LeaseManager.java`
 
 ```rust
-// artemis-server/src/lease/manager.rs
-use artemis_core::model::{InstanceKey, Lease};
+// artemis-service/src/lease/manager.rs
+use artemis_common::model::{InstanceKey, Lease};
 use dashmap::DashMap;
 use std::sync::Arc;
 use std::time::Duration;
@@ -349,7 +349,7 @@ mod tests {
 **Step 3: 运行测试**
 
 ```bash
-cargo test -p artemis-server
+cargo test -p artemis-service
 ```
 
 Expected: 所有测试通过
@@ -357,7 +357,7 @@ Expected: 所有测试通过
 **Step 4: 提交**
 
 ```bash
-git add artemis-server/src/lease/
+git add artemis-service/src/lease/
 git commit -m "feat(server): implement LeaseManager
 
 - DashMap-based concurrent lease storage
@@ -374,13 +374,13 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 3.3: 实现VersionedCacheManager（版本化缓存）
 
 **Files:**
-- Create: `artemis-server/src/cache/mod.rs`
-- Create: `artemis-server/src/cache/versioned.rs`
+- Create: `artemis-service/src/cache/mod.rs`
+- Create: `artemis-service/src/cache/versioned.rs`
 
 **Step 1: 创建cache模块**
 
 ```rust
-// artemis-server/src/cache/mod.rs
+// artemis-service/src/cache/mod.rs
 pub mod versioned;
 
 pub use versioned::VersionedCacheManager;
@@ -391,8 +391,8 @@ pub use versioned::VersionedCacheManager;
 参考Java: `VersionedCacheManager.java`
 
 ```rust
-// artemis-server/src/cache/versioned.rs
-use artemis_core::model::Service;
+// artemis-service/src/cache/versioned.rs
+use artemis_common::model::Service;
 use dashmap::DashMap;
 use parking_lot::RwLock;
 use std::sync::Arc;
@@ -522,7 +522,7 @@ mod tests {
 **Step 3: 运行测试**
 
 ```bash
-cargo test -p artemis-server
+cargo test -p artemis-service
 ```
 
 Expected: 所有测试通过
@@ -530,7 +530,7 @@ Expected: 所有测试通过
 **Step 4: 提交**
 
 ```bash
-git add artemis-server/src/cache/
+git add artemis-service/src/cache/
 git commit -m "feat(server): implement VersionedCacheManager
 
 - Version-tracked service cache
@@ -547,13 +547,13 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 3.4: 实现RateLimiter（限流器）
 
 **Files:**
-- Create: `artemis-server/src/ratelimiter/mod.rs`
-- Create: `artemis-server/src/ratelimiter/limiter.rs`
+- Create: `artemis-service/src/ratelimiter/mod.rs`
+- Create: `artemis-service/src/ratelimiter/limiter.rs`
 
 **Step 1: 创建ratelimiter模块**
 
 ```rust
-// artemis-server/src/ratelimiter/mod.rs
+// artemis-service/src/ratelimiter/mod.rs
 pub mod limiter;
 
 pub use limiter::RateLimiter;
@@ -564,7 +564,7 @@ pub use limiter::RateLimiter;
 参考Java: `RateLimiterManager.java`
 
 ```rust
-// artemis-server/src/ratelimiter/limiter.rs
+// artemis-service/src/ratelimiter/limiter.rs
 use governor::{
     clock::DefaultClock,
     state::{InMemoryState, NotKeyed},
@@ -624,7 +624,7 @@ mod tests {
 **Step 3: 运行测试**
 
 ```bash
-cargo test -p artemis-server
+cargo test -p artemis-service
 ```
 
 Expected: 测试通过
@@ -632,7 +632,7 @@ Expected: 测试通过
 **Step 4: 提交**
 
 ```bash
-git add artemis-server/src/ratelimiter/
+git add artemis-service/src/ratelimiter/
 git commit -m "feat(server): implement RateLimiter
 
 - Use governor crate for token bucket algorithm
@@ -648,22 +648,22 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 3.5: 实现RegistryServiceImpl
 
 **Files:**
-- Create: `artemis-server/src/registry/service_impl.rs`
-- Update: `artemis-server/src/lib.rs`
+- Create: `artemis-service/src/registry/service_impl.rs`
+- Update: `artemis-service/src/lib.rs`
 
 **Step 1: 实现RegistryServiceImpl**
 
 参考Java: `RegistryServiceImpl.java`
 
 ```rust
-// artemis-server/src/registry/service_impl.rs
+// artemis-service/src/registry/service_impl.rs
 use super::repository::RegistryRepository;
 use crate::lease::LeaseManager;
-use artemis_core::model::{
+use artemis_common::model::{
     ErrorCode, HeartbeatRequest, HeartbeatResponse, RegisterRequest, RegisterResponse,
     ResponseStatus, UnregisterRequest, UnregisterResponse,
 };
-use artemis_core::traits::RegistryService;
+use artemis_common::traits::RegistryService;
 use async_trait::async_trait;
 use std::sync::Arc;
 use tracing::{info, warn};
@@ -745,7 +745,7 @@ impl RegistryService for RegistryServiceImpl {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use artemis_core::model::{Instance, InstanceStatus};
+    use artemis_common::model::{Instance, InstanceStatus};
     use std::time::Duration;
 
     fn create_test_instance() -> Instance {
@@ -834,7 +834,7 @@ mod tests {
 **Step 2: 更新lib.rs**
 
 ```rust
-// artemis-server/src/lib.rs
+// artemis-service/src/lib.rs
 //! Artemis Server - 业务逻辑实现
 
 pub mod cache;
@@ -852,7 +852,7 @@ pub use registry::RegistryServiceImpl;
 **Step 3: 运行测试**
 
 ```bash
-cargo test -p artemis-server
+cargo test -p artemis-service
 ```
 
 Expected: 所有测试通过
@@ -860,7 +860,7 @@ Expected: 所有测试通过
 **Step 4: 提交**
 
 ```bash
-git add artemis-server/
+git add artemis-service/
 git commit -m "feat(server): implement RegistryServiceImpl
 
 - Implement RegistryService trait
@@ -876,13 +876,13 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 3.6: 实现DiscoveryServiceImpl
 
 **Files:**
-- Create: `artemis-server/src/discovery/mod.rs`
-- Create: `artemis-server/src/discovery/service_impl.rs`
+- Create: `artemis-service/src/discovery/mod.rs`
+- Create: `artemis-service/src/discovery/service_impl.rs`
 
 **Step 1: 创建discovery模块**
 
 ```rust
-// artemis-server/src/discovery/mod.rs
+// artemis-service/src/discovery/mod.rs
 pub mod service_impl;
 pub mod filter;
 
@@ -894,14 +894,14 @@ pub use service_impl::DiscoveryServiceImpl;
 参考Java: `DiscoveryServiceImpl.java`
 
 ```rust
-// artemis-server/src/discovery/service_impl.rs
+// artemis-service/src/discovery/service_impl.rs
 use crate::cache::VersionedCacheManager;
 use crate::registry::RegistryRepository;
-use artemis_core::model::{
+use artemis_common::model::{
     ErrorCode, GetServiceRequest, GetServiceResponse, GetServicesDeltaRequest,
     GetServicesDeltaResponse, GetServicesRequest, GetServicesResponse, ResponseStatus, Service,
 };
-use artemis_core::traits::DiscoveryService;
+use artemis_common::traits::DiscoveryService;
 use async_trait::async_trait;
 use std::sync::Arc;
 
@@ -1020,7 +1020,7 @@ impl DiscoveryService for DiscoveryServiceImpl {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use artemis_core::model::{DiscoveryConfig, Instance, InstanceStatus};
+    use artemis_common::model::{DiscoveryConfig, Instance, InstanceStatus};
 
     fn create_test_instance(service_id: &str) -> Instance {
         Instance {
@@ -1068,14 +1068,14 @@ mod tests {
 **Step 3: 创建filter占位**
 
 ```rust
-// artemis-server/src/discovery/filter.rs
+// artemis-service/src/discovery/filter.rs
 //! 服务发现过滤器（后续实现）
 ```
 
 **Step 4: 运行测试**
 
 ```bash
-cargo test -p artemis-server
+cargo test -p artemis-service
 ```
 
 Expected: 测试通过
@@ -1083,7 +1083,7 @@ Expected: 测试通过
 **Step 5: 提交**
 
 ```bash
-git add artemis-server/src/discovery/
+git add artemis-service/src/discovery/
 git commit -m "feat(server): implement DiscoveryServiceImpl
 
 - Implement DiscoveryService trait
@@ -1100,14 +1100,14 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 3.7: 实现DiscoveryFilter机制
 
 **Files:**
-- Update: `artemis-server/src/discovery/filter.rs`
-- Update: `artemis-server/src/discovery/service_impl.rs`
+- Update: `artemis-service/src/discovery/filter.rs`
+- Update: `artemis-service/src/discovery/service_impl.rs`
 
 **Step 1: 实现DiscoveryFilter trait**
 
 ```rust
-// artemis-server/src/discovery/filter.rs
-use artemis_core::model::{DiscoveryConfig, Service};
+// artemis-service/src/discovery/filter.rs
+use artemis_common::model::{DiscoveryConfig, Service};
 use async_trait::async_trait;
 use std::sync::Arc;
 
@@ -1155,7 +1155,7 @@ impl Default for DiscoveryFilterChain {
 **Step 2: 实现基础过滤器示例**
 
 ```rust
-// artemis-server/src/discovery/filter.rs (继续)
+// artemis-service/src/discovery/filter.rs (继续)
 
 /// 示例：根据实例状态过滤
 pub struct StatusFilter;
@@ -1165,7 +1165,7 @@ impl DiscoveryFilter for StatusFilter {
     async fn filter(&self, service: &mut Service, _config: &DiscoveryConfig) -> Result<()> {
         // 只保留状态为Up的实例
         service.instances.retain(|inst| {
-            matches!(inst.status, artemis_core::model::InstanceStatus::Up)
+            matches!(inst.status, artemis_common::model::InstanceStatus::Up)
         });
         Ok(())
     }
@@ -1175,7 +1175,7 @@ impl DiscoveryFilter for StatusFilter {
 **Step 3: 在DiscoveryServiceImpl中集成过滤器**
 
 ```rust
-// artemis-server/src/discovery/service_impl.rs
+// artemis-service/src/discovery/service_impl.rs
 use super::filter::{DiscoveryFilterChain, StatusFilter};
 use std::sync::Arc;
 
@@ -1221,7 +1221,7 @@ impl DiscoveryServiceImpl {
 **Step 4: 更新filter模块导出**
 
 ```rust
-// artemis-server/src/discovery/mod.rs
+// artemis-service/src/discovery/mod.rs
 pub mod filter;
 pub mod service_impl;
 
@@ -1232,7 +1232,7 @@ pub use service_impl::DiscoveryServiceImpl;
 **Step 5: 运行测试**
 
 ```bash
-cargo test -p artemis-server
+cargo test -p artemis-service
 ```
 
 Expected: 测试通过
@@ -1240,7 +1240,7 @@ Expected: 测试通过
 **Step 6: 提交**
 
 ```bash
-git add artemis-server/src/discovery/
+git add artemis-service/src/discovery/
 git commit -m "feat(server): implement DiscoveryFilter mechanism
 
 - Add DiscoveryFilter trait for extensible filtering
@@ -1257,13 +1257,13 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 3.8: 完善VersionedCacheManager增量差异计算
 
 **Files:**
-- Update: `artemis-server/src/cache/versioned.rs`
+- Update: `artemis-service/src/cache/versioned.rs`
 
 **Step 1: 实现compute_delta方法**
 
 ```rust
-// artemis-server/src/cache/versioned.rs
-use artemis_core::model::{ChangeType, InstanceChange};
+// artemis-service/src/cache/versioned.rs
+use artemis_common::model::{ChangeType, InstanceChange};
 use chrono::Utc;
 use std::collections::{HashMap, HashSet};
 
@@ -1398,7 +1398,7 @@ impl VersionedCacheManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use artemis_core::model::InstanceStatus;
+    use artemis_common::model::InstanceStatus;
 
     fn create_test_service(id: &str, instance_ids: &[&str]) -> Service {
         Service {
@@ -1511,7 +1511,7 @@ async fn get_services_delta(
 **Step 3: 运行测试**
 
 ```bash
-cargo test -p artemis-server test_compute_delta
+cargo test -p artemis-service test_compute_delta
 ```
 
 Expected: 新增的3个测试通过
@@ -1519,8 +1519,8 @@ Expected: 新增的3个测试通过
 **Step 4: 提交**
 
 ```bash
-git add artemis-server/src/cache/
-git add artemis-server/src/discovery/service_impl.rs
+git add artemis-service/src/cache/
+git add artemis-service/src/discovery/service_impl.rs
 git commit -m "feat(server): implement complete delta computation
 
 - Implement compute_delta for service diff calculation
@@ -1537,14 +1537,14 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 3.9: 实现集群和复制模块（占位）
 
 **Files:**
-- Create: `artemis-server/src/cluster/mod.rs`
-- Create: `artemis-server/src/replication/mod.rs`
-- Create: `artemis-server/src/storage/mod.rs`
+- Create: `artemis-service/src/cluster/mod.rs`
+- Create: `artemis-service/src/replication/mod.rs`
+- Create: `artemis-service/src/storage/mod.rs`
 
 **Step 1: 创建cluster模块占位**
 
 ```rust
-// artemis-server/src/cluster/mod.rs
+// artemis-service/src/cluster/mod.rs
 //! 集群管理模块
 //!
 //! 负责集群节点发现、健康检查等功能
@@ -1554,7 +1554,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 **Step 2: 创建replication模块占位**
 
 ```rust
-// artemis-server/src/replication/mod.rs
+// artemis-service/src/replication/mod.rs
 //! 数据复制模块
 //!
 //! 负责节点间的数据同步
@@ -1564,7 +1564,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 **Step 3: 创建storage模块占位**
 
 ```rust
-// artemis-server/src/storage/mod.rs
+// artemis-service/src/storage/mod.rs
 //! 存储抽象层
 //!
 //! 提供持久化存储接口
@@ -1574,7 +1574,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 **Step 4: 验证编译**
 
 ```bash
-cargo check -p artemis-server
+cargo check -p artemis-service
 ```
 
 Expected: 编译成功
@@ -1582,7 +1582,7 @@ Expected: 编译成功
 **Step 5: 提交**
 
 ```bash
-git add artemis-server/src/cluster/ artemis-server/src/replication/ artemis-server/src/storage/
+git add artemis-service/src/cluster/ artemis-service/src/replication/ artemis-service/src/storage/
 git commit -m "feat(server): add cluster, replication, storage module placeholders
 
 - Create module structure for future implementation
@@ -1596,14 +1596,14 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 3.10: 集成测试和文档
 
 **Files:**
-- Create: `artemis-server/tests/integration_test.rs`
+- Create: `artemis-service/tests/integration_test.rs`
 
 **Step 1: 创建集成测试**
 
 ```rust
-// artemis-server/tests/integration_test.rs
-use artemis_core::model::{Instance, InstanceStatus, RegisterRequest};
-use artemis_core::traits::RegistryService;
+// artemis-service/tests/integration_test.rs
+use artemis_common::model::{Instance, InstanceStatus, RegisterRequest};
+use artemis_common::traits::RegistryService;
 use artemis_server::cache::VersionedCacheManager;
 use artemis_server::discovery::DiscoveryServiceImpl;
 use artemis_server::lease::LeaseManager;
@@ -1653,8 +1653,8 @@ async fn test_full_registry_flow() {
     discovery_service.refresh_cache();
 
     // 3. 服务发现
-    use artemis_core::model::{DiscoveryConfig, GetServiceRequest};
-    use artemis_core::traits::DiscoveryService;
+    use artemis_common::model::{DiscoveryConfig, GetServiceRequest};
+    use artemis_common::traits::DiscoveryService;
 
     let get_req = GetServiceRequest {
         discovery_config: DiscoveryConfig {
@@ -1675,7 +1675,7 @@ async fn test_full_registry_flow() {
 **Step 2: 运行集成测试**
 
 ```bash
-cargo test -p artemis-server --test integration_test
+cargo test -p artemis-service --test integration_test
 ```
 
 Expected: 集成测试通过
@@ -1683,7 +1683,7 @@ Expected: 集成测试通过
 **Step 3: 提交**
 
 ```bash
-git add artemis-server/tests/
+git add artemis-service/tests/
 git commit -m "test(server): add integration tests
 
 - Test full registry and discovery flow
@@ -1706,5 +1706,5 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 - ✅ DiscoveryFilter机制完整实现
 - ✅ 增量delta计算完整实现
 - ✅ 集群和复制模块占位
-- ✅ `cargo test -p artemis-server` 全部通过
+- ✅ `cargo test -p artemis-service` 全部通过
 - ✅ 集成测试验证

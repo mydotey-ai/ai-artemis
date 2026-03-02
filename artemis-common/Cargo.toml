@@ -1,0 +1,16 @@
+[package]
+name = "artemis-common"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+thiserror = { workspace = true }
+async-trait = { workspace = true }
+parking_lot = { workspace = true }
+uuid = { workspace = true }
+humantime-serde = { workspace = true }
+tracing = { workspace = true }
+toml = { workspace = true }

@@ -51,13 +51,13 @@
 
 ### 核心组件
 
-**数据模型层** (artemis-core):
+**数据模型层** (artemis-common):
 - ✅ ServiceGroup, GroupStatus, GroupType
 - ✅ RouteRule, RouteRuleStatus, RouteStrategy
 - ✅ RouteRuleGroup (路由规则分组关联)
 - ✅ GroupTag (分组标签)
 
-**路由引擎** (artemis-server/routing):
+**路由引擎** (artemis-service/routing):
 - ✅ WeightedRoundRobinStrategy - 加权轮询策略
 - ✅ CloseByVisitStrategy - 就近访问策略
 - ✅ RouteEngine - 统一路由引擎
@@ -69,7 +69,7 @@
 - ✅ 分组标签管理
 - ✅ 路由规则分组关联
 
-**HTTP API 层** (artemis-web/src/api/routing.rs):
+**HTTP API 层** (artemis-server/src/api/routing.rs):
 - ✅ 20 个 REST API 端点
 - ✅ 完整的请求/响应模型
 - ✅ 错误处理和验证
@@ -88,14 +88,14 @@
 
 | 模块 | 文件 | 状态 |
 |------|------|------|
-| 数据模型 | `artemis-core/src/model/group.rs` | ✅ 完成 |
-| 数据模型 | `artemis-core/src/model/route.rs` | ✅ 完成 |
-| 路由策略 | `artemis-server/src/routing/strategy.rs` | ✅ 完成 |
-| 路由引擎 | `artemis-server/src/routing/engine.rs` | ✅ 完成 |
-| 路由上下文 | `artemis-server/src/routing/context.rs` | ✅ 完成 |
+| 数据模型 | `artemis-common/src/model/group.rs` | ✅ 完成 |
+| 数据模型 | `artemis-common/src/model/route.rs` | ✅ 完成 |
+| 路由策略 | `artemis-service/src/routing/strategy.rs` | ✅ 完成 |
+| 路由引擎 | `artemis-service/src/routing/engine.rs` | ✅ 完成 |
+| 路由上下文 | `artemis-service/src/routing/context.rs` | ✅ 完成 |
 | 分组管理 | `artemis-management/src/group.rs` | ✅ 完成 |
 | 规则管理 | `artemis-management/src/route.rs` | ✅ 完成 |
-| HTTP API | `artemis-web/src/api/routing.rs` | ✅ 完成 |
+| HTTP API | `artemis-server/src/api/routing.rs` | ✅ 完成 |
 
 ### 测试文件
 
@@ -106,7 +106,7 @@
 
 **原计划**: 实现完整的服务分组路由功能,包括 27 个 HTTP API 和两种路由策略引擎(加权轮询 + 就近访问)
 
-**架构**: 分层架构 - 数据模型层 (artemis-core) → 业务逻辑层 (artemis-management + artemis-server/routing) → HTTP API 层 (artemis-web/api/routing.rs)。路由策略通过 DiscoveryFilter 集成到发现服务。
+**架构**: 分层架构 - 数据模型层 (artemis-common) → 业务逻辑层 (artemis-management + artemis-service/routing) → HTTP API 层 (artemis-server/api/routing.rs)。路由策略通过 DiscoveryFilter 集成到发现服务。
 
 **技术栈**: Rust, Tokio, Axum, DashMap, serde
 
@@ -114,11 +114,11 @@
 
 ## 任务概览
 
-1. **Task 1-3**: 数据模型层 (artemis-core) - 定义 ServiceGroup, RouteRule, GroupTag 等核心数据结构
-2. **Task 4-7**: 路由策略引擎 (artemis-server/routing) - 实现加权轮询和就近访问策略
+1. **Task 1-3**: 数据模型层 (artemis-common) - 定义 ServiceGroup, RouteRule, GroupTag 等核心数据结构
+2. **Task 4-7**: 路由策略引擎 (artemis-service/routing) - 实现加权轮询和就近访问策略
 3. **Task 8-11**: 业务逻辑层 (artemis-management) - GroupManager 和 RouteManager 完整实现
 4. **Task 12-13**: 发现服务集成 - GroupRoutingFilter 过滤器
-5. **Task 14-19**: HTTP API 层 (artemis-web) - 27 个 API 端点
+5. **Task 14-19**: HTTP API 层 (artemis-server) - 27 个 API 端点
 6. **Task 20-21**: 集成测试和文档
 
 ---
@@ -126,12 +126,12 @@
 ## Task 1: 创建分组数据模型
 
 **文件**:
-- Create: `artemis-core/src/model/group.rs`
-- Modify: `artemis-core/src/model/mod.rs`
+- Create: `artemis-common/src/model/group.rs`
+- Modify: `artemis-common/src/model/mod.rs`
 
 ### Step 1: 编写分组数据模型
 
-在 `artemis-core/src/model/group.rs` 创建:
+在 `artemis-common/src/model/group.rs` 创建:
 
 ```rust
 //! Service group management data models
@@ -293,7 +293,7 @@ mod tests {
 
 ### Step 2: 导出分组模型
 
-修改 `artemis-core/src/model/mod.rs`,添加:
+修改 `artemis-common/src/model/mod.rs`,添加:
 
 ```rust
 pub mod group;
@@ -308,7 +308,7 @@ pub use group::{
 ### Step 3: 运行测试验证
 
 ```bash
-cargo test --package artemis-core --lib model::group
+cargo test --package artemis-common --lib model::group
 ```
 
 预期: 所有测试通过
@@ -316,7 +316,7 @@ cargo test --package artemis-core --lib model::group
 ### Step 4: 提交
 
 ```bash
-git add artemis-core/src/model/group.rs artemis-core/src/model/mod.rs
+git add artemis-common/src/model/group.rs artemis-common/src/model/mod.rs
 git commit -m "feat(core): 添加服务分组数据模型
 
 - ServiceGroup: 服务分组核心数据结构
@@ -340,12 +340,12 @@ Co-Authored-By: Happy <yesreply@happy.engineering>"
 ## Task 2: 扩展路由规则模型
 
 **文件**:
-- Modify: `artemis-core/src/model/route.rs`
-- Modify: `artemis-core/src/model/mod.rs`
+- Modify: `artemis-common/src/model/route.rs`
+- Modify: `artemis-common/src/model/mod.rs`
 
 ### Step 1: 扩展 RouteRule 和新增 RouteRuleGroup
 
-在 `artemis-core/src/model/route.rs` 添加:
+在 `artemis-common/src/model/route.rs` 添加:
 
 ```rust
 /// 路由规则分组关联 (带权重)
@@ -389,7 +389,7 @@ mod tests {
 
 ### Step 2: 更新导出
 
-在 `artemis-core/src/model/mod.rs` 添加:
+在 `artemis-common/src/model/mod.rs` 添加:
 
 ```rust
 pub use route::RouteRuleGroup;
@@ -398,13 +398,13 @@ pub use route::RouteRuleGroup;
 ### Step 3: 运行测试
 
 ```bash
-cargo test --package artemis-core --lib model::route::tests::test_route_rule_group
+cargo test --package artemis-common --lib model::route::tests::test_route_rule_group
 ```
 
 ### Step 4: 提交
 
 ```bash
-git add artemis-core/src/model/route.rs artemis-core/src/model/mod.rs
+git add artemis-common/src/model/route.rs artemis-common/src/model/mod.rs
 git commit -m "feat(core): 添加路由规则分组关联模型
 
 - RouteRuleGroup: 路由规则与分组的关联关系
@@ -423,18 +423,18 @@ Co-Authored-By: Happy <yesreply@happy.engineering>"
 ## Task 3: 创建路由上下文模型
 
 **文件**:
-- Create: `artemis-server/src/routing/mod.rs`
-- Create: `artemis-server/src/routing/context.rs`
+- Create: `artemis-service/src/routing/mod.rs`
+- Create: `artemis-service/src/routing/context.rs`
 
 ### Step 1: 创建 routing 目录结构
 
 ```bash
-mkdir -p artemis-server/src/routing
+mkdir -p artemis-service/src/routing
 ```
 
 ### Step 2: 创建路由上下文
 
-在 `artemis-server/src/routing/context.rs` 创建:
+在 `artemis-service/src/routing/context.rs` 创建:
 
 ```rust
 //! Routing context for strategy execution
@@ -493,7 +493,7 @@ mod tests {
 
 ### Step 3: 创建模块入口
 
-在 `artemis-server/src/routing/mod.rs` 创建:
+在 `artemis-service/src/routing/mod.rs` 创建:
 
 ```rust
 //! Service routing engine and strategies
@@ -507,9 +507,9 @@ pub use strategy::{RouteStrategy, WeightedRoundRobinStrategy, CloseByVisitStrate
 pub use engine::RouteEngine;
 ```
 
-### Step 4: 在 artemis-server/src/lib.rs 导出
+### Step 4: 在 artemis-service/src/lib.rs 导出
 
-在 `artemis-server/src/lib.rs` 添加:
+在 `artemis-service/src/lib.rs` 添加:
 
 ```rust
 pub mod routing;
@@ -518,14 +518,14 @@ pub mod routing;
 ### Step 5: 运行测试
 
 ```bash
-cargo test --package artemis-server routing::context
+cargo test --package artemis-service routing::context
 ```
 
 ### Step 6: 提交
 
 ```bash
-git add artemis-server/src/routing/
-git add artemis-server/src/lib.rs
+git add artemis-service/src/routing/
+git add artemis-service/src/lib.rs
 git commit -m "feat(server): 添加路由上下文模型
 
 - RouteContext: 包含客户端 IP/Region/Zone 信息
@@ -544,16 +544,16 @@ Co-Authored-By: Happy <yesreply@happy.engineering>"
 ## Task 4: 实现加权轮询策略
 
 **文件**:
-- Create: `artemis-server/src/routing/strategy.rs`
+- Create: `artemis-service/src/routing/strategy.rs`
 
 ### Step 1: 编写加权轮询策略测试
 
-在 `artemis-server/src/routing/strategy.rs` 创建(先写测试):
+在 `artemis-service/src/routing/strategy.rs` 创建(先写测试):
 
 ```rust
 //! Routing strategies
 
-use artemis_core::model::{Instance, RouteRuleGroup};
+use artemis_common::model::{Instance, RouteRuleGroup};
 use async_trait::async_trait;
 use dashmap::DashMap;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -669,7 +669,7 @@ impl Default for WeightedRoundRobinStrategy {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use artemis_core::model::{Instance, InstanceStatus};
+    use artemis_common::model::{Instance, InstanceStatus};
     use std::collections::HashMap;
 
     fn create_test_instance(service_id: &str, instance_id: &str, group_id: &str) -> Instance {
@@ -755,7 +755,7 @@ mod tests {
 ### Step 2: 运行测试验证失败
 
 ```bash
-cargo test --package artemis-server routing::strategy::tests::test_weighted_round_robin
+cargo test --package artemis-service routing::strategy::tests::test_weighted_round_robin
 ```
 
 预期: 编译通过,测试通过
@@ -763,7 +763,7 @@ cargo test --package artemis-server routing::strategy::tests::test_weighted_roun
 ### Step 3: 提交
 
 ```bash
-git add artemis-server/src/routing/strategy.rs
+git add artemis-service/src/routing/strategy.rs
 git commit -m "feat(server): 实现加权轮询路由策略
 
 - WeightedRoundRobinStrategy: 基于权重的轮询算法
@@ -785,11 +785,11 @@ Co-Authored-By: Happy <yesreply@happy.engineering>"
 ## Task 5: 实现就近访问策略
 
 **文件**:
-- Modify: `artemis-server/src/routing/strategy.rs`
+- Modify: `artemis-service/src/routing/strategy.rs`
 
 ### Step 1: 在 strategy.rs 添加就近访问策略
 
-在 `artemis-server/src/routing/strategy.rs` 末尾添加:
+在 `artemis-service/src/routing/strategy.rs` 末尾添加:
 
 ```rust
 /// 就近访问策略
@@ -867,7 +867,7 @@ impl Default for CloseByVisitStrategy {
 #[cfg(test)]
 mod close_by_visit_tests {
     use super::*;
-    use artemis_core::model::{Instance, InstanceStatus};
+    use artemis_common::model::{Instance, InstanceStatus};
     use std::collections::HashMap;
 
     fn create_instance(service_id: &str, instance_id: &str, region: &str, zone: &str) -> Instance {
@@ -947,13 +947,13 @@ mod close_by_visit_tests {
 ### Step 2: 运行测试
 
 ```bash
-cargo test --package artemis-server routing::strategy::close_by_visit_tests
+cargo test --package artemis-service routing::strategy::close_by_visit_tests
 ```
 
 ### Step 3: 提交
 
 ```bash
-git add artemis-server/src/routing/strategy.rs
+git add artemis-service/src/routing/strategy.rs
 git commit -m "feat(server): 实现就近访问路由策略
 
 - CloseByVisitStrategy: 基于地理位置的就近路由
@@ -974,16 +974,16 @@ Co-Authored-By: Happy <yesreply@happy.engineering>"
 ## Task 6: 实现路由引擎
 
 **文件**:
-- Create: `artemis-server/src/routing/engine.rs`
+- Create: `artemis-service/src/routing/engine.rs`
 
 ### Step 1: 创建路由引擎
 
-在 `artemis-server/src/routing/engine.rs` 创建:
+在 `artemis-service/src/routing/engine.rs` 创建:
 
 ```rust
 //! Route engine - unified entry point for routing strategies
 
-use artemis_core::model::{Instance, RouteRule, RouteStrategy as RouteStrategyEnum};
+use artemis_common::model::{Instance, RouteRule, RouteStrategy as RouteStrategyEnum};
 use std::sync::Arc;
 use tracing::warn;
 
@@ -1044,7 +1044,7 @@ impl Default for RouteEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use artemis_core::model::{InstanceStatus, RouteRuleGroup, RouteRuleStatus};
+    use artemis_common::model::{InstanceStatus, RouteRuleGroup, RouteRuleStatus};
     use std::collections::HashMap;
 
     fn create_test_instance(service_id: &str, instance_id: &str, group_id: &str) -> Instance {
@@ -1122,7 +1122,7 @@ mod tests {
 
 ### Step 2: 更新 mod.rs
 
-确保 `artemis-server/src/routing/mod.rs` 包含:
+确保 `artemis-service/src/routing/mod.rs` 包含:
 
 ```rust
 pub mod engine;
@@ -1131,13 +1131,13 @@ pub mod engine;
 ### Step 3: 运行测试
 
 ```bash
-cargo test --package artemis-server routing::engine
+cargo test --package artemis-service routing::engine
 ```
 
 ### Step 4: 提交
 
 ```bash
-git add artemis-server/src/routing/engine.rs
+git add artemis-service/src/routing/engine.rs
 git commit -m "feat(server): 实现路由引擎统一入口
 
 - RouteEngine: 统一管理路由策略
@@ -1178,11 +1178,11 @@ Co-Authored-By: Happy <yesreply@happy.engineering>"
 ## Task 12-13: 发现服务集成
 
 **Task 12**: 实现 GroupRoutingFilter
-- 文件: `artemis-server/src/discovery/filter.rs` (新增)
+- 文件: `artemis-service/src/discovery/filter.rs` (新增)
 - 功能: 从 RouteManager 获取规则,应用 RouteEngine
 
 **Task 13**: 集成到 DiscoveryServiceImpl
-- 修改: `artemis-server/src/discovery/mod.rs`
+- 修改: `artemis-service/src/discovery/mod.rs`
 - 添加过滤器到过滤器链末尾
 
 ---

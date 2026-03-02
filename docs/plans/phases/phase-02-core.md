@@ -1,4 +1,4 @@
-# 阶段2: artemis-core实现
+# 阶段2: artemis-common实现
 
 > **For Claude:** 核心数据模型、trait定义、错误处理。这是整个系统的基础。
 
@@ -12,13 +12,13 @@
 ## Task 2.1: 实现核心数据模型 - Instance
 
 **Files:**
-- Create: `artemis-core/src/model/mod.rs`
-- Create: `artemis-core/src/model/instance.rs`
+- Create: `artemis-common/src/model/mod.rs`
+- Create: `artemis-common/src/model/instance.rs`
 
 **Step 1: 创建model模块**
 
 ```rust
-// artemis-core/src/model/mod.rs
+// artemis-common/src/model/mod.rs
 pub mod instance;
 pub mod service;
 pub mod lease;
@@ -37,7 +37,7 @@ pub use request::*;
 **Step 2: 实现Instance模型**
 
 ```rust
-// artemis-core/src/model/instance.rs
+// artemis-common/src/model/instance.rs
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -149,7 +149,7 @@ mod tests {
 **Step 3: 运行测试**
 
 ```bash
-cargo test -p artemis-core
+cargo test -p artemis-common
 ```
 
 Expected: 2 tests passed
@@ -157,7 +157,7 @@ Expected: 2 tests passed
 **Step 4: 提交**
 
 ```bash
-git add artemis-core/src/model/
+git add artemis-common/src/model/
 git commit -m "feat(core): implement Instance model with tests
 
 - Add Instance struct with all fields
@@ -175,15 +175,15 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 2.2: 实现Service、Lease、RouteRule模型
 
 **Files:**
-- Create: `artemis-core/src/model/service.rs`
-- Create: `artemis-core/src/model/lease.rs`
-- Create: `artemis-core/src/model/route.rs`
-- Create: `artemis-core/src/model/change.rs`
+- Create: `artemis-common/src/model/service.rs`
+- Create: `artemis-common/src/model/lease.rs`
+- Create: `artemis-common/src/model/route.rs`
+- Create: `artemis-common/src/model/change.rs`
 
 **Step 1: 实现Service模型**
 
 ```rust
-// artemis-core/src/model/service.rs
+// artemis-common/src/model/service.rs
 use super::instance::Instance;
 use super::route::RouteRule;
 use serde::{Deserialize, Serialize};
@@ -218,7 +218,7 @@ pub struct ServiceGroup {
 **Step 2: 实现Lease模型**
 
 ```rust
-// artemis-core/src/model/lease.rs
+// artemis-common/src/model/lease.rs
 use super::instance::InstanceKey;
 use parking_lot::Mutex;
 use std::sync::Arc;
@@ -309,7 +309,7 @@ mod tests {
 **Step 3: 实现RouteRule模型**
 
 ```rust
-// artemis-core/src/model/route.rs
+// artemis-common/src/model/route.rs
 use super::service::ServiceGroup;
 use serde::{Deserialize, Serialize};
 
@@ -331,7 +331,7 @@ pub enum RouteStrategy {
 **Step 4: 实现InstanceChange模型**
 
 ```rust
-// artemis-core/src/model/change.rs
+// artemis-common/src/model/change.rs
 use super::instance::Instance;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -356,7 +356,7 @@ pub enum ChangeType {
 **Step 5: 运行测试**
 
 ```bash
-cargo test -p artemis-core
+cargo test -p artemis-common
 ```
 
 Expected: All tests pass
@@ -364,7 +364,7 @@ Expected: All tests pass
 **Step 6: 提交**
 
 ```bash
-git add artemis-core/src/model/
+git add artemis-common/src/model/
 git commit -m "feat(core): implement Service, Lease, RouteRule, InstanceChange models
 
 - Add Service and ServiceGroup models
@@ -381,12 +381,12 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 2.3: 实现Request/Response模型
 
 **Files:**
-- Create: `artemis-core/src/model/request.rs`
+- Create: `artemis-common/src/model/request.rs`
 
 **Step 1: 实现请求响应模型**
 
 ```rust
-// artemis-core/src/model/request.rs
+// artemis-common/src/model/request.rs
 use super::instance::{Instance, InstanceKey};
 use super::service::Service;
 use serde::{Deserialize, Serialize};
@@ -520,7 +520,7 @@ pub enum ErrorCode {
 **Step 2: 提交**
 
 ```bash
-git add artemis-core/src/model/request.rs
+git add artemis-common/src/model/request.rs
 git commit -m "feat(core): implement Request/Response models
 
 - Add Register/Heartbeat/Unregister request/response
@@ -536,14 +536,14 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 2.4: 实现Trait定义
 
 **Files:**
-- Create: `artemis-core/src/traits/mod.rs`
-- Create: `artemis-core/src/traits/registry.rs`
-- Create: `artemis-core/src/traits/discovery.rs`
+- Create: `artemis-common/src/traits/mod.rs`
+- Create: `artemis-common/src/traits/registry.rs`
+- Create: `artemis-common/src/traits/discovery.rs`
 
 **Step 1: 创建traits模块**
 
 ```rust
-// artemis-core/src/traits/mod.rs
+// artemis-common/src/traits/mod.rs
 pub mod registry;
 pub mod discovery;
 
@@ -554,7 +554,7 @@ pub use discovery::DiscoveryService;
 **Step 2: 定义RegistryService trait**
 
 ```rust
-// artemis-core/src/traits/registry.rs
+// artemis-common/src/traits/registry.rs
 use crate::model::{HeartbeatRequest, HeartbeatResponse};
 use crate::model::{RegisterRequest, RegisterResponse};
 use crate::model::{UnregisterRequest, UnregisterResponse};
@@ -576,7 +576,7 @@ pub trait RegistryService: Send + Sync {
 **Step 3: 定义DiscoveryService trait**
 
 ```rust
-// artemis-core/src/traits/discovery.rs
+// artemis-common/src/traits/discovery.rs
 use crate::model::{GetServiceRequest, GetServiceResponse};
 use crate::model::{GetServicesRequest, GetServicesResponse};
 use crate::model::{GetServicesDeltaRequest, GetServicesDeltaResponse};
@@ -601,7 +601,7 @@ pub trait DiscoveryService: Send + Sync {
 **Step 4: 验证编译**
 
 ```bash
-cargo check -p artemis-core
+cargo check -p artemis-common
 ```
 
 Expected: 编译成功
@@ -609,7 +609,7 @@ Expected: 编译成功
 **Step 5: 提交**
 
 ```bash
-git add artemis-core/src/traits/
+git add artemis-common/src/traits/
 git commit -m "feat(core): define RegistryService and DiscoveryService traits
 
 - Add RegistryService with register/heartbeat/unregister
@@ -625,14 +625,14 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 2.5: 实现错误处理和配置
 
 **Files:**
-- Create: `artemis-core/src/error.rs`
-- Create: `artemis-core/src/config.rs`
-- Create: `artemis-core/src/utils.rs`
+- Create: `artemis-common/src/error.rs`
+- Create: `artemis-common/src/config.rs`
+- Create: `artemis-common/src/utils.rs`
 
 **Step 1: 实现错误类型**
 
 ```rust
-// artemis-core/src/error.rs
+// artemis-common/src/error.rs
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -665,7 +665,7 @@ pub type Result<T> = std::result::Result<T, ArtemisError>;
 **Step 2: 实现配置结构**
 
 ```rust
-// artemis-core/src/config.rs
+// artemis-common/src/config.rs
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -735,13 +735,13 @@ impl Default for ArtemisConfig {
 **Step 3: 创建utils模块（占位）**
 
 ```rust
-// artemis-core/src/utils.rs
+// artemis-common/src/utils.rs
 //! 实用工具函数
 ```
 
 **Step 4: 添加humantime-serde依赖**
 
-更新 `artemis-core/Cargo.toml`:
+更新 `artemis-common/Cargo.toml`:
 
 ```toml
 [dependencies]
@@ -752,8 +752,8 @@ humantime-serde = "1.1"
 **Step 5: 验证编译**
 
 ```bash
-cargo check -p artemis-core
-cargo test -p artemis-core
+cargo check -p artemis-common
+cargo test -p artemis-common
 ```
 
 Expected: 编译成功，所有测试通过
@@ -761,7 +761,7 @@ Expected: 编译成功，所有测试通过
 **Step 6: 提交**
 
 ```bash
-git add artemis-core/
+git add artemis-common/
 git commit -m "feat(core): implement error handling and configuration
 
 - Add ArtemisError with thiserror
@@ -780,5 +780,5 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 - ✅ Trait定义清晰
 - ✅ 错误处理完整
 - ✅ 配置结构完善
-- ✅ `cargo test -p artemis-core` 全部通过
+- ✅ `cargo test -p artemis-common` 全部通过
 - ✅ 文档注释完整

@@ -1,5 +1,5 @@
 use artemis_client::{AddressManager, ClientConfig, FilterChain, StatusFilter};
-use artemis_core::model::{DiscoveryConfig, Instance, InstanceStatus, LookupServicesRequest};
+use artemis_common::model::{DiscoveryConfig, Instance, InstanceStatus, LookupServicesRequest};
 use std::time::Duration;
 
 #[tokio::test]

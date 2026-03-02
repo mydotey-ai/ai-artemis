@@ -586,7 +586,7 @@ async fn main() -> Result<()> {
 
 - ✅ **Phase 1-6**: 基础客户端 SDK 已完成
 - ✅ **Phase 9**: WebSocket 推送已实现
-- ✅ **Phase 26**: artemis-core 重构完成,依赖轻量
+- ✅ **Phase 26**: artemis-common 重构完成,依赖轻量
 
 ### 被依赖的 Phase
 

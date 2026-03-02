@@ -1,6 +1,6 @@
 use crate::http::retry_with_backoff;
 use crate::{ClientConfig, Result};
-use artemis_core::model::*;
+use artemis_common::model::*;
 use reqwest::Client;
 use std::sync::Arc;
 use std::time::Instant;

@@ -9,7 +9,7 @@
 
 **关键变更**:
 1. ✅ **Phase 1-27 全部完成** - 核心功能 + 功能对齐 + Web Console 100%实现
-2. ✅ **Phase 28: artemis-core 重构** - 代码精简78.5%，模块职责清晰化
+2. ✅ **Phase 28: artemis-common 重构** - 代码精简78.5%，模块职责清晰化
 3. ✅ **Phase 29: 管理 API 重构** - 46个管理端点迁移到artemis-management，依赖关系修正
 4. ✅ **Phase 11 说明** - 已跳过/合并到其他Phase
 5. 📊 **更新API端点统计** - 101个端点全部实现
@@ -41,9 +41,9 @@
 
 ---
 
-## 🔧 Phase 28: artemis-core 架构重构 (2026-02-17)
+## 🔧 Phase 28: artemis-common 架构重构 (2026-02-17)
 
-**重构目标**: 精简 artemis-core 为核心协议层，让 client 只依赖必需的部分
+**重构目标**: 精简 artemis-common 为核心协议层，让 client 只依赖必需的部分
 
 **重构成果**:
 
@@ -58,7 +58,7 @@
 **模块重组**:
 
 ```
-artemis-core (精简后 - 471 行)
+artemis-common (精简后 - 471 行)
 ├── error.rs              # 错误类型定义
 ├── lib.rs                # 库入口
 └── model/
@@ -69,25 +69,25 @@ artemis-core (精简后 - 471 行)
     ├── replication.rs    # Server 间复制协议
     └── mod.rs
 
-artemis-server (新增模块)
-├── config/               # 从 artemis-core 迁移
-├── telemetry/            # 从 artemis-core 迁移
-├── utils.rs              # 从 artemis-core 迁移
-├── traits/               # 从 artemis-core 迁移
+artemis-service (新增模块)
+├── config/               # 从 artemis-common 迁移
+├── telemetry/            # 从 artemis-common 迁移
+├── utils.rs              # 从 artemis-common 迁移
+├── traits/               # 从 artemis-common 迁移
 │   ├── discovery.rs
 │   └── registry.rs
-└── model/                # 从 artemis-core 迁移
+└── model/                # 从 artemis-common 迁移
     ├── lease.rs          # 租约模型
     └── status.rs         # Status 查询模型
 
 artemis-management (新增模块)
-├── model/                # 从 artemis-core 迁移
+├── model/                # 从 artemis-common 迁移
 │   ├── management.rs     # InstanceOperation, ServerOperation
 │   ├── group.rs          # ServiceGroup, GroupInstance
 │   ├── route.rs          # RouteRule, RouteStrategy
 │   ├── zone.rs           # ZoneOperation
 │   └── canary.rs         # CanaryConfig
-└── routing/              # 从 artemis-server 迁移
+└── routing/              # 从 artemis-service 迁移
     ├── context.rs
     ├── engine.rs
     ├── strategy.rs
@@ -95,12 +95,12 @@ artemis-management (新增模块)
 ```
 
 **依赖关系优化**:
-- ✅ `artemis-client` → 只依赖精简后的 `artemis-core` (471 行)
-- ✅ `artemis-server` → 包含所有 server 特有基础设施
+- ✅ `artemis-client` → 只依赖精简后的 `artemis-common` (471 行)
+- ✅ `artemis-service` → 包含所有 server 特有基础设施
 - ✅ `artemis-management` → 包含所有管理功能模型 + routing 模块
 - ✅ 无循环依赖，依赖关系清晰
 
-**Phase 文档**: [`docs/plans/phases/phase-28-artemis-core-refactoring.md`](phases/phase-28-artemis-core-refactoring.md)
+**Phase 文档**: [`docs/plans/phases/phase-28-artemis-common-refactoring.md`](phases/phase-28-artemis-common-refactoring.md)
 
 **提交记录**: 16 个重构提交，108 个文件变更，已合并到 main 分支
 
@@ -108,27 +108,27 @@ artemis-management (新增模块)
 
 ## 🔧 Phase 29: 管理 API 重构 (2026-02-17)
 
-**重构目标**: 将管理相关的 HTTP API 处理器从 artemis-web 迁移到 artemis-management，实现更清晰的职责分离
+**重构目标**: 将管理相关的 HTTP API 处理器从 artemis-server 迁移到 artemis-management，实现更清晰的职责分离
 
 **重构成果**:
 
 | 模块 | 迁移 | API 端点 | 代码行数 |
 |------|------|----------|----------|
-| **JWT 中间件** | artemis-web → management | N/A | 43 |
-| **认证 API** | artemis-web → management | 18 | 376 |
-| **实例操作 API** | artemis-web → management | 9 | 265 |
-| **Zone 管理 API** | artemis-web → management | 5 | 188 |
-| **金丝雀 API** | artemis-web → management | 5 | 219 |
-| **审计日志 API** | artemis-web → management | 9 | 443 |
+| **JWT 中间件** | artemis-server → management | N/A | 43 |
+| **认证 API** | artemis-server → management | 18 | 376 |
+| **实例操作 API** | artemis-server → management | 9 | 265 |
+| **Zone 管理 API** | artemis-server → management | 5 | 188 |
+| **金丝雀 API** | artemis-server → management | 5 | 219 |
+| **审计日志 API** | artemis-server → management | 9 | 443 |
 | **路由定义** | 新增 | 46 | 157 |
 | **总计** | - | **46** | **~1,700** |
 
 **Status Model 归位**:
-- `artemis-management/src/model/status.rs` → `artemis-server/src/model/status.rs`
+- `artemis-management/src/model/status.rs` → `artemis-service/src/model/status.rs`
 - 原因：status 功能属于核心业务逻辑，而非管理功能
 
 **Routing 模块迁移**:
-- `artemis-server/src/routing/` → `artemis-management/src/routing/`
+- `artemis-service/src/routing/` → `artemis-management/src/routing/`
 - 原因：routing 是管理功能，应属于 management 层
 
 **Discovery Filter 分离**:
@@ -234,11 +234,11 @@ artemis-management (新增模块)
 **实际达成**: ✅ P99延迟 **< 0.5ms** (超越目标20倍)
 
 **Architecture:** Workspace多Crate架构，包含6个crate：
-- `artemis-core` (471行) - 核心协议定义（Instance, Service, Request/Response, Replication）
-- `artemis-server` - 业务逻辑实现 + server 特有基础设施（config, telemetry, traits, utils, lease）
-- `artemis-web` - HTTP/WebSocket API层
+- `artemis-common` (471行) - 核心协议定义（Instance, Service, Request/Response, Replication）
+- `artemis-service` - 业务逻辑实现 + server 特有基础设施（config, telemetry, traits, utils, lease）
+- `artemis-server` - HTTP/WebSocket API层
 - `artemis-management` - 管理功能和持久化 + management 模型（group, route, zone, canary, status）
-- `artemis-client` - 客户端SDK（仅依赖精简后的 artemis-core）
+- `artemis-client` - 客户端SDK（仅依赖精简后的 artemis-common）
 - `artemis` - CLI工具和服务器启动程序
 
 **Tech Stack:** Rust 2024, Tokio, Axum, DashMap, parking_lot, SQLx, Governor, Serde, Clap
@@ -257,7 +257,7 @@ artemis-management (新增模块)
 | Phase 19-25 (功能对齐) | 7个 | 34个 | ✅ 已完成 | 100% |
 | Phase 26 (客户端企业级功能) | 1个 | 12个 | ✅ 已完成 | 100% |
 | Phase 27 (Web Console) | 1个 | 9个模块 | ✅ 已完成 | 100% |
-| Phase 28 (artemis-core 重构) | 1个 | 重构 | ✅ 已完成 | 100% |
+| Phase 28 (artemis-common 重构) | 1个 | 重构 | ✅ 已完成 | 100% |
 | Phase 29 (管理 API 重构) | 1个 | 重构 | ✅ 已完成 | 100% |
 | **总计** | **27个** | - | ✅ **全部完成** | **100%** |
 
@@ -342,11 +342,11 @@ artemis-management (新增模块)
 
 | Phase | 名称 | 优先级 | 内容 | 状态 |
 |-------|------|--------|------|------|
-| Phase 28 | artemis-core 重构 | P0 | 精简78.5% | ✅ 已完成 |
+| Phase 28 | artemis-common 重构 | P0 | 精简78.5% | ✅ 已完成 |
 | Phase 29 | 管理 API 重构 | P0 | 46端点迁移 | ✅ 已完成 |
 
 **Phase 28 详情**:
-- artemis-core 从 2193 行精简到 471 行 (-78.5%)
+- artemis-common 从 2193 行精简到 471 行 (-78.5%)
 - 模块从 21 个精简到 8 个 (-62%)
 - client 只依赖精简后的 core
 

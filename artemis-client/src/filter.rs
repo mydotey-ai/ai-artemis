@@ -1,4 +1,4 @@
-use artemis_core::model::{Instance, InstanceStatus};
+use artemis_common::model::{Instance, InstanceStatus};
 
 /// Registry filter trait for filtering instance lists.
 ///

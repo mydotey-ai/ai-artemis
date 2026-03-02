@@ -9,13 +9,13 @@ use artemis_management::{
     AuthManager, ConfigLoader, Database, GroupManager, GroupRoutingFilter, InstanceManager,
     ManagementDiscoveryFilter, RouteEngine, RouteManager,
 };
-use artemis_server::config::ArtemisConfig;
-use artemis_server::{
+use artemis_service::config::ArtemisConfig;
+use artemis_service::{
     RegistryServiceImpl, cache::VersionedCacheManager, cluster::ClusterManager,
     discovery::DiscoveryServiceImpl, lease::LeaseManager, registry::RegistryRepository,
     replication::ReplicationManager,
 };
-use artemis_web::{server::run_server, state::AppState};
+use artemis_server::{server::run_server, state::AppState};
 use clap::{Parser, Subcommand};
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -131,7 +131,7 @@ async fn start_server(
     let repository = RegistryRepository::new();
     let lease_manager = Arc::new(LeaseManager::new(Duration::from_secs(config.lease.ttl_secs)));
     let cache = Arc::new(VersionedCacheManager::new());
-    let change_manager = Arc::new(artemis_server::InstanceChangeManager::new());
+    let change_manager = Arc::new(artemis_service::InstanceChangeManager::new());
 
     // 4. Initialize cluster components (if enabled)
     let (cluster_manager, replication_manager) = if config.cluster.enabled {
@@ -240,13 +240,13 @@ async fn start_server(
 
     let discovery_service = Arc::new(discovery_service);
 
-    let session_manager = Arc::new(artemis_web::websocket::SessionManager::new());
+    let session_manager = Arc::new(artemis_server::websocket::SessionManager::new());
 
     // Load balancer for discovery lookup
-    let load_balancer = Arc::new(artemis_server::discovery::LoadBalancer::new());
+    let load_balancer = Arc::new(artemis_service::discovery::LoadBalancer::new());
 
     // Status service
-    let status_service = Arc::new(artemis_server::StatusService::new(
+    let status_service = Arc::new(artemis_service::StatusService::new(
         cluster_manager.clone(),
         lease_manager,
         config.server.node_id.clone(),

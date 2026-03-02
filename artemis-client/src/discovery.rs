@@ -1,5 +1,5 @@
 use crate::{ClientConfig, Result};
-use artemis_core::model::*;
+use artemis_common::model::*;
 use parking_lot::RwLock;
 use reqwest::Client;
 use std::collections::HashMap;

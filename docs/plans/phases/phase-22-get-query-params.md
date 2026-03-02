@@ -48,7 +48,7 @@
 
 ## 📖 相关文档
 
-- **实现代码**: `artemis-web/src/handlers/discovery.rs`
+- **实现代码**: `artemis-server/src/handlers/discovery.rs`
 - **测试脚本**: `scripts/test-get-query-params.sh`
 - **原始设计**: `docs/archive/phase-19-22-gap-fixing-plan.md`
 

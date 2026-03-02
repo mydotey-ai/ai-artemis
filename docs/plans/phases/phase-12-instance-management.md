@@ -86,7 +86,7 @@ impl DiscoveryFilter for ManagementDiscoveryFilter {
 
 ### Task 3: HTTP API 实现 ✅
 
-**文件**: `artemis-web/src/api/management/instance.rs`, `artemis-web/src/api/management/server.rs`
+**文件**: `artemis-server/src/api/management/instance.rs`, `artemis-server/src/api/management/server.rs`
 
 **API 端点** (7个):
 
@@ -281,8 +281,8 @@ $ ./scripts/test-instance-management.sh
 |------|------|---------|---------|
 | InstanceManager | `artemis-management/src/instance.rs` | 350行 | 200行 |
 | ManagementDiscoveryFilter | `artemis-management/src/discovery_filter.rs` | 80行 | - |
-| 实例管理API | `artemis-web/src/api/management/instance.rs` | 150行 | - |
-| 服务器管理API | `artemis-web/src/api/management/server.rs` | 120行 | - |
+| 实例管理API | `artemis-server/src/api/management/instance.rs` | 150行 | - |
+| 服务器管理API | `artemis-server/src/api/management/server.rs` | 120行 | - |
 | **总计** | - | **~700行** | **200行** |
 
 ### API 端点

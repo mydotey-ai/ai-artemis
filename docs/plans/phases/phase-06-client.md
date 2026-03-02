@@ -178,7 +178,7 @@ pub use client::RegistryClient;
 ```rust
 // artemis-client/src/registry/client.rs
 use crate::{config::ClientConfig, error::Result};
-use artemis_core::model::{
+use artemis_common::model::{
     HeartbeatRequest, HeartbeatResponse, Instance, InstanceKey, RegisterRequest,
     RegisterResponse, UnregisterRequest, UnregisterResponse,
 };
@@ -223,7 +223,7 @@ impl RegistryClient {
             .await?;
 
         // 记录成功注册的实例
-        if response.response_status.error_code == artemis_core::model::ErrorCode::Success {
+        if response.response_status.error_code == artemis_common::model::ErrorCode::Success {
             let mut registered = self.registered_instances.lock();
             for instance in &request.instances {
                 registered.push(instance.key());
@@ -342,7 +342,7 @@ pub use client::DiscoveryClient;
 ```rust
 // artemis-client/src/discovery/client.rs
 use crate::{config::ClientConfig, error::Result};
-use artemis_core::model::{
+use artemis_common::model::{
     DiscoveryConfig, GetServiceRequest, GetServiceResponse, Service,
 };
 use dashmap::DashMap;
@@ -501,7 +501,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ```rust
 // artemis-client/examples/simple_client.rs
 use artemis_client::{ClientConfig, DiscoveryClient, RegistryClient};
-use artemis_core::model::{Instance, InstanceStatus};
+use artemis_common::model::{Instance, InstanceStatus};
 use std::sync::Arc;
 use std::time::Duration;
 

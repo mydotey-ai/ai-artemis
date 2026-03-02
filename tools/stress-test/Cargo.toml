@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-artemis-core = { path = "../../artemis-core" }
+artemis-common = { path = "../../artemis-common" }
 tokio = { workspace = true }
 reqwest = { workspace = true }
 serde = { workspace = true }

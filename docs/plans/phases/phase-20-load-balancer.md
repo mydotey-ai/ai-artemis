@@ -46,7 +46,7 @@
 ## 📖 相关文档
 
 - **路由策略**: Phase 13 分组路由
-- **实现代码**: `artemis-server/src/routing/strategies.rs`
+- **实现代码**: `artemis-service/src/routing/strategies.rs`
 - **测试脚本**: `scripts/test-load-balancer.sh`
 - **原始设计**: `docs/archive/phase-19-22-gap-fixing-plan.md`
 

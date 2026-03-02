@@ -138,14 +138,14 @@ Artemis是携程开发的SOA服务注册中心，用于微服务架构中的服�
 
 ```
 artemis/
-├── artemis-core/           # 核心库 (lib)
+├── artemis-common/           # 核心库 (lib)
 │   ├── model/             # 数据模型
 │   ├── traits/            # 核心trait定义
 │   ├── error/             # 错误类型
 │   ├── config/            # 配置管理
 │   └── utils/             # 工具函数
 │
-├── artemis-server/         # 服务端 (bin + lib)
+├── artemis-service/         # 服务端 (bin + lib)
 │   ├── registry/          # 注册服务
 │   ├── discovery/         # 发现服务
 │   ├── lease/             # 租约管理
@@ -155,7 +155,7 @@ artemis/
 │   ├── ratelimiter/       # 限流器
 │   └── storage/           # 存储抽象
 │
-├── artemis-web/            # Web层 (bin)
+├── artemis-server/            # Web层 (bin)
 │   ├── api/               # REST API
 │   ├── websocket/         # WebSocket处理
 │   └── middleware/        # 中间件
@@ -2983,8 +2983,8 @@ cd artemis-rust
 # 构建Release版本
 cargo build --release
 
-# 二进制文件位于 target/release/artemis-server
-ls -lh target/release/artemis-server
+# 二进制文件位于 target/release/artemis-service
+ls -lh target/release/artemis-service
 ```
 
 **步骤2: 准备配置文件**
@@ -3050,16 +3050,16 @@ mysql -h 192.168.1.200 -u artemis -p artemis < deployment/schema.sql
 
 ```bash
 # 方式1: 使用配置文件
-./target/release/artemis-server --config /etc/artemis/config.toml
+./target/release/artemis-service --config /etc/artemis/config.toml
 
 # 方式2: 配置文件 + 命令行参数覆盖
-./target/release/artemis-server \
+./target/release/artemis-service \
     --config /etc/artemis/config.toml \
     --server.port 8081 \
     --server.node-id node-002
 
 # 方式3: 仅命令行参数（用于快速测试）
-./target/release/artemis-server \
+./target/release/artemis-service \
     --server.host 0.0.0.0 \
     --server.port 8080 \
     --server.node-id node-001 \
@@ -3068,13 +3068,13 @@ mysql -h 192.168.1.200 -u artemis -p artemis < deployment/schema.sql
 # 方式4: 环境变量 + 配置文件
 export ARTEMIS_SERVER__NODE_ID=node-003
 export ARTEMIS_DATABASE__URL="mysql://artemis:password@localhost/artemis"
-./target/release/artemis-server --config /etc/artemis/config.toml
+./target/release/artemis-service --config /etc/artemis/config.toml
 ```
 
 **命令行参数说明**：
 
 ```
-artemis-server [OPTIONS]
+artemis-service [OPTIONS]
 
 OPTIONS:
     -c, --config <FILE>              配置文件路径 [默认: /etc/artemis/config.toml]
@@ -3127,7 +3127,7 @@ Environment="RUST_LOG=info"
 Environment="RUST_BACKTRACE=1"
 
 # 启动命令
-ExecStart=/opt/artemis/bin/artemis-server --config /etc/artemis/config.toml
+ExecStart=/opt/artemis/bin/artemis-service --config /etc/artemis/config.toml
 
 # 优雅停止（30秒超时）
 ExecStop=/bin/kill -SIGTERM $MAINPID
@@ -3172,8 +3172,8 @@ sudo mkdir -p /var/log/artemis
 sudo mkdir -p /var/lib/artemis
 
 # 复制二进制文件
-sudo cp target/release/artemis-server /opt/artemis/bin/
-sudo chmod +x /opt/artemis/bin/artemis-server
+sudo cp target/release/artemis-service /opt/artemis/bin/
+sudo chmod +x /opt/artemis/bin/artemis-service
 
 # 设置权限
 sudo chown -R artemis:artemis /opt/artemis
@@ -3290,7 +3290,7 @@ set -e
 
 NODES=("192.168.1.101" "192.168.1.102" "192.168.1.103")
 NODE_IDS=("node-001" "node-002" "node-003")
-BINARY="target/release/artemis-server"
+BINARY="target/release/artemis-service"
 REMOTE_USER="root"
 
 echo "开始批量部署 Artemis 集群..."
@@ -3401,10 +3401,10 @@ netstat -tlnp | grep artemis
 ss -tlnp | grep artemis
 
 # 检查进程
-ps aux | grep artemis-server
+ps aux | grep artemis-service
 
 # 检查资源使用
-top -p $(pgrep artemis-server)
+top -p $(pgrep artemis-service)
 ```
 
 **优势**：

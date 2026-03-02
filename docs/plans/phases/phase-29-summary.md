@@ -2,7 +2,7 @@
 
 ## 概述
 
-**Phase 29** 成功将管理相关的 HTTP API 处理器从 `artemis-web` 迁移到 `artemis-management`,实现了更清晰的职责分离。
+**Phase 29** 成功将管理相关的 HTTP API 处理器从 `artemis-server` 迁移到 `artemis-management`,实现了更清晰的职责分离。
 
 **完成时间**: 2026-02-17
 **状态**: ✅ 完成
@@ -15,20 +15,20 @@
 
 | 模块 | 原文件 | 新文件 | 行数 | API 端点数 |
 |------|-------|--------|------|-----------|
-| **JWT 中间件** | `artemis-web/src/middleware/jwt.rs` | `artemis-management/src/web/middleware/jwt.rs` | 43 | N/A |
-| **认证 API** | `artemis-web/src/api/auth.rs` | `artemis-management/src/web/api/auth.rs` | 376 | 18 |
-| **实例操作 API** | `artemis-web/src/api/management.rs` | `artemis-management/src/web/api/instance.rs` | 265 | 9 |
-| **Zone 管理 API** | `artemis-web/src/api/zone.rs` | `artemis-management/src/web/api/zone.rs` | 188 | 5 |
-| **金丝雀 API** | `artemis-web/src/api/canary.rs` | `artemis-management/src/web/api/canary.rs` | 219 | 5 |
-| **审计日志 API** | `artemis-web/src/api/audit.rs` | `artemis-management/src/web/api/audit.rs` | 443 | 9 |
+| **JWT 中间件** | `artemis-server/src/middleware/jwt.rs` | `artemis-management/src/web/middleware/jwt.rs` | 43 | N/A |
+| **认证 API** | `artemis-server/src/api/auth.rs` | `artemis-management/src/web/api/auth.rs` | 376 | 18 |
+| **实例操作 API** | `artemis-server/src/api/management.rs` | `artemis-management/src/web/api/instance.rs` | 265 | 9 |
+| **Zone 管理 API** | `artemis-server/src/api/zone.rs` | `artemis-management/src/web/api/zone.rs` | 188 | 5 |
+| **金丝雀 API** | `artemis-server/src/api/canary.rs` | `artemis-management/src/web/api/canary.rs` | 219 | 5 |
+| **审计日志 API** | `artemis-server/src/api/audit.rs` | `artemis-management/src/web/api/audit.rs` | 443 | 9 |
 | **路由定义** | - | `artemis-management/src/web/routes.rs` | 157 | 46 |
 | **总计** | - | - | **1,691** | **46** |
 
-### 保留在 artemis-web 的模块
+### 保留在 artemis-server 的模块
 
 | 模块 | 原因 |
 |------|------|
-| **routing.rs** (分组和路由 API) | 依赖 `RegistryServiceImpl` (artemis-server),避免循环依赖 |
+| **routing.rs** (分组和路由 API) | 依赖 `RegistryServiceImpl` (artemis-service),避免循环依赖 |
 
 ---
 
@@ -60,7 +60,7 @@ web/
 ### 重构前
 
 ```
-artemis-web (HTTP 层)
+artemis-server (HTTP 层)
 ├── api/
 │   ├── auth.rs          ❌ 认证 API
 │   ├── management.rs    ❌ 实例操作 API
@@ -87,7 +87,7 @@ artemis-management (业务逻辑层)
 ### 重构后
 
 ```
-artemis-web (轻量级路由聚合层)
+artemis-server (轻量级路由聚合层)
 ├── api/
 │   ├── routing.rs       ✅ 分组/路由 API (保留,依赖 registry_service)
 │   ├── registry.rs      ✅ 服务注册 API
@@ -99,13 +99,13 @@ artemis-web (轻量级路由聚合层)
 artemis-management (完整管理层 - 业务逻辑 + HTTP API)
 ├── web/                 ✨ 新增: HTTP API 模块
 │   ├── api/
-│   │   ├── auth.rs      🔄 认证 API (迁移自 artemis-web)
+│   │   ├── auth.rs      🔄 认证 API (迁移自 artemis-server)
 │   │   ├── instance.rs  🔄 实例操作 API (迁移自 management.rs)
-│   │   ├── audit.rs     🔄 审计日志 API (迁移自 artemis-web)
-│   │   ├── zone.rs      🔄 Zone API (迁移自 artemis-web)
-│   │   └── canary.rs    🔄 金丝雀 API (迁移自 artemis-web)
+│   │   ├── audit.rs     🔄 审计日志 API (迁移自 artemis-server)
+│   │   ├── zone.rs      🔄 Zone API (迁移自 artemis-server)
+│   │   └── canary.rs    🔄 金丝雀 API (迁移自 artemis-server)
 │   ├── middleware/
-│   │   └── jwt.rs       🔄 JWT 中间件 (迁移自 artemis-web)
+│   │   └── jwt.rs       🔄 JWT 中间件 (迁移自 artemis-server)
 │   ├── routes.rs        ✨ 管理路由定义 (46 端点)
 │   └── state.rs         ✨ ManagementState
 ├── auth/                ✅ 认证/授权业务逻辑
@@ -134,7 +134,7 @@ tower = { workspace = true }
 tower-http = { workspace = true }
 ```
 
-### artemis-web
+### artemis-server
 
 **删除**:
 - `src/api/auth.rs` (376 行)
@@ -230,7 +230,7 @@ POST /api/management/log/group-instance-logs.json     - 查询分组实例绑定
 POST /api/management/log/service-instance-logs.json   - 查询服务实例日志
 ```
 
-### 保留在 artemis-web 的端点 (23 个)
+### 保留在 artemis-server 的端点 (23 个)
 
 #### 分组和路由管理 (23 个)
 
@@ -283,7 +283,7 @@ pub struct ManagementState {
 }
 ```
 
-### 路由聚合 (artemis-web/src/server.rs)
+### 路由聚合 (artemis-server/src/server.rs)
 
 ```rust
 use artemis_management::{management_routes, ManagementState};
@@ -383,12 +383,12 @@ pub async fn jwt_auth(
 ### 1. 更清晰的职责分离
 
 - ✅ **artemis-management**: 成为完整的管理层 (业务逻辑 + HTTP API)
-- ✅ **artemis-web**: 简化为轻量级路由聚合层 (核心服务 + 路由代理)
+- ✅ **artemis-server**: 简化为轻量级路由聚合层 (核心服务 + 路由代理)
 - ✅ **模块边界清晰**: 管理功能集中在一个 crate,易于理解和维护
 
 ### 2. 代码组织优化
 
-- ✅ **artemis-web 代码减少**: 1,534 行代码迁移到 artemis-management
+- ✅ **artemis-server 代码减少**: 1,534 行代码迁移到 artemis-management
 - ✅ **server.rs 简化**: 从 323 行减少到 224 行 (-31%)
 - ✅ **功能内聚**: 所有管理 API 集中在 artemis-management
 
@@ -396,7 +396,7 @@ pub async fn jwt_auth(
 
 - ✅ **单一职责**: 每个 crate 职责更加明确
 - ✅ **独立测试**: 管理 API 可独立测试
-- ✅ **减少耦合**: artemis-web 不再直接依赖管理 API 实现
+- ✅ **减少耦合**: artemis-server 不再直接依赖管理 API 实现
 
 ### 4. 未来可扩展性
 
@@ -408,12 +408,12 @@ pub async fn jwt_auth(
 
 ## 未完成项
 
-### routing.rs 保留在 artemis-web
+### routing.rs 保留在 artemis-server
 
 **原因**:
-- `get_group_instances` 函数需要同时访问 `GroupManager` (artemis-management) 和 `RegistryServiceImpl` (artemis-server)
-- 如果将 routing.rs 迁移到 artemis-management,会导致 artemis-management 依赖 artemis-server
-- 而 artemis-server 已经依赖 artemis-management (用于用户管理、审计日志等)
+- `get_group_instances` 函数需要同时访问 `GroupManager` (artemis-management) 和 `RegistryServiceImpl` (artemis-service)
+- 如果将 routing.rs 迁移到 artemis-management,会导致 artemis-management 依赖 artemis-service
+- 而 artemis-service 已经依赖 artemis-management (用于用户管理、审计日志等)
 - 这会形成循环依赖,Rust 不允许
 
 **影响**:
@@ -438,11 +438,11 @@ pub async fn jwt_auth(
 
 ## 结论
 
-**Phase 29** 成功实现了管理 API 的重构,将 46 个管理端点 (约 1,691 行代码) 迁移到 artemis-management crate。虽然由于循环依赖问题,routing.rs (23 个端点) 保留在 artemis-web,但这不影响整体架构的清晰度和可维护性。
+**Phase 29** 成功实现了管理 API 的重构,将 46 个管理端点 (约 1,691 行代码) 迁移到 artemis-management crate。虽然由于循环依赖问题,routing.rs (23 个端点) 保留在 artemis-server,但这不影响整体架构的清晰度和可维护性。
 
 **重构后的架构更加清晰**:
 - artemis-management: 完整的管理层 (业务逻辑 + HTTP API)
-- artemis-web: 轻量级路由聚合层 (核心服务 + 路由代理)
+- artemis-server: 轻量级路由聚合层 (核心服务 + 路由代理)
 
 **所有功能正常工作,零性能回退,零编译警告。** ✅
 

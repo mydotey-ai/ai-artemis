@@ -51,7 +51,7 @@ cargo test --workspace
 cargo test --test integration_test
 
 # 性能基准
-cargo bench --package artemis-server
+cargo bench --package artemis-service
 
 # 代码覆盖率
 cargo tarpaulin --out Html --output-dir coverage
@@ -94,22 +94,22 @@ cargo outdated
 
 ```
 artemis (CLI)
-├── artemis-web
-│   ├── artemis-server
+├── artemis-server
+│   ├── artemis-service
 │   └── artemis-management
 └── artemis-client
 
-artemis-server
-└── artemis-core
+artemis-service
+└── artemis-common
 
 artemis-management
-├── artemis-core
+├── artemis-common
 └── sea-orm
 ```
 
 **依赖规则**:
 - **禁止循环依赖**: Crate 之间不允许循环依赖
-- **核心在底层**: `artemis-core` 只定义数据结构和 Trait,不依赖其他 crate
+- **核心在底层**: `artemis-common` 只定义数据结构和 Trait,不依赖其他 crate
 - **客户端独立**: `artemis-client` 可独立使用,不依赖服务端 crate
 
 ### 错误处理
@@ -117,7 +117,7 @@ artemis-management
 使用统一的错误类型 `ArtemisError`:
 
 ```rust
-use artemis_core::error::ArtemisError;
+use artemis_common::error::ArtemisError;
 
 pub fn my_function() -> Result<T, ArtemisError> {
     // 使用 ? 操作符传播错误

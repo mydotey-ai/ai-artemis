@@ -26,7 +26,7 @@
 
 ### Task 1: 金丝雀配置数据模型
 
-**文件**: `artemis-core/src/model/canary.rs`
+**文件**: `artemis-common/src/model/canary.rs`
 
 ```rust
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -94,7 +94,7 @@ impl CanaryManager {
 
 ### Task 3: 金丝雀 API 实现 (1个端点)
 
-**文件**: `artemis-web/src/api/management/canary.rs`
+**文件**: `artemis-server/src/api/management/canary.rs`
 
 #### API 端点
 

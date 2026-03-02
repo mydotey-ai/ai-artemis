@@ -4,8 +4,8 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-artemis-core = { path = "../artemis-core" }
-artemis-server = { path = "../artemis-server" }
+artemis-common = { path = "../artemis-common" }
+artemis-service = { path = "../artemis-service" }
 sea-orm = { workspace = true }
 async-trait = { workspace = true }
 sea-orm-migration = { workspace = true }

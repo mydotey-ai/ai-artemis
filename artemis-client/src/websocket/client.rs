@@ -1,5 +1,5 @@
 use crate::{config::ClientConfig, error::Result};
-use artemis_core::model::InstanceChange;
+use artemis_common::model::InstanceChange;
 use futures::{SinkExt, StreamExt};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;

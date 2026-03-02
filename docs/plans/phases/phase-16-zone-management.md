@@ -26,7 +26,7 @@
 
 ### Task 1: Zone 操作数据模型
 
-**文件**: `artemis-core/src/model/management.rs`
+**文件**: `artemis-common/src/model/management.rs`
 
 ```rust
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -71,7 +71,7 @@ impl ZoneManager {
 
 ### Task 3: Zone API 实现 (5个端点)
 
-**文件**: `artemis-web/src/api/management/zone.rs`
+**文件**: `artemis-server/src/api/management/zone.rs`
 
 #### API 端点
 

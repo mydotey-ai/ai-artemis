@@ -4,33 +4,21 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-artemis-core = { path = "../artemis-core" }
+artemis-common = { path = "../artemis-common" }
+artemis-service = { path = "../artemis-service" }
+artemis-management = { path = "../artemis-management" }
+axum = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
 tokio = { workspace = true }
-dashmap = { workspace = true }
-parking_lot = { workspace = true }
-async-trait = { workspace = true }
-governor = { workspace = true }
-tracing = { workspace = true }
-chrono = { workspace = true }
+tokio-util = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-reqwest = { workspace = true }
+tracing = { workspace = true }
 anyhow = { workspace = true }
-rand = { workspace = true }
-hostname = { workspace = true }
+dashmap = { workspace = true }
+futures = { workspace = true }
+chrono = { workspace = true }
 uuid = { workspace = true }
-humantime-serde = { workspace = true }
-toml = { workspace = true }
-opentelemetry = { workspace = true }
-opentelemetry_sdk = { workspace = true }
-opentelemetry-otlp = { workspace = true }
-tracing-opentelemetry = { workspace = true }
-tracing-subscriber = { workspace = true }
-
-[dev-dependencies]
-criterion = { workspace = true }
-artemis-management = { path = "../artemis-management" }
-
-[[bench]]
-name = "performance"
-harness = false
+prometheus = { workspace = true }
+lazy_static = { workspace = true }

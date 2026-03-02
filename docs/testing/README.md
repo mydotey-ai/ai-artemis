@@ -169,7 +169,7 @@ fn test_heartbeat_expired_lease_renews_successfully() {}
 - [GitHub 仓库](https://github.com/mydotey/ai-artemis)
 - [项目 README](../../README.md)
 - [脚本工具集](../../scripts/README.md)
-- [性能基准测试](../../artemis-server/benches/)
+- [性能基准测试](../../artemis-service/benches/)
 
 ---
 

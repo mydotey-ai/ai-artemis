@@ -8,7 +8,7 @@ use crate::model::{
     OperateInstanceResponse, OperateServerRequest, OperateServerResponse, ServerOperationInfo,
 };
 use crate::web::state::ManagementState;
-use artemis_core::model::ResponseStatus;
+use artemis_common::model::ResponseStatus;
 use axum::{
     Json,
     extract::{Query, State},
@@ -53,7 +53,7 @@ pub async fn operate_instance(
             error!("Failed to operate instance: {}", e);
             let response = OperateInstanceResponse {
                 status: ResponseStatus::error(
-                    artemis_core::model::ErrorCode::InternalError,
+                    artemis_common::model::ErrorCode::InternalError,
                     format!("Operation failed: {}", e),
                 ),
             };
@@ -133,7 +133,7 @@ pub async fn operate_server(
             error!("Failed to operate server: {}", e);
             let response = OperateServerResponse {
                 status: ResponseStatus::error(
-                    artemis_core::model::ErrorCode::InternalError,
+                    artemis_common::model::ErrorCode::InternalError,
                     format!("Operation failed: {}", e),
                 ),
             };

@@ -43,7 +43,7 @@
 ## 📖 相关文档
 
 - **基础功能**: Phase 10 集群复制
-- **实现代码**: `artemis-web/src/handlers/replication.rs`
+- **实现代码**: `artemis-server/src/handlers/replication.rs`
 - **测试脚本**: `scripts/test-batch-replication.sh`
 
 ---

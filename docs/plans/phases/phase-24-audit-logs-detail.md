@@ -42,7 +42,7 @@
 ## 📖 相关文档
 
 - **基础功能**: Phase 15 审计日志
-- **实现代码**: `artemis-web/src/handlers/audit.rs`
+- **实现代码**: `artemis-server/src/handlers/audit.rs`
 - **测试脚本**: `scripts/test-audit-logs.sh`
 
 ---

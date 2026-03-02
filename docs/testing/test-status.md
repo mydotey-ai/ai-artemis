@@ -46,20 +46,20 @@
 
 ### 完美覆盖 (100%)
 ```
-artemis-server:
+artemis-service:
   routing/context.rs          100.00% ✅✅
   cache/versioned.rs          100.00% ✅✅
   change/manager.rs           100.00% ✅✅
   cluster/node.rs             100.00% ✅✅
 
-artemis-web:
+artemis-server:
   api/registry.rs             100.00% ✅✅
   api/status.rs               100.00% ✅✅
 ```
 
 ### 优秀覆盖 (>95%)
 ```
-artemis-server:
+artemis-service:
   discovery/filter.rs          98.04% ✅
   discovery/load_balancer.rs   98.45% ✅
   lease/manager.rs             98.16% ✅
@@ -94,11 +94,11 @@ artemis-server:
 ### 单元测试 (459 个)
 | 模块 | 测试数 | 覆盖率 |
 |------|--------|--------|
-| artemis-server | 230+ | 62%+ |
+| artemis-service | 230+ | 62%+ |
 | artemis-management | 60+ | 65%+ |
 | artemis-client | 50+ | 70%+ |
-| artemis-web | 90+ | 55%+ |
-| artemis-core | 7 | 92%+ |
+| artemis-server | 90+ | 55%+ |
+| artemis-common | 7 | 92%+ |
 
 ### 集成测试 (33 个)
 - Web API 测试: 30 个

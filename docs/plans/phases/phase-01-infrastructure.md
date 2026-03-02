@@ -23,9 +23,9 @@
 # Cargo.toml
 [workspace]
 members = [
-    "artemis-core",
+    "artemis-common",
+    "artemis-service",
     "artemis-server",
-    "artemis-web",
     "artemis-management",
     "artemis-client",
     "artemis",
@@ -161,23 +161,23 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 1.2: 创建所有crate目录
 
 **Files:**
-- Create: `artemis-core/Cargo.toml` + `artemis-core/src/lib.rs`
+- Create: `artemis-common/Cargo.toml` + `artemis-common/src/lib.rs`
+- Create: `artemis-service/Cargo.toml` + `artemis-service/src/lib.rs`
 - Create: `artemis-server/Cargo.toml` + `artemis-server/src/lib.rs`
-- Create: `artemis-web/Cargo.toml` + `artemis-web/src/lib.rs`
 - Create: `artemis-management/Cargo.toml` + `artemis-management/src/lib.rs`
 - Create: `artemis-client/Cargo.toml` + `artemis-client/src/lib.rs`
 - Create: `artemis/Cargo.toml` + `artemis/src/main.rs`
 
-**Step 1: 创建artemis-core**
+**Step 1: 创建artemis-common**
 
 ```bash
-mkdir -p artemis-core/src
+mkdir -p artemis-common/src
 ```
 
 ```toml
-# artemis-core/Cargo.toml
+# artemis-common/Cargo.toml
 [package]
-name = "artemis-core"
+name = "artemis-common"
 version.workspace = true
 edition.workspace = true
 
@@ -192,7 +192,7 @@ uuid = { workspace = true }
 ```
 
 ```rust
-// artemis-core/src/lib.rs
+// artemis-common/src/lib.rs
 //! Artemis Core - 核心数据模型和trait定义
 
 pub mod model;
@@ -202,21 +202,21 @@ pub mod config;
 pub mod utils;
 ```
 
-**Step 2: 创建artemis-server**
+**Step 2: 创建artemis-service**
 
 ```bash
-mkdir -p artemis-server/src
+mkdir -p artemis-service/src
 ```
 
 ```toml
-# artemis-server/Cargo.toml
+# artemis-service/Cargo.toml
 [package]
-name = "artemis-server"
+name = "artemis-service"
 version.workspace = true
 edition.workspace = true
 
 [dependencies]
-artemis-core = { path = "../artemis-core" }
+artemis-common = { path = "../artemis-common" }
 tokio = { workspace = true }
 dashmap = { workspace = true }
 parking_lot = { workspace = true }
@@ -231,7 +231,7 @@ anyhow = { workspace = true }
 ```
 
 ```rust
-// artemis-server/src/lib.rs
+// artemis-service/src/lib.rs
 //! Artemis Server - 业务逻辑实现
 
 pub mod registry;
@@ -244,22 +244,22 @@ pub mod ratelimiter;
 pub mod storage;
 ```
 
-**Step 3: 创建artemis-web**
+**Step 3: 创建artemis-server**
 
 ```bash
-mkdir -p artemis-web/src
+mkdir -p artemis-server/src
 ```
 
 ```toml
-# artemis-web/Cargo.toml
+# artemis-server/Cargo.toml
 [package]
-name = "artemis-web"
+name = "artemis-server"
 version.workspace = true
 edition.workspace = true
 
 [dependencies]
-artemis-core = { path = "../artemis-core" }
-artemis-server = { path = "../artemis-server" }
+artemis-common = { path = "../artemis-common" }
+artemis-service = { path = "../artemis-service" }
 axum = { workspace = true }
 tower = { workspace = true }
 tower-http = { workspace = true }
@@ -275,7 +275,7 @@ chrono = { workspace = true }
 ```
 
 ```rust
-// artemis-web/src/lib.rs
+// artemis-server/src/lib.rs
 //! Artemis Web - HTTP/WebSocket API层
 
 pub mod server;
@@ -299,8 +299,8 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-artemis-core = { path = "../artemis-core" }
-artemis-server = { path = "../artemis-server" }
+artemis-common = { path = "../artemis-common" }
+artemis-service = { path = "../artemis-service" }
 sqlx = { workspace = true }
 tokio = { workspace = true }
 serde = { workspace = true }
@@ -339,7 +339,7 @@ description = "Artemis Service Registry Client SDK"
 license.workspace = true
 
 [dependencies]
-artemis-core = { path = "../artemis-core" }
+artemis-common = { path = "../artemis-common" }
 reqwest = { workspace = true }
 tokio = { workspace = true }
 tokio-tungstenite = { workspace = true }
@@ -381,9 +381,9 @@ name = "artemis"
 path = "src/main.rs"
 
 [dependencies]
-artemis-core = { path = "../artemis-core" }
+artemis-common = { path = "../artemis-common" }
+artemis-service = { path = "../artemis-service" }
 artemis-server = { path = "../artemis-server" }
-artemis-web = { path = "../artemis-web" }
 artemis-management = { path = "../artemis-management" }
 clap = { workspace = true }
 tokio = { workspace = true }
@@ -420,9 +420,9 @@ Expected: 成功编译所有crate（可能有unused warnings）
 git add .
 git commit -m "chore: create all crate directories and basic structure
 
-- Create artemis-core (models, traits, errors)
-- Create artemis-server (registry, discovery, lease)
-- Create artemis-web (HTTP/WebSocket API)
+- Create artemis-common (models, traits, errors)
+- Create artemis-service (registry, discovery, lease)
+- Create artemis-server (HTTP/WebSocket API)
 - Create artemis-management (persistence, admin)
 - Create artemis-client (SDK)
 - Create artemis (CLI binary)

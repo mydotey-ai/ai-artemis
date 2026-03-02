@@ -26,18 +26,18 @@ Rust 版本通过零 GC、无锁并发、零拷贝设计完全解决了这些问
 
 ```
 artemis-workspace/
-├── artemis-core/          # 核心数据模型、Trait、错误类型
-├── artemis-server/        # 业务逻辑层 (注册、发现、租约、缓存)
-├── artemis-web/           # HTTP API 层 (Axum + WebSocket)
+├── artemis-common/          # 核心数据模型、Trait、错误类型
+├── artemis-service/        # 业务逻辑层 (注册、发现、租约、缓存)
+├── artemis-server/           # HTTP API 层 (Axum + WebSocket)
 ├── artemis-management/    # 管理功能和数据持久化
 ├── artemis-client/        # 客户端 SDK (企业级功能,100%对齐Java版本)
 └── artemis/               # CLI 二进制 (服务器 + 管理工具)
 ```
 
 **模块职责**:
-- **artemis-core**: 定义所有数据结构 (ServiceInstance, DiscoveryConfig 等) 和 Trait 接口
-- **artemis-server**: 实现核心业务逻辑 (RegistryService, DiscoveryService, LeaseManager 等)
-- **artemis-web**: 提供 HTTP REST API 和 WebSocket 实时推送
+- **artemis-common**: 定义所有数据结构 (ServiceInstance, DiscoveryConfig 等) 和 Trait 接口
+- **artemis-service**: 实现核心业务逻辑 (RegistryService, DiscoveryService, LeaseManager 等)
+- **artemis-server**: 提供 HTTP REST API 和 WebSocket 实时推送
 - **artemis-management**: 高级管理功能 (分组路由、Zone管理、审计日志、持久化)
 - **artemis-client**: 客户端 SDK,支持服务注册/发现/心跳/实时订阅
 - **artemis**: 可执行文件,提供 CLI 命令

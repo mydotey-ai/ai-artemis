@@ -6,7 +6,7 @@ description = "Artemis Service Registry Client SDK"
 license.workspace = true
 
 [dependencies]
-artemis-core = { path = "../artemis-core" }
+artemis-common = { path = "../artemis-common" }
 reqwest = { workspace = true }
 tokio = { workspace = true }
 tokio-tungstenite = { workspace = true }

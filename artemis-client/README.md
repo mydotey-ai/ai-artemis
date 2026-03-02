@@ -68,7 +68,7 @@ let config = ClientConfig {
 
 ```rust
 use artemis_client::{FilterChain, StatusFilter};
-use artemis_core::model::InstanceStatus;
+use artemis_common::model::InstanceStatus;
 
 let filter = FilterChain::new()
     .add(Box::new(StatusFilter::new(vec![InstanceStatus::Up])));

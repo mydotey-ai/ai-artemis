@@ -1,7 +1,7 @@
 //! Discovery filters for management features
 
-use artemis_core::model::{DiscoveryConfig, Service};
-use artemis_server::discovery::filter::{DiscoveryFilter, Result};
+use artemis_common::model::{DiscoveryConfig, Service};
+use artemis_service::discovery::filter::{DiscoveryFilter, Result};
 use async_trait::async_trait;
 use std::sync::Arc;
 

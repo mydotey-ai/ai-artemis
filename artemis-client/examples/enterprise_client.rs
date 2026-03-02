@@ -11,7 +11,7 @@
 //! Run with metrics: cargo run --example enterprise_client --features metrics
 
 use artemis_client::{AddressManager, ClientConfig, FilterChain, RegistryClient, StatusFilter};
-use artemis_core::model::{Instance, InstanceStatus};
+use artemis_common::model::{Instance, InstanceStatus};
 use std::sync::Arc;
 
 #[tokio::main]

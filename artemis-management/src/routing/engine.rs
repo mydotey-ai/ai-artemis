@@ -1,6 +1,6 @@
 //! 路由引擎 - 统一入口
 
-use artemis_core::model::Instance;
+use artemis_common::model::Instance;
 use crate::model::{RouteRule, RouteStrategy as RouteStrategyEnum};
 use std::sync::Arc;
 use tracing::{debug, warn};
@@ -112,8 +112,8 @@ impl Default for RouteEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use artemis_core::model::InstanceStatus;
-    use artemis_core::model::service::ServiceGroup;
+    use artemis_common::model::InstanceStatus;
+    use artemis_common::model::service::ServiceGroup;
     use crate::model::{RouteRuleStatus, RouteStrategy as RouteStrategyEnum};
 
     fn create_test_instance(service_id: &str, instance_id: &str, group_id: &str) -> Instance {

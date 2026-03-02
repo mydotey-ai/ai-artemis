@@ -5,7 +5,7 @@
 //! affecting the registration state.
 
 use crate::model::{InstanceOperation, InstanceOperationRecord, ServerOperation};
-use artemis_core::model::InstanceKey;
+use artemis_common::model::InstanceKey;
 use dashmap::DashMap;
 use std::sync::Arc;
 use tracing::info;
@@ -268,7 +268,7 @@ impl InstanceManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use artemis_core::model::InstanceKey;
+    use artemis_common::model::InstanceKey;
 
     fn create_test_instance_key() -> InstanceKey {
         InstanceKey {

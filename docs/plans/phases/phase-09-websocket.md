@@ -1,6 +1,6 @@
 # 阶段9: WebSocket完整实现
 
-> **For Claude:** 实现WebSocket实时推送功能，包括服务端和客户端。参考Java实现: `artemis-java/artemis-server/`
+> **For Claude:** 实现WebSocket实时推送功能，包括服务端和客户端。参考Java实现: `artemis-java/artemis-service/`
 
 **优先级**: P1 (强烈建议)
 **状态**: ✅ **已完成** (2026-02-13)
@@ -12,13 +12,13 @@
 ## Task 9.1: 实现SessionManager（会话管理）
 
 **Files:**
-- Create: `artemis-web/src/websocket/session.rs`
-- Update: `artemis-web/src/websocket/mod.rs`
+- Create: `artemis-server/src/websocket/session.rs`
+- Update: `artemis-server/src/websocket/mod.rs`
 
 **Step 1: 实现SessionManager**
 
 ```rust
-// artemis-web/src/websocket/mod.rs
+// artemis-server/src/websocket/mod.rs
 pub mod handler;
 pub mod session;
 
@@ -27,7 +27,7 @@ pub use session::SessionManager;
 ```
 
 ```rust
-// artemis-web/src/websocket/session.rs
+// artemis-server/src/websocket/session.rs
 use dashmap::DashMap;
 use futures::stream::SplitSink;
 use axum::extract::ws::{WebSocket, Message};
@@ -141,7 +141,7 @@ mod tests {
 **Step 2: 提交**
 
 ```bash
-git add artemis-web/src/websocket/
+git add artemis-server/src/websocket/
 git commit -m "feat(web): implement SessionManager for WebSocket
 
 - Add SessionManager for connection management
@@ -158,12 +158,12 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 9.2: 实现WebSocket Handler
 
 **Files:**
-- Create: `artemis-web/src/websocket/handler.rs`
+- Create: `artemis-server/src/websocket/handler.rs`
 
 **Step 1: 实现WebSocket处理器**
 
 ```rust
-// artemis-web/src/websocket/handler.rs
+// artemis-server/src/websocket/handler.rs
 use super::session::SessionManager;
 use crate::state::AppState;
 use axum::{
@@ -294,7 +294,7 @@ async fn handle_text_message(
 **Step 2: 添加SessionManager到AppState**
 
 ```rust
-// artemis-web/src/state.rs
+// artemis-server/src/state.rs
 use crate::websocket::SessionManager;
 
 pub struct AppState {
@@ -326,7 +326,7 @@ impl AppState {
 **Step 3: 添加WebSocket路由**
 
 ```rust
-// artemis-web/src/server.rs
+// artemis-server/src/server.rs
 use crate::websocket;
 
 let app = Router::new()
@@ -341,7 +341,7 @@ let app = Router::new()
 **Step 4: 提交**
 
 ```bash
-git add artemis-web/
+git add artemis-server/
 git commit -m "feat(web): implement WebSocket handler
 
 - Add WebSocket upgrade handler
@@ -358,21 +358,21 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 9.3: 实现InstanceChangeManager（变更推送）
 
 **Files:**
-- Create: `artemis-server/src/change/mod.rs`
-- Create: `artemis-server/src/change/manager.rs`
+- Create: `artemis-service/src/change/mod.rs`
+- Create: `artemis-service/src/change/manager.rs`
 
 **Step 1: 实现ChangeManager**
 
 ```rust
-// artemis-server/src/change/mod.rs
+// artemis-service/src/change/mod.rs
 pub mod manager;
 
 pub use manager::InstanceChangeManager;
 ```
 
 ```rust
-// artemis-server/src/change/manager.rs
-use artemis_core::model::{InstanceChange, InstanceKey};
+// artemis-service/src/change/manager.rs
+use artemis_common::model::{InstanceChange, InstanceKey};
 use dashmap::DashMap;
 use std::sync::Arc;
 use tokio::sync::mpsc;
@@ -410,10 +410,10 @@ impl InstanceChangeManager {
     }
 
     /// 发布实例注册事件
-    pub fn publish_register(&self, instance: &artemis_core::model::Instance) {
+    pub fn publish_register(&self, instance: &artemis_common::model::Instance) {
         let change = InstanceChange {
             instance: instance.clone(),
-            change_type: artemis_core::model::ChangeType::New,
+            change_type: artemis_common::model::ChangeType::New,
             change_time: chrono::Utc::now(),
         };
 
@@ -421,10 +421,10 @@ impl InstanceChangeManager {
     }
 
     /// 发布实例注销事件
-    pub fn publish_unregister(&self, key: &InstanceKey, instance: &artemis_core::model::Instance) {
+    pub fn publish_unregister(&self, key: &InstanceKey, instance: &artemis_common::model::Instance) {
         let change = InstanceChange {
             instance: instance.clone(),
-            change_type: artemis_core::model::ChangeType::Delete,
+            change_type: artemis_common::model::ChangeType::Delete,
             change_time: chrono::Utc::now(),
         };
 
@@ -442,7 +442,7 @@ impl Default for InstanceChangeManager {
 **Step 2: 集成到RegistryServiceImpl**
 
 ```rust
-// artemis-server/src/registry/service_impl.rs
+// artemis-service/src/registry/service_impl.rs
 use crate::change::InstanceChangeManager;
 
 pub struct RegistryServiceImpl {
@@ -497,7 +497,7 @@ impl RegistryService for RegistryServiceImpl {
 **Step 3: 更新lib.rs**
 
 ```rust
-// artemis-server/src/lib.rs
+// artemis-service/src/lib.rs
 pub mod change;
 
 pub use change::InstanceChangeManager;
@@ -506,7 +506,7 @@ pub use change::InstanceChangeManager;
 **Step 4: 提交**
 
 ```bash
-git add artemis-server/
+git add artemis-service/
 git commit -m "feat(server): implement InstanceChangeManager
 
 - Add InstanceChangeManager for change event publishing
@@ -537,7 +537,7 @@ pub use client::WebSocketClient;
 ```rust
 // artemis-client/src/websocket/client.rs
 use crate::{config::ClientConfig, error::Result};
-use artemis_core::model::InstanceChange;
+use artemis_common::model::InstanceChange;
 use futures::{SinkExt, StreamExt};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;

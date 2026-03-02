@@ -98,12 +98,12 @@ pub use server::run_server;
 ```rust
 // artemis/src/commands/server.rs
 use anyhow::Result;
-use artemis_core::config::ArtemisConfig;
+use artemis_common::config::ArtemisConfig;
 use artemis_server::{
     cache::VersionedCacheManager, discovery::DiscoveryServiceImpl, lease::LeaseManager,
     ratelimiter::RateLimiter, registry::RegistryRepository, registry::RegistryServiceImpl,
 };
-use artemis_web::{AppState, WebServer};
+use artemis_server::{AppState, WebServer};
 use figment::{
     providers::{Env, Format, Toml},
     Figment,
@@ -239,7 +239,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ```rust
 // artemis/src/commands/service.rs
 use anyhow::Result;
-use artemis_core::model::{GetServicesRequest, GetServiceRequest, DiscoveryConfig};
+use artemis_common::model::{GetServicesRequest, GetServiceRequest, DiscoveryConfig};
 use reqwest::Client;
 
 pub async fn list_services(server_url: &str, region: &str, zone: &str) -> Result<()> {
@@ -256,7 +256,7 @@ pub async fn list_services(server_url: &str, region: &str, zone: &str) -> Result
         .json(&request)
         .send()
         .await?
-        .json::<artemis_core::model::GetServicesResponse>()
+        .json::<artemis_common::model::GetServicesResponse>()
         .await?;
 
     println!("Services:");
@@ -285,7 +285,7 @@ pub async fn get_service(server_url: &str, service_id: &str, region: &str, zone:
         .json(&request)
         .send()
         .await?
-        .json::<artemis_core::model::GetServiceResponse>()
+        .json::<artemis_common::model::GetServiceResponse>()
         .await?;
 
     if let Some(service) = response.service {
@@ -307,7 +307,7 @@ pub async fn get_service(server_url: &str, service_id: &str, region: &str, zone:
 ```rust
 // artemis/src/commands/instance.rs
 use anyhow::Result;
-use artemis_core::model::{Instance, InstanceStatus, RegisterRequest, UnregisterRequest, InstanceKey};
+use artemis_common::model::{Instance, InstanceStatus, RegisterRequest, UnregisterRequest, InstanceKey};
 use reqwest::Client;
 
 pub async fn register_instance(
@@ -346,10 +346,10 @@ pub async fn register_instance(
         .json(&request)
         .send()
         .await?
-        .json::<artemis_core::model::RegisterResponse>()
+        .json::<artemis_common::model::RegisterResponse>()
         .await?;
 
-    if response.response_status.error_code == artemis_core::model::ErrorCode::Success {
+    if response.response_status.error_code == artemis_common::model::ErrorCode::Success {
         println!("Instance registered successfully");
     } else {
         println!("Registration failed: {:?}", response.response_status.error_message);
@@ -523,7 +523,7 @@ pub enum ConfigAction {
 ```rust
 // artemis/src/commands/config.rs
 use anyhow::Result;
-use artemis_core::config::ArtemisConfig;
+use artemis_common::config::ArtemisConfig;
 use figment::{providers::Format, Figment};
 use std::collections::HashMap;
 use std::fs;
@@ -617,7 +617,7 @@ fn convert_properties_to_rust_config(
 
     // Database配置映射
     if let Some(db_url) = props.get("artemis.db.url") {
-        config.database = Some(artemis_core::config::DatabaseConfig {
+        config.database = Some(artemis_common::config::DatabaseConfig {
             url: db_url.clone(),
             max_connections: props
                 .get("artemis.db.max_connections")

@@ -67,7 +67,7 @@ run_all_tests() {
     cargo test --workspace --lib
 
     print_info "2. 运行 Web API 测试..."
-    cargo test -p artemis-web --tests
+    cargo test -p artemis-server --tests
 
     print_success "所有测试完成!"
 }
@@ -84,10 +84,10 @@ run_web_tests() {
     print_title "运行 Web API 测试"
 
     print_info "Registry API 测试..."
-    cargo test -p artemis-web --test test_registry_api
+    cargo test -p artemis-server --test test_registry_api
 
     print_info "Discovery API 测试..."
-    cargo test -p artemis-web --test test_discovery_api
+    cargo test -p artemis-server --test test_discovery_api
 
     print_success "Web API 测试完成!"
 }
@@ -95,14 +95,14 @@ run_web_tests() {
 # 运行 Registry API 测试
 run_registry_tests() {
     print_title "运行 Registry API 测试"
-    cargo test -p artemis-web --test test_registry_api --verbose
+    cargo test -p artemis-server --test test_registry_api --verbose
     print_success "Registry API 测试完成!"
 }
 
 # 运行 Discovery API 测试
 run_discovery_tests() {
     print_title "运行 Discovery API 测试"
-    cargo test -p artemis-web --test test_discovery_api --verbose
+    cargo test -p artemis-server --test test_discovery_api --verbose
     print_success "Discovery API 测试完成!"
 }
 
@@ -132,7 +132,7 @@ generate_coverage() {
 # 运行性能基准测试
 run_benchmarks() {
     print_title "运行性能基准测试"
-    cargo bench --package artemis-server
+    cargo bench --package artemis-service
     print_success "性能基准测试完成!"
 }
 
@@ -146,7 +146,7 @@ run_watch() {
     fi
 
     print_info "监视文件变化并自动运行测试..."
-    cargo watch -x "test --workspace --lib" -x "test -p artemis-web --tests"
+    cargo watch -x "test --workspace --lib" -x "test -p artemis-server --tests"
 }
 
 # 清理测试缓存
@@ -162,18 +162,18 @@ show_summary() {
     print_title "测试统计摘要"
 
     echo "📊 测试文件:"
-    echo "  - artemis-web/tests/test_registry_api.rs"
-    echo "  - artemis-web/tests/test_discovery_api.rs"
+    echo "  - artemis-server/tests/test_registry_api.rs"
+    echo "  - artemis-server/tests/test_discovery_api.rs"
     echo "  - artemis/tests/common/mod.rs"
     echo "  - artemis-management/tests/common/mod.rs"
     echo ""
 
     echo "📈 快速测试:"
     echo "  Registry API 测试:"
-    cargo test -p artemis-web --test test_registry_api 2>&1 | grep -E "running|test result:"
+    cargo test -p artemis-server --test test_registry_api 2>&1 | grep -E "running|test result:"
     echo ""
     echo "  Discovery API 测试:"
-    cargo test -p artemis-web --test test_discovery_api 2>&1 | grep -E "running|test result:"
+    cargo test -p artemis-server --test test_discovery_api 2>&1 | grep -E "running|test result:"
     echo ""
 
     echo "🎯 覆盖的 API 端点: 8/101"

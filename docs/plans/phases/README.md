@@ -11,7 +11,7 @@
 - **Phase 19-25**: 功能对齐补充 (34 API, 2026-02-15)
 - **Phase 26**: 客户端企业级功能 (2026-02-17)
 - **Phase 27**: Web 控制台 (2026-02-16 至 2026-02-17)
-- **Phase 28**: artemis-core 架构重构 (2026-02-17)
+- **Phase 28**: artemis-common 架构重构 (2026-02-17)
 - **Phase 29**: 管理 API 重构 (2026-02-17)
 
 **总计**: 101 个 API 端点，100% 实现，与 Java 版本完全对齐
@@ -115,7 +115,7 @@
 
 | Phase | 文件 | 说明 | 状态 |
 |-------|------|------|------|
-| Phase 28 | `phase-28-artemis-core-refactoring.md` | artemis-core 精简重构 (代码减少 78.5%) | ✅ 已完成 |
+| Phase 28 | `phase-28-artemis-common-refactoring.md` | artemis-common 精简重构 (代码减少 78.5%) | ✅ 已完成 |
 | Phase 29 | `phase-29-management-api-refactoring.md` | 管理 API 重构 (46 端点迁移,依赖修正) | ✅ 已完成 |
 
 ---
@@ -203,7 +203,7 @@
 |------|-------|------|------|
 | 客户端扩展 | Phase 26 | 12 个企业级功能,~2,500 行代码,50+ 测试 | ✅ 已完成 |
 | Web 控制台 | Phase 27 | 9 个功能模块,14,000+ 行代码 | ✅ 已完成 |
-| 架构优化 | Phase 28 | artemis-core 精简 78.5%,依赖优化 | ✅ 已完成 |
+| 架构优化 | Phase 28 | artemis-common 精简 78.5%,依赖优化 | ✅ 已完成 |
 | 管理 API 重构 | Phase 29 | 46 端点迁移,依赖修正,routing 模块迁移 | ✅ 已完成 |
 
 ### 技术成果

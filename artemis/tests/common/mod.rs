@@ -5,12 +5,12 @@
 //! - TestCluster: 测试集群管理
 //! - Fixture: 测试数据构造器
 
-use artemis_core::model::{Instance, InstanceStatus, InstanceKey, ServiceGroup, RouteRule, RouteStrategy};
-use artemis_server::{
+use artemis_common::model::{Instance, InstanceStatus, InstanceKey, ServiceGroup, RouteRule, RouteStrategy};
+use artemis_service::{
     RegistryServiceImpl, VersionedCacheManager, InstanceChangeManager,
     discovery::DiscoveryServiceImpl, lease::LeaseManager, registry::RegistryRepository,
 };
-use artemis_web::state::AppState;
+use artemis_server::state::AppState;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
@@ -43,7 +43,7 @@ impl TestServer {
                 cache.clone(),
             ));
 
-            let session_manager = Arc::new(artemis_web::websocket::SessionManager::new());
+            let session_manager = Arc::new(artemis_server::websocket::SessionManager::new());
             let instance_manager = Arc::new(artemis_management::InstanceManager::new());
 
             let app_state = AppState {
@@ -57,7 +57,7 @@ impl TestServer {
             };
 
             let addr: SocketAddr = format!("127.0.0.1:{}", port).parse().unwrap();
-            let _ = artemis_web::server::run_server(app_state, addr).await;
+            let _ = artemis_server::server::run_server(app_state, addr).await;
         });
 
         // 等待服务器启动

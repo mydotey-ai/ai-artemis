@@ -38,7 +38,7 @@
 ## 📖 相关文档
 
 - **基础功能**: Phase 12 实例管理
-- **实现代码**: `artemis-web/src/handlers/management.rs`
+- **实现代码**: `artemis-server/src/handlers/management.rs`
 - **测试脚本**: `scripts/test-all-operations.sh`
 
 ---

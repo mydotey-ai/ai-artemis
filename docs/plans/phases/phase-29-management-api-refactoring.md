@@ -2,16 +2,16 @@
 
 ## 概述
 
-**目标**: 将管理相关的 HTTP API 处理器从 artemis-web 迁移到 artemis-management,实现更清晰的职责分离。
+**目标**: 将管理相关的 HTTP API 处理器从 artemis-server 迁移到 artemis-management,实现更清晰的职责分离。
 
 **当前状态**:
 - ✅ 业务逻辑已在 artemis-management (AuthManager, GroupManager, RouteManager 等)
-- ❌ HTTP API 处理器仍在 artemis-web/src/api/
-- ❌ artemis-web 同时承担核心服务和管理功能的 HTTP 适配
+- ❌ HTTP API 处理器仍在 artemis-server/src/api/
+- ❌ artemis-server 同时承担核心服务和管理功能的 HTTP 适配
 
 **重构目标**:
 - artemis-management 提供完整的管理 API 模块 (HTTP handlers + 路由)
-- artemis-web 仅作为轻量级路由聚合层,合并核心服务和管理服务的端点
+- artemis-server 仅作为轻量级路由聚合层,合并核心服务和管理服务的端点
 - 更清晰的模块边界和职责分离
 
 ---
@@ -21,7 +21,7 @@
 ### 当前架构 (Before)
 
 ```
-artemis-web (HTTP 层)
+artemis-server (HTTP 层)
 ├── api/
 │   ├── auth.rs          ❌ 认证 API (应属于 management)
 │   ├── management.rs    ❌ 实例操作 API (应属于 management)
@@ -52,7 +52,7 @@ artemis-management (业务逻辑层)
 ### 目标架构 (After)
 
 ```
-artemis-web (轻量级路由聚合层)
+artemis-server (轻量级路由聚合层)
 ├── api/
 │   ├── registry.rs      ✅ 服务注册 API
 │   ├── discovery.rs     ✅ 服务发现 API
@@ -65,15 +65,15 @@ artemis-web (轻量级路由聚合层)
 artemis-management (完整管理层 - 业务逻辑 + HTTP API)
 ├── web/                 ✨ 新增: HTTP API 模块
 │   ├── api/
-│   │   ├── auth.rs      🔄 认证 API (迁移自 artemis-web)
+│   │   ├── auth.rs      🔄 认证 API (迁移自 artemis-server)
 │   │   ├── instance.rs  🔄 实例操作 API (迁移自 management.rs)
-│   │   ├── routing.rs   🔄 分组/路由 API (迁移自 artemis-web)
-│   │   ├── audit.rs     🔄 审计日志 API (迁移自 artemis-web)
-│   │   ├── zone.rs      🔄 Zone API (迁移自 artemis-web)
-│   │   ├── canary.rs    🔄 金丝雀 API (迁移自 artemis-web)
+│   │   ├── routing.rs   🔄 分组/路由 API (迁移自 artemis-server)
+│   │   ├── audit.rs     🔄 审计日志 API (迁移自 artemis-server)
+│   │   ├── zone.rs      🔄 Zone API (迁移自 artemis-server)
+│   │   ├── canary.rs    🔄 金丝雀 API (迁移自 artemis-server)
 │   │   └── mod.rs
 │   ├── middleware/
-│   │   ├── jwt.rs       🔄 JWT 中间件 (迁移自 artemis-web)
+│   │   ├── jwt.rs       🔄 JWT 中间件 (迁移自 artemis-server)
 │   │   └── mod.rs
 │   ├── routes.rs        ✨ 管理路由定义
 │   ├── state.rs         ✨ 管理状态
@@ -114,7 +114,7 @@ mkdir -p artemis-management/src/web/middleware
 ```toml
 [dependencies]
 # 现有依赖...
-artemis-core = { path = "../artemis-core" }
+artemis-common = { path = "../artemis-common" }
 sea-orm = { workspace = true }
 tokio = { workspace = true }
 dashmap = { workspace = true }
@@ -138,7 +138,7 @@ tower-http = { workspace = true }     # HTTP 中间件
 
 #### 2.1 迁移认证 API
 
-**源文件**: `artemis-web/src/api/auth.rs` (376 行)
+**源文件**: `artemis-server/src/api/auth.rs` (376 行)
 **目标文件**: `artemis-management/src/web/api/auth.rs`
 
 **迁移内容**:
@@ -170,7 +170,7 @@ GET    /api/auth/roles
 
 #### 2.2 迁移实例操作 API
 
-**源文件**: `artemis-web/src/api/management.rs` (265 行)
+**源文件**: `artemis-server/src/api/management.rs` (265 行)
 **目标文件**: `artemis-management/src/web/api/instance.rs`
 
 **API 端点** (共 8 个):
@@ -188,7 +188,7 @@ GET  /api/management/all-server-operations.json
 
 #### 2.3 迁移分组和路由 API
 
-**源文件**: `artemis-web/src/api/routing.rs` (1,063 行 - 最大文件)
+**源文件**: `artemis-server/src/api/routing.rs` (1,063 行 - 最大文件)
 **目标文件**: `artemis-management/src/web/api/routing.rs`
 
 **API 端点** (共 23 个):
@@ -223,7 +223,7 @@ PATCH  /api/routing/rules/{rule_id}/groups/{group_id}
 
 #### 2.4 迁移审计日志 API
 
-**源文件**: `artemis-web/src/api/audit.rs` (443 行)
+**源文件**: `artemis-server/src/api/audit.rs` (443 行)
 **目标文件**: `artemis-management/src/web/api/audit.rs`
 
 **API 端点** (共 9 个):
@@ -241,7 +241,7 @@ POST /api/management/log/service-instance-logs.json
 
 #### 2.5 迁移 Zone 管理 API
 
-**源文件**: `artemis-web/src/api/zone.rs` (188 行)
+**源文件**: `artemis-server/src/api/zone.rs` (188 行)
 **目标文件**: `artemis-management/src/web/api/zone.rs`
 
 **API 端点** (共 5 个):
@@ -255,7 +255,7 @@ DELETE /api/management/zone/{zone_id}/{region_id}
 
 #### 2.6 迁移金丝雀 API
 
-**源文件**: `artemis-web/src/api/canary.rs` (219 行)
+**源文件**: `artemis-server/src/api/canary.rs` (219 行)
 **目标文件**: `artemis-management/src/web/api/canary.rs`
 
 **API 端点** (共 5 个):
@@ -273,7 +273,7 @@ GET    /api/management/canary/configs
 
 #### 3.1 迁移 JWT 中间件
 
-**源文件**: `artemis-web/src/middleware/jwt.rs` (43 行)
+**源文件**: `artemis-server/src/middleware/jwt.rs` (43 行)
 **目标文件**: `artemis-management/src/web/middleware/jwt.rs`
 
 **功能**:
@@ -345,11 +345,11 @@ pub fn management_routes(state: ManagementState) -> Router {
 
 ---
 
-### 5. 更新 artemis-web 路由聚合
+### 5. 更新 artemis-server 路由聚合
 
 #### 5.1 简化 AppState
 
-**文件**: `artemis-web/src/state.rs`
+**文件**: `artemis-server/src/state.rs`
 
 ```rust
 use artemis_management::ManagementState;
@@ -376,7 +376,7 @@ pub struct AppState {
 
 #### 5.2 简化路由定义
 
-**文件**: `artemis-web/src/server.rs`
+**文件**: `artemis-server/src/server.rs`
 
 ```rust
 use artemis_management::web::management_routes;
@@ -449,21 +449,21 @@ pub use web::{ManagementState, management_routes};  // ✨ 导出 Web API
 
 ---
 
-### 7. 清理 artemis-web
+### 7. 清理 artemis-server
 
 #### 7.1 删除已迁移的文件
 
 ```bash
-rm artemis-web/src/api/auth.rs
-rm artemis-web/src/api/management.rs
-rm artemis-web/src/api/routing.rs
-rm artemis-web/src/api/audit.rs
-rm artemis-web/src/api/zone.rs
-rm artemis-web/src/api/canary.rs
-rm artemis-web/src/middleware/jwt.rs
+rm artemis-server/src/api/auth.rs
+rm artemis-server/src/api/management.rs
+rm artemis-server/src/api/routing.rs
+rm artemis-server/src/api/audit.rs
+rm artemis-server/src/api/zone.rs
+rm artemis-server/src/api/canary.rs
+rm artemis-server/src/middleware/jwt.rs
 ```
 
-#### 7.2 更新 artemis-web/src/api/mod.rs
+#### 7.2 更新 artemis-server/src/api/mod.rs
 
 移除已迁移模块的引用:
 
@@ -484,7 +484,7 @@ pub mod replication;
 pub mod status;
 ```
 
-#### 7.3 更新 artemis-web/src/middleware/mod.rs
+#### 7.3 更新 artemis-server/src/middleware/mod.rs
 
 ```rust
 // 移除:
@@ -542,7 +542,7 @@ pub mod status;
 2. 配置认证和 CORS 中间件
 3. 导出 management_routes 函数
 
-### Step 9: 更新 artemis-web 路由聚合 (估计: 30 分钟)
+### Step 9: 更新 artemis-server 路由聚合 (估计: 30 分钟)
 
 1. 简化 AppState
 2. 更新 server.rs 使用 management_routes
@@ -601,7 +601,7 @@ pub mod status;
 ### 1. 更清晰的职责分离
 
 - ✅ artemis-management 成为完整的管理层 (业务逻辑 + HTTP API)
-- ✅ artemis-web 简化为轻量级路由聚合层
+- ✅ artemis-server 简化为轻量级路由聚合层
 - ✅ 核心服务和管理功能完全解耦
 
 ### 2. 更好的可维护性
@@ -618,7 +618,7 @@ pub mod status;
 
 ### 4. 更好的代码组织
 
-- ✅ artemis-web 代码量减少约 2,500 行 (6 个 API 文件 + 中间件)
+- ✅ artemis-server 代码量减少约 2,500 行 (6 个 API 文件 + 中间件)
 - ✅ artemis-management 成为功能完整的管理层
 - ✅ 模块边界更加清晰
 
@@ -682,7 +682,7 @@ pub mod status;
 | 迁移审计日志 API | 25 分钟 |
 | 迁移 Zone 和金丝雀 API | 25 分钟 |
 | 完善管理路由 | 30 分钟 |
-| 更新 artemis-web | 30 分钟 |
+| 更新 artemis-server | 30 分钟 |
 | 集成测试 | 60 分钟 |
 | 文档更新 | 30 分钟 |
 | **总计** | **约 5.5 小时** |

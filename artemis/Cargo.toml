@@ -9,9 +9,9 @@ name = "artemis"
 path = "src/main.rs"
 
 [dependencies]
-artemis-core = { path = "../artemis-core" }
+artemis-common = { path = "../artemis-common" }
+artemis-service = { path = "../artemis-service" }
 artemis-server = { path = "../artemis-server" }
-artemis-web = { path = "../artemis-web" }
 artemis-management = { path = "../artemis-management" }
 clap = { workspace = true }
 tokio = { workspace = true }
