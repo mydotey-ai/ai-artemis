@@ -201,7 +201,7 @@ const Instances: React.FC = () => {
       if (operationsResponse.status.error_code === 'success') {
         operationsResponse.instance_operation_records.forEach((record: InstanceOperationRecord) => {
           if (record.operation === 'pullout' && record.operation_complete) {
-            const key = `${record.instance_key.service_id}:${record.instance_key.instance_id}:${record.instance_key.region_id}`;
+            const key = `${record.instance_key.serviceId}:${record.instance_key.instanceId}:${record.instance_key.regionId}`;
             pulledOutInstances.add(key);
           }
         });
@@ -211,18 +211,18 @@ const Instances: React.FC = () => {
       const allInstances: InstanceRow[] = [];
       servicesResponse.services.forEach((service: Service) => {
         service.instances.forEach((instance: Instance) => {
-          const key = `${instance.service_id}:${instance.instance_id}:${instance.region_id}`;
+          const key = `${instance.serviceId}:${instance.instanceId}:${instance.regionId}`;
           const isPulledOut = pulledOutInstances.has(key);
 
           allInstances.push({
-            instanceId: instance.instance_id,
-            serviceId: instance.service_id,
+            instanceId: instance.instanceId,
+            serviceId: instance.serviceId,
             ip: instance.ip,
             port: instance.port,
             status: instance.status,
             displayStatus: isPulledOut ? 'out' : instance.status,
-            regionId: instance.region_id,
-            zoneId: instance.zone_id,
+            regionId: instance.regionId,
+            zoneId: instance.zoneId,
             metadata: instance.metadata || {},
             url: instance.url,
             healthCheckUrl: instance.health_check_url,
@@ -268,9 +268,9 @@ const Instances: React.FC = () => {
         'instance.status_changed': 'Instance status changed',
       };
 
-      const eventData = data as { instance_id?: string; status?: string };
-      const instanceInfo = eventData.instance_id
-        ? ` (${eventData.instance_id})`
+      const eventData = data as { instanceId?: string; status?: string };
+      const instanceInfo = eventData.instanceId
+        ? ` (${eventData.instanceId})`
         : '';
 
       showNotification({
@@ -414,13 +414,13 @@ const Instances: React.FC = () => {
 
   // ===== Instance Operations =====
   const createInstanceKey = (instance: InstanceRow): InstanceKey => ({
-    service_id: instance.serviceId,
-    instance_id: instance.instanceId,
+    serviceId: instance.serviceId,
+    instanceId: instance.instanceId,
     ip: instance.ip,
     port: instance.port,
-    region_id: instance.regionId,
-    zone_id: instance.zoneId,
-    group_id: '', // Default group
+    regionId: instance.regionId,
+    zoneId: instance.zoneId,
+    groupId: '', // Default group
   });
 
   const handlePullIn = async (instance: InstanceRow): Promise<void> => {

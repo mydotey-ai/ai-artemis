@@ -100,7 +100,7 @@ interface Statistics {
  * Canary form data
  */
 interface CanaryFormData {
-  service_id: string;
+  serviceId: string;
   ip_whitelist: string;
   description: string;
 }
@@ -169,7 +169,7 @@ const Canary: React.FC = () => {
 
   // Form state
   const [formData, setFormData] = useState<CanaryFormData>({
-    service_id: '',
+    serviceId: '',
     ip_whitelist: '',
     description: '',
   });
@@ -235,7 +235,7 @@ const Canary: React.FC = () => {
       // Search filter
       if (
         searchQuery &&
-        !config.service_id.toLowerCase().includes(searchQuery.toLowerCase())
+        !config.serviceId.toLowerCase().includes(searchQuery.toLowerCase())
       ) {
         return false;
       }
@@ -267,8 +267,8 @@ const Canary: React.FC = () => {
     if (editMode) {
       return services;
     }
-    const configuredServiceIds = new Set(configs.map((c) => c.service_id));
-    return services.filter((s) => !configuredServiceIds.has(s.service_id));
+    const configuredServiceIds = new Set(configs.map((c) => c.serviceId));
+    return services.filter((s) => !configuredServiceIds.has(s.serviceId));
   }, [services, configs, editMode]);
 
   // ===== Event Handlers =====
@@ -317,7 +317,7 @@ const Canary: React.FC = () => {
   const handleCreate = (): void => {
     setEditMode(false);
     setFormData({
-      service_id: '',
+      serviceId: '',
       ip_whitelist: '',
       description: '',
     });
@@ -331,7 +331,7 @@ const Canary: React.FC = () => {
   const handleEdit = (config: CanaryConfig): void => {
     setEditMode(true);
     setFormData({
-      service_id: config.service_id,
+      serviceId: config.serviceId,
       ip_whitelist: config.ip_whitelist.join('\n'),
       description: '',
     });
@@ -379,7 +379,7 @@ const Canary: React.FC = () => {
       setActionLoading(true);
       const response = currentEnabled
         ? await disableCanary(serviceId)
-        : await enableCanary({ service_id: serviceId, enabled: true });
+        : await enableCanary({ serviceId: serviceId, enabled: true });
 
       if (!response.success) {
         throw new Error(response.message || 'Failed to update canary status');
@@ -399,7 +399,7 @@ const Canary: React.FC = () => {
   const handleManageIps = (config: CanaryConfig): void => {
     setIpDialog({
       open: true,
-      serviceId: config.service_id,
+      serviceId: config.serviceId,
       currentIps: [...config.ip_whitelist],
     });
     setNewIp('');
@@ -506,8 +506,8 @@ const Canary: React.FC = () => {
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
 
-    if (!formData.service_id.trim()) {
-      errors.service_id = 'Service ID is required';
+    if (!formData.serviceId.trim()) {
+      errors.serviceId = 'Service ID is required';
     }
 
     // Validate IPs
@@ -546,7 +546,7 @@ const Canary: React.FC = () => {
         .filter((ip) => ip.length > 0);
 
       const request: SetCanaryConfigRequest = {
-        service_id: formData.service_id,
+        serviceId: formData.serviceId,
         ip_whitelist: ips,
         description: formData.description || undefined,
       };
@@ -582,7 +582,7 @@ const Canary: React.FC = () => {
     const csvHeaders = ['Service ID', 'Status', 'Whitelist IPs', 'Created At', 'Updated At'];
 
     const csvRows = filteredConfigs.map((config) => [
-      config.service_id,
+      config.serviceId,
       config.enabled ? 'ACTIVE' : 'INACTIVE',
       config.ip_whitelist.join('; '),
       config.created_at || 'N/A',
@@ -755,23 +755,23 @@ const Canary: React.FC = () => {
       <DialogContent dividers>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           {/* Service ID */}
-          <FormControl fullWidth error={Boolean(formErrors.service_id)}>
+          <FormControl fullWidth error={Boolean(formErrors.serviceId)}>
             <InputLabel>Service ID *</InputLabel>
             <Select
-              value={formData.service_id}
-              onChange={(e) => handleFormChange('service_id', e.target.value)}
+              value={formData.serviceId}
+              onChange={(e) => handleFormChange('serviceId', e.target.value)}
               label="Service ID *"
               disabled={editMode}
             >
               {availableServices.map((service) => (
-                <MenuItem key={service.service_id} value={service.service_id}>
-                  {service.service_id}
+                <MenuItem key={service.serviceId} value={service.serviceId}>
+                  {service.serviceId}
                 </MenuItem>
               ))}
             </Select>
-            {formErrors.service_id && (
+            {formErrors.serviceId && (
               <Typography variant="caption" color="error">
-                {formErrors.service_id}
+                {formErrors.serviceId}
               </Typography>
             )}
           </FormControl>
@@ -1050,19 +1050,19 @@ const Canary: React.FC = () => {
                   <TableBody>
                     {paginatedConfigs.map((config) => (
                       <TableRow
-                        key={config.service_id}
+                        key={config.serviceId}
                         sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                       >
                         <TableCell>
                           <Typography variant="body2" fontWeight={500}>
-                            {config.service_id}
+                            {config.serviceId}
                           </Typography>
                         </TableCell>
                         <TableCell align="center">
                           <Tooltip title={config.enabled ? 'Disable' : 'Enable'}>
                             <Switch
                               checked={config.enabled}
-                              onChange={() => handleStatusToggle(config.service_id, config.enabled)}
+                              onChange={() => handleStatusToggle(config.serviceId, config.enabled)}
                               color="success"
                             />
                           </Tooltip>
@@ -1102,7 +1102,7 @@ const Canary: React.FC = () => {
                               <IconButton
                                 size="small"
                                 color="error"
-                                onClick={() => handleDelete(config.service_id)}
+                                onClick={() => handleDelete(config.serviceId)}
                               >
                                 <DeleteIcon fontSize="small" />
                               </IconButton>

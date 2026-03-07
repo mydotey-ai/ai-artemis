@@ -99,13 +99,13 @@ function extractPermissionIds(user: User): string[] {
 
   // 从用户的直接权限
   user.permissions?.forEach((p) => {
-    permissionSet.add(p.permission_id);
+    permissionSet.add(p.permissionId);
   });
 
   // 从用户的角色权限
   user.roles?.forEach((role) => {
     role.permissions?.forEach((p) => {
-      permissionSet.add(p.permission_id);
+      permissionSet.add(p.permissionId);
     });
   });
 
@@ -144,12 +144,12 @@ export const useAuthStore = create<AuthStoreState>((set, get) => {
         // For now, create mock user until backend is implemented
         // TODO: Replace with actual user data from API response
         const mockUser: User = {
-          user_id: `user_${username}`,
+          userId: `user_${username}`,
           username,
           email: `${username}@example.com`,
           roles: [
             {
-              role_id: 'admin',
+              roleId: 'admin',
               name: 'Administrator',
               description: 'Admin role',
               permissions: [],
@@ -157,13 +157,13 @@ export const useAuthStore = create<AuthStoreState>((set, get) => {
           ],
           permissions: [
             {
-              permission_id: 'service:read',
+              permissionId: 'service:read',
               name: 'Read Services',
               resource: 'service',
               action: 'read',
             },
             {
-              permission_id: 'service:write',
+              permissionId: 'service:write',
               name: 'Write Services',
               resource: 'service',
               action: 'write',
@@ -268,7 +268,7 @@ export const useAuthStore = create<AuthStoreState>((set, get) => {
     // ===== 角色检查 =====
     hasRole: (roleId: string): boolean => {
       const { roles } = get();
-      return roles.some((role) => role.role_id === roleId);
+      return roles.some((role) => role.roleId === roleId);
     },
 
     // ===== 设置用户 =====

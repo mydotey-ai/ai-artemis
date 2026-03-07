@@ -21,14 +21,14 @@ export interface ResponseStatus {
  * 实例键 (唯一标识一个实例)
  */
 export interface InstanceKey {
-  service_id: string;
-  instance_id: string;
-  app_id?: string;
-  group_id?: string;
+  serviceId: string;
+  instanceId: string;
+  appId?: string;
+  groupId?: string;
   ip: string;
   port: number;
-  region_id: string;
-  zone_id?: string;
+  regionId: string;
+  zoneId?: string;
 }
 
 /**
@@ -58,7 +58,7 @@ export interface InstanceOperationRecord {
   instance_key: InstanceKey;
   operation: InstanceOperationType;
   operation_complete: boolean;
-  operator_id: string;
+  operatorId: string;
   token?: string;
 }
 
@@ -66,8 +66,8 @@ export interface InstanceOperationRecord {
  * 服务器操作记录 (用于查询返回)
  */
 export interface ServerOperationInfo {
-  server_id: string;
-  region_id: string;
+  serverId: string;
+  regionId: string;
   operation: ServerOperationType;
 }
 
@@ -80,7 +80,7 @@ export interface OperateInstanceRequest {
   instance_key: InstanceKey;
   operation: InstanceOperationType;
   operation_complete?: boolean;
-  operator_id: string;
+  operatorId: string;
   token?: string;
 }
 
@@ -98,7 +98,7 @@ export interface OperateInstanceResponse {
  *
  * @param instance_key - 实例键
  * @param operation - 操作类型 (pullout/pullin)
- * @param operator_id - 操作人 ID
+ * @param operatorId - 操作人 ID
  * @param operation_complete - 操作是否完成 (默认 false)
  * @returns 操作结果
  *
@@ -112,13 +112,13 @@ export interface OperateInstanceResponse {
 export async function operateInstance(
   instance_key: InstanceKey,
   operation: InstanceOperationType,
-  operator_id: string,
+  operatorId: string,
   operation_complete: boolean = false
 ): Promise<OperateInstanceResponse> {
   const request: OperateInstanceRequest = {
     instance_key,
     operation,
-    operator_id,
+    operatorId,
     operation_complete,
   };
 
@@ -238,11 +238,11 @@ export async function isInstanceDown(
  * 操作服务器请求
  */
 export interface OperateServerRequest {
-  server_id: string;
-  region_id: string;
+  serverId: string;
+  regionId: string;
   operation: ServerOperationType;
   operation_complete?: boolean;
-  operator_id: string;
+  operatorId: string;
   token?: string;
 }
 
@@ -260,10 +260,10 @@ export interface OperateServerResponse {
  *
  * 批量操作服务器上的所有实例
  *
- * @param server_id - 服务器 ID (IP 地址)
- * @param region_id - Region ID
+ * @param serverId - 服务器 ID (IP 地址)
+ * @param regionId - Region ID
  * @param operation - 操作类型 (pullout/pullin)
- * @param operator_id - 操作人 ID
+ * @param operatorId - 操作人 ID
  * @param operation_complete - 操作是否完成 (默认 false)
  * @returns 操作结果
  *
@@ -275,17 +275,17 @@ export interface OperateServerResponse {
  * await operateServer('192.168.1.100', 'us-east', ServerOperationType.PullIn, 'admin');
  */
 export async function operateServer(
-  server_id: string,
-  region_id: string,
+  serverId: string,
+  regionId: string,
   operation: ServerOperationType,
-  operator_id: string,
+  operatorId: string,
   operation_complete: boolean = false
 ): Promise<OperateServerResponse> {
   const request: OperateServerRequest = {
-    server_id,
-    region_id,
+    serverId,
+    regionId,
     operation,
-    operator_id,
+    operatorId,
     operation_complete,
   };
 
@@ -305,8 +305,8 @@ export async function operateServer(
  * 查询服务器是否被拉出请求
  */
 export interface IsServerDownRequest {
-  server_id: string;
-  region_id: string;
+  serverId: string;
+  regionId: string;
 }
 
 /**
@@ -324,8 +324,8 @@ export interface IsServerDownResponse {
  *
  * 检查一个服务器是否被拉出
  *
- * @param server_id - 服务器 ID (IP 地址)
- * @param region_id - Region ID
+ * @param serverId - 服务器 ID (IP 地址)
+ * @param regionId - Region ID
  * @returns 是否被拉出的状态
  *
  * @example
@@ -335,12 +335,12 @@ export interface IsServerDownResponse {
  * }
  */
 export async function isServerDown(
-  server_id: string,
-  region_id: string
+  serverId: string,
+  regionId: string
 ): Promise<IsServerDownResponse> {
   const request: IsServerDownRequest = {
-    server_id,
-    region_id,
+    serverId,
+    regionId,
   };
 
   try {
@@ -361,7 +361,7 @@ export async function isServerDown(
  * 查询所有实例操作请求
  */
 export interface GetAllInstanceOperationsRequest {
-  region_id?: string;
+  regionId?: string;
 }
 
 /**
@@ -379,20 +379,20 @@ export interface GetAllInstanceOperationsResponse {
  *
  * 查询所有实例的操作记录,可按 Region 过滤
  *
- * @param region_id - 可选的 Region ID 过滤
+ * @param regionId - 可选的 Region ID 过滤
  * @returns 所有实例操作记录
  *
  * @example
  * const result = await getAllInstanceOperationsPost('us-east');
  * result.instance_operation_records.forEach(record => {
- *   console.log(`${record.instance_key.instance_id}: ${record.operation}`);
+ *   console.log(`${record.instance_key.instanceId}: ${record.operation}`);
  * });
  */
 export async function getAllInstanceOperationsPost(
-  region_id?: string
+  regionId?: string
 ): Promise<GetAllInstanceOperationsResponse> {
   const request: GetAllInstanceOperationsRequest = {
-    region_id,
+    regionId,
   };
 
   try {
@@ -414,19 +414,19 @@ export async function getAllInstanceOperationsPost(
  *
  * 使用 query parameter 查询所有实例操作
  *
- * @param region_id - 可选的 Region ID 过滤
+ * @param regionId - 可选的 Region ID 过滤
  * @returns 所有实例操作记录
  *
  * @example
  * const result = await getAllInstanceOperations('us-east');
  */
 export async function getAllInstanceOperations(
-  region_id?: string
+  regionId?: string
 ): Promise<GetAllInstanceOperationsResponse> {
   try {
     const params = new URLSearchParams();
-    if (region_id) {
-      params.append('regionId', region_id);
+    if (regionId) {
+      params.append('regionId', regionId);
     }
 
     const response = await apiClient.get(
@@ -444,7 +444,7 @@ export async function getAllInstanceOperations(
  * 查询所有服务器操作请求
  */
 export interface GetAllServerOperationsRequest {
-  region_id?: string;
+  regionId?: string;
 }
 
 /**
@@ -462,20 +462,20 @@ export interface GetAllServerOperationsResponse {
  *
  * 查询所有服务器的操作记录,可按 Region 过滤
  *
- * @param region_id - 可选的 Region ID 过滤
+ * @param regionId - 可选的 Region ID 过滤
  * @returns 所有服务器操作记录
  *
  * @example
  * const result = await getAllServerOperationsPost('us-east');
  * result.server_operation_records.forEach(record => {
- *   console.log(`${record.server_id}: ${record.operation}`);
+ *   console.log(`${record.serverId}: ${record.operation}`);
  * });
  */
 export async function getAllServerOperationsPost(
-  region_id?: string
+  regionId?: string
 ): Promise<GetAllServerOperationsResponse> {
   const request: GetAllServerOperationsRequest = {
-    region_id,
+    regionId,
   };
 
   try {
@@ -497,19 +497,19 @@ export async function getAllServerOperationsPost(
  *
  * 使用 query parameter 查询所有服务器操作
  *
- * @param region_id - 可选的 Region ID 过滤
+ * @param regionId - 可选的 Region ID 过滤
  * @returns 所有服务器操作记录
  *
  * @example
  * const result = await getAllServerOperations('us-east');
  */
 export async function getAllServerOperations(
-  region_id?: string
+  regionId?: string
 ): Promise<GetAllServerOperationsResponse> {
   try {
     const params = new URLSearchParams();
-    if (region_id) {
-      params.append('regionId', region_id);
+    if (regionId) {
+      params.append('regionId', regionId);
     }
 
     const response = await apiClient.get(

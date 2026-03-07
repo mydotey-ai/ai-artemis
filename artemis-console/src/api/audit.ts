@@ -14,9 +14,9 @@ export interface AuditLog {
   id: string;
   timestamp: string;
   operation_type: string;
-  operator_id: string;
+  operatorId: string;
   resource_type: string;
-  resource_id: string;
+  resourceId: string;
   action: string;
   details: Record<string, any>;
   result: 'SUCCESS' | 'FAILURE';
@@ -25,7 +25,7 @@ export interface AuditLog {
 
 export interface QueryLogsParams {
   operation_type?: string;
-  operator_id?: string;
+  operatorId?: string;
   resource_type?: string;
   start_time?: string;
   end_time?: string;
@@ -63,13 +63,13 @@ export async function queryLogsByOperation(
 
 /**
  * 按操作员查询
- * GET /api/management/audit/logs?operator_id=...
+ * GET /api/management/audit/logs?operatorId=...
  */
 export async function queryLogsByOperator(
   operatorId: string,
   limit?: number
 ): Promise<ApiResponse<AuditLog[]>> {
-  return queryLogs({ operator_id: operatorId, limit });
+  return queryLogs({ operatorId: operatorId, limit });
 }
 
 /**

@@ -20,7 +20,7 @@ const API_BASE = '/api/discovery';
  * POST /api/discovery/service.json
  *
  * @param serviceId - 服务 ID
- * @param config - 发现配置（包含 region_id, zone_id 等）
+ * @param config - 发现配置（包含 regionId, zoneId 等）
  * @returns 服务详细信息
  */
 export async function getService(
@@ -29,9 +29,9 @@ export async function getService(
 ): Promise<GetServiceResponse> {
   const request: GetServiceRequest = {
     discovery_config: {
-      service_id: serviceId,
-      region_id: config.region_id,
-      zone_id: config.zone_id,
+      serviceId: serviceId,
+      regionId: config.regionId,
+      zoneId: config.zoneId,
       discovery_data: config.discovery_data,
     },
   };
@@ -56,8 +56,8 @@ export async function getAllServices(
   zoneId: string
 ): Promise<GetServicesResponse> {
   const request: GetServicesRequest = {
-    region_id: regionId,
-    zone_id: zoneId,
+    regionId: regionId,
+    zoneId: zoneId,
   };
 
   const response = await apiClient.post<GetServicesResponse>(

@@ -27,27 +27,27 @@ export interface RouteRuleStatus {
 }
 
 export interface CreateGroupRequest {
-  service_id: string;
-  region_id: string;
-  zone_id: string;
+  serviceId: string;
+  regionId: string;
+  zoneId: string;
   name: string;
   group_type: GroupType;
   description?: string;
 }
 
 export interface CreateRuleRequest {
-  route_id: string;
-  service_id: string;
+  routeId: string;
+  serviceId: string;
   name: string;
   description?: string;
   strategy: RouteStrategy;
 }
 
 export interface AddRuleGroupRequest {
-  group_id: string;
+  groupId: string;
   weight: number;
-  region_id?: string;
-  zone_id?: string;
+  regionId?: string;
+  zoneId?: string;
 }
 
 export interface UpdateGroupRequest {
@@ -66,13 +66,13 @@ export interface UpdateRuleGroupRequest {
 }
 
 export interface ListGroupsQuery {
-  service_id?: string;
-  region_id?: string;
+  serviceId?: string;
+  regionId?: string;
 }
 
 export interface GetGroupInstancesQuery {
-  region_id?: string;
-  zone_id?: string;
+  regionId?: string;
+  zoneId?: string;
 }
 
 export interface GroupTag {
@@ -112,7 +112,7 @@ export async function listGroups(query?: ListGroupsQuery): Promise<ApiResponse<a
 
 /**
  * 获取分组详情
- * GET /api/management/routing/groups/:group_id
+ * GET /api/management/routing/groups/:groupId
  */
 export async function getGroup(groupId: string): Promise<ApiResponse<any>> {
   const response = await apiClient.get(`${API_BASE}/groups/${groupId}`);
@@ -121,7 +121,7 @@ export async function getGroup(groupId: string): Promise<ApiResponse<any>> {
 
 /**
  * 更新分组
- * PUT /api/management/routing/groups/:group_id
+ * PUT /api/management/routing/groups/:groupId
  */
 export async function updateGroup(groupId: string, request: UpdateGroupRequest): Promise<ApiResponse<any>> {
   const response = await apiClient.put(`${API_BASE}/groups/${groupId}`, request);
@@ -130,7 +130,7 @@ export async function updateGroup(groupId: string, request: UpdateGroupRequest):
 
 /**
  * 删除分组
- * DELETE /api/management/routing/groups/:group_id
+ * DELETE /api/management/routing/groups/:groupId
  */
 export async function deleteGroup(groupId: string): Promise<ApiResponse<any>> {
   const response = await apiClient.delete(`${API_BASE}/groups/${groupId}`);
@@ -139,7 +139,7 @@ export async function deleteGroup(groupId: string): Promise<ApiResponse<any>> {
 
 /**
  * 获取分组下的实例
- * GET /api/management/routing/groups/:group_id/instances
+ * GET /api/management/routing/groups/:groupId/instances
  */
 export async function getGroupInstances(
   groupId: string,
@@ -153,7 +153,7 @@ export async function getGroupInstances(
 
 /**
  * 添加分组标签
- * POST /api/management/routing/groups/:group_id/tags
+ * POST /api/management/routing/groups/:groupId/tags
  */
 export async function addGroupTags(
   groupId: string,
@@ -165,7 +165,7 @@ export async function addGroupTags(
 
 /**
  * 移除分组标签
- * DELETE /api/management/routing/groups/:group_id/tags/:tag_key
+ * DELETE /api/management/routing/groups/:groupId/tags/:tag_key
  */
 export async function removeGroupTag(groupId: string, tagKey: string): Promise<ApiResponse<any>> {
   const response = await apiClient.delete(`${API_BASE}/groups/${groupId}/tags/${tagKey}`);
@@ -189,7 +189,7 @@ export async function createRule(request: CreateRuleRequest): Promise<ApiRespons
  */
 export async function listRules(serviceId?: string): Promise<ApiResponse<any>> {
   const response = await apiClient.get(`${API_BASE}/rules`, {
-    params: { service_id: serviceId },
+    params: { serviceId: serviceId },
   });
   return response.data;
 }
@@ -246,7 +246,7 @@ export async function listRuleGroups(ruleId: string): Promise<ApiResponse<any>> 
 
 /**
  * 更新规则分组权重
- * PUT /api/management/routing/rules/:rule_id/groups/:group_id
+ * PUT /api/management/routing/rules/:rule_id/groups/:groupId
  */
 export async function updateRuleGroup(
   ruleId: string,
@@ -262,7 +262,7 @@ export async function updateRuleGroup(
 
 /**
  * 从规则中移除分组
- * DELETE /api/management/routing/rules/:rule_id/groups/:group_id
+ * DELETE /api/management/routing/rules/:rule_id/groups/:groupId
  */
 export async function removeRuleGroup(ruleId: string, groupId: string): Promise<ApiResponse<any>> {
   const response = await apiClient.delete(`${API_BASE}/rules/${ruleId}/groups/${groupId}`);

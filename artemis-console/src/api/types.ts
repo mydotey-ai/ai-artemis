@@ -74,11 +74,11 @@ export type InstanceStatus = typeof InstanceStatus[keyof typeof InstanceStatus];
  * Core entity representing a registered service instance
  */
 export interface Instance {
-  region_id: string;
-  zone_id: string;
-  group_id?: string;
-  service_id: string;
-  instance_id: string;
+  regionId: string;
+  zoneId: string;
+  groupId?: string;
+  serviceId: string;
+  instanceId: string;
   machine_name?: string;
   ip: string;
   port: number;
@@ -94,11 +94,11 @@ export interface Instance {
  * Unique identifier for an instance
  */
 export interface InstanceKey {
-  region_id: string;
-  zone_id: string;
-  service_id: string;
-  group_id: string;
-  instance_id: string;
+  regionId: string;
+  zoneId: string;
+  serviceId: string;
+  groupId: string;
+  instanceId: string;
 }
 
 // =====================================================
@@ -110,10 +110,10 @@ export interface InstanceKey {
  * Represents a collection of service instances
  */
 export interface ServiceGroup {
-  group_id?: number;
-  service_id: string;
-  region_id: string;
-  zone_id: string;
+  groupId?: number;
+  serviceId: string;
+  regionId: string;
+  zoneId: string;
   name: string;
   group_type: GroupType;
   status: GroupStatus;
@@ -159,13 +159,13 @@ export interface GroupTag {
  */
 export interface GroupInstance {
   id?: number;
-  group_id: number;
-  instance_id: string;
-  region_id: string;
-  zone_id: string;
-  service_id: string;
+  groupId: number;
+  instanceId: string;
+  regionId: string;
+  zoneId: string;
+  serviceId: string;
   binding_type?: BindingType;
-  operator_id?: string;
+  operatorId?: string;
   created_at?: number;
 }
 
@@ -184,7 +184,7 @@ export type BindingType = typeof BindingType[keyof typeof BindingType];
  * Represents a service with its instances and routing info
  */
 export interface Service {
-  service_id: string;
+  serviceId: string;
   metadata?: Record<string, string>;
   instances: Instance[];
   logic_instances?: Instance[];
@@ -196,9 +196,9 @@ export interface Service {
  * Parameters for service discovery requests
  */
 export interface DiscoveryConfig {
-  service_id: string;
-  region_id: string;
-  zone_id: string;
+  serviceId: string;
+  regionId: string;
+  zoneId: string;
   discovery_data?: Record<string, string>;
 }
 
@@ -207,12 +207,12 @@ export interface DiscoveryConfig {
  * Represents a service group in the routing context
  */
 export interface Group {
-  group_id?: number;
-  service_id: string;
-  region_id: string;
-  zone_id: string;
+  groupId?: number;
+  serviceId: string;
+  regionId: string;
+  zoneId: string;
   name: string;
-  app_id?: string;
+  appId?: string;
   description?: string;
   status: GroupStatus;
   metadata?: Record<string, string>;
@@ -241,8 +241,8 @@ export interface GetServiceResponse {
  * Get Services Request
  */
 export interface GetServicesRequest {
-  region_id: string;
-  zone_id: string;
+  regionId: string;
+  zoneId: string;
 }
 
 /**
@@ -258,8 +258,8 @@ export interface GetServicesResponse {
  * For incremental service discovery
  */
 export interface GetServicesDeltaRequest {
-  region_id: string;
-  zone_id: string;
+  regionId: string;
+  zoneId: string;
   since_timestamp: number;
 }
 
@@ -358,7 +358,7 @@ export interface InstanceOperationRecord {
   instance_key: InstanceKey;
   operation: InstanceOperationType;
   operation_complete: boolean;
-  operator_id: string;
+  operatorId: string;
   token?: string;
 }
 
@@ -369,7 +369,7 @@ export interface OperateInstanceRequest {
   instance_key: InstanceKey;
   operation: InstanceOperationType;
   operation_complete?: boolean;
-  operator_id: string;
+  operatorId: string;
   token?: string;
 }
 
@@ -428,10 +428,10 @@ export type ServerOperationType = typeof ServerOperationType[keyof typeof Server
  * Server Operation Record
  */
 export interface ServerOperationRecord {
-  server_id: string;
-  region_id: string;
+  serverId: string;
+  regionId: string;
   operation: ServerOperationType;
-  operator_id: string;
+  operatorId: string;
   operation_time: number;
 }
 
@@ -440,8 +440,8 @@ export interface ServerOperationRecord {
  * Used in batch query responses
  */
 export interface ServerOperationInfo {
-  server_id: string;
-  region_id: string;
+  serverId: string;
+  regionId: string;
   operation: ServerOperationType;
 }
 
@@ -449,11 +449,11 @@ export interface ServerOperationInfo {
  * Operate Server Request
  */
 export interface OperateServerRequest {
-  server_id: string;
-  region_id: string;
+  serverId: string;
+  regionId: string;
   operation: ServerOperationType;
   operation_complete?: boolean;
-  operator_id: string;
+  operatorId: string;
   token?: string;
 }
 
@@ -468,8 +468,8 @@ export interface OperateServerResponse {
  * Is Server Down Request
  */
 export interface IsServerDownRequest {
-  server_id: string;
-  region_id: string;
+  serverId: string;
+  regionId: string;
 }
 
 /**
@@ -484,7 +484,7 @@ export interface IsServerDownResponse {
  * Get All Instance Operations Request
  */
 export interface GetAllInstanceOperationsRequest {
-  region_id?: string;
+  regionId?: string;
 }
 
 /**
@@ -499,7 +499,7 @@ export interface GetAllInstanceOperationsResponse {
  * Get All Server Operations Request
  */
 export interface GetAllServerOperationsRequest {
-  region_id?: string;
+  regionId?: string;
 }
 
 /**
@@ -539,9 +539,9 @@ export type RouteRuleStatus = typeof RouteRuleStatus[keyof typeof RouteRuleStatu
  * Defines routing rules for a service
  */
 export interface RouteRule {
-  route_rule_id?: number;
-  route_id: string;
-  service_id: string;
+  routeRuleId?: number;
+  routeId: string;
+  serviceId: string;
   name: string;
   description?: string;
   status: RouteRuleStatus;
@@ -554,21 +554,21 @@ export interface RouteRule {
  * Associates a group with a route rule and weight
  */
 export interface RouteRuleGroup {
-  route_rule_id: string;
-  group_id: string;
+  routeRuleId: string;
+  groupId: string;
   weight: number;
   unreleasable: boolean;
-  region_id?: string;
-  zone_id?: string;
+  regionId?: string;
+  zoneId?: string;
 }
 
 /**
  * Create Group Request
  */
 export interface CreateGroupRequest {
-  service_id: string;
-  region_id: string;
-  zone_id: string;
+  serviceId: string;
+  regionId: string;
+  zoneId: string;
   name: string;
   group_type: GroupType;
   description?: string;
@@ -578,8 +578,8 @@ export interface CreateGroupRequest {
  * Create Route Rule Request
  */
 export interface CreateRuleRequest {
-  route_id: string;
-  service_id: string;
+  routeId: string;
+  serviceId: string;
   name: string;
   description?: string;
   strategy: RouteStrategy;
@@ -589,10 +589,10 @@ export interface CreateRuleRequest {
  * Add Rule Group Request
  */
 export interface AddRuleGroupRequest {
-  group_id: string;
+  groupId: string;
   weight: number;
-  region_id?: string;
-  zone_id?: string;
+  regionId?: string;
+  zoneId?: string;
 }
 
 /**
@@ -634,10 +634,10 @@ export interface AddGroupTagsRequest {
  * Cluster Node
  */
 export interface ServiceNode {
-  node_id: string;
+  nodeId: string;
   url: string;
-  region_id: string;
-  zone_id: string;
+  regionId: string;
+  zoneId: string;
 }
 
 /**
@@ -710,7 +710,7 @@ export interface LeaseStatus {
  * Get Leases Status Request
  */
 export interface GetLeasesStatusRequest {
-  service_ids?: string[];
+  serviceIds?: string[];
 }
 
 /**
@@ -752,9 +752,9 @@ export interface GetDeploymentStatusRequest {
  * Get Deployment Status Response
  */
 export interface GetDeploymentStatusResponse {
-  region_id: string;
-  zone_id: string;
-  app_id: string;
+  regionId: string;
+  zoneId: string;
+  appId: string;
   machine_name: string;
   ip: string;
   port: number;
@@ -777,8 +777,8 @@ export interface AuditLog {
   id?: number;
   operation_type: string;
   resource_type: string;
-  resource_id: string;
-  operator_id: string;
+  resourceId: string;
+  operatorId: string;
   operation_details?: Record<string, any>;
   timestamp: number;
   status: 'success' | 'failure';
@@ -790,7 +790,7 @@ export interface AuditLog {
  */
 export interface QueryLogsParams {
   operation_type?: string;
-  operator_id?: string;
+  operatorId?: string;
   limit?: number;
 }
 
@@ -798,8 +798,8 @@ export interface QueryLogsParams {
  * Query Instance Logs Parameters
  */
 export interface QueryInstanceLogsParams {
-  service_id?: string;
-  operator_id?: string;
+  serviceId?: string;
+  operatorId?: string;
   limit?: number;
 }
 
@@ -807,8 +807,8 @@ export interface QueryInstanceLogsParams {
  * Query Server Logs Parameters
  */
 export interface QueryServerLogsParams {
-  server_id?: string;
-  operator_id?: string;
+  serverId?: string;
+  operatorId?: string;
   limit?: number;
 }
 
@@ -816,8 +816,8 @@ export interface QueryServerLogsParams {
  * Query Group Logs Parameters
  */
 export interface QueryGroupLogsParams {
-  group_id?: string;
-  operator_id?: string;
+  groupId?: string;
+  operatorId?: string;
   limit?: number;
 }
 
@@ -826,7 +826,7 @@ export interface QueryGroupLogsParams {
  */
 export interface QueryRouteRuleLogsParams {
   rule_id?: string;
-  operator_id?: string;
+  operatorId?: string;
   limit?: number;
 }
 
@@ -835,8 +835,8 @@ export interface QueryRouteRuleLogsParams {
  */
 export interface QueryRouteRuleGroupLogsParams {
   rule_id?: string;
-  group_id?: string;
-  operator_id?: string;
+  groupId?: string;
+  operatorId?: string;
   limit?: number;
 }
 
@@ -858,10 +858,10 @@ export type ZoneOperationType = typeof ZoneOperationType[keyof typeof ZoneOperat
  * Zone Operation Record
  */
 export interface ZoneOperationRecord {
-  zone_id: string;
-  region_id: string;
+  zoneId: string;
+  regionId: string;
   operation: ZoneOperationType;
-  operator_id: string;
+  operatorId: string;
   operation_time: number;
 }
 
@@ -869,10 +869,10 @@ export interface ZoneOperationRecord {
  * Operate Zone Request
  */
 export interface OperateZoneRequest {
-  zone_id: string;
-  region_id: string;
+  zoneId: string;
+  regionId: string;
   operation: ZoneOperationType;
-  operator_id: string;
+  operatorId: string;
 }
 
 /**
@@ -887,8 +887,8 @@ export interface OperateZoneResponse {
  * Get Zone Status Request
  */
 export interface GetZoneStatusRequest {
-  zone_id: string;
-  region_id: string;
+  zoneId: string;
+  regionId: string;
 }
 
 /**
@@ -896,18 +896,18 @@ export interface GetZoneStatusRequest {
  */
 export interface GetZoneStatusResponse {
   success: boolean;
-  zone_id: string;
-  region_id: string;
+  zoneId: string;
+  regionId: string;
   is_down: boolean;
   operation?: ZoneOperationType;
-  operator_id?: string;
+  operatorId?: string;
 }
 
 /**
  * List Zone Operations Request
  */
 export interface ListZoneOperationsRequest {
-  region_id?: string;
+  regionId?: string;
 }
 
 /**
@@ -926,7 +926,7 @@ export interface ListZoneOperationsResponse {
  * Canary Configuration
  */
 export interface CanaryConfig {
-  service_id: string;
+  serviceId: string;
   ip_whitelist: string[];
   enabled: boolean;
 }
@@ -935,7 +935,7 @@ export interface CanaryConfig {
  * Set Canary Config Request
  */
 export interface SetCanaryConfigRequest {
-  service_id: string;
+  serviceId: string;
   ip_whitelist: string[];
 }
 
@@ -951,7 +951,7 @@ export interface SetCanaryConfigResponse {
  * Get Canary Config Request
  */
 export interface GetCanaryConfigRequest {
-  service_id: string;
+  serviceId: string;
 }
 
 /**
@@ -966,7 +966,7 @@ export interface GetCanaryConfigResponse {
  * Enable Canary Request
  */
 export interface EnableCanaryRequest {
-  service_id: string;
+  serviceId: string;
   enabled: boolean;
 }
 
@@ -1083,8 +1083,8 @@ export interface BatchUnregisterResponse {
  * Services Delta Request
  */
 export interface ServicesDeltaRequest {
-  region_id: string;
-  zone_id: string;
+  regionId: string;
+  zoneId: string;
   since_timestamp: number;
 }
 
@@ -1101,8 +1101,8 @@ export interface ServicesDeltaResponse {
  * Sync Full Data Request
  */
 export interface SyncFullDataRequest {
-  region_id: string;
-  zone_id?: string;
+  regionId: string;
+  zoneId?: string;
 }
 
 /**
@@ -1122,7 +1122,7 @@ export interface SyncFullDataResponse {
  * User
  */
 export interface User {
-  user_id: string;
+  userId: string;
   username: string;
   email?: string;
   roles: Role[];
@@ -1135,7 +1135,7 @@ export interface User {
  * Role
  */
 export interface Role {
-  role_id: string;
+  roleId: string;
   name: string;
   description?: string;
   permissions: Permission[];
@@ -1145,7 +1145,7 @@ export interface Role {
  * Permission
  */
 export interface Permission {
-  permission_id: string;
+  permissionId: string;
   name: string;
   resource: string;
   action: string; // 'read' | 'write' | 'delete' | 'admin'
@@ -1224,16 +1224,16 @@ export interface GetUserInfoResponse {
  * List Groups Query Parameters
  */
 export interface ListGroupsQuery {
-  service_id?: string;
-  region_id?: string;
+  serviceId?: string;
+  regionId?: string;
 }
 
 /**
  * Get Group Instances Query Parameters
  */
 export interface GetGroupInstancesQuery {
-  region_id?: string;
-  zone_id?: string;
+  regionId?: string;
+  zoneId?: string;
 }
 
 // =====================================================
@@ -1245,9 +1245,9 @@ export interface GetGroupInstancesQuery {
  */
 export interface GroupOperation {
   operation_id?: number;
-  group_id: number;
+  groupId: number;
   operation_type: string;
-  operator_id: string;
+  operatorId: string;
   description?: string;
   timestamp: number;
 }

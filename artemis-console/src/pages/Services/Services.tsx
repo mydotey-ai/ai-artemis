@@ -153,9 +153,9 @@ const Services: React.FC = () => {
         const firstInstance = instances[0];
 
         return {
-          serviceId: service.service_id,
-          regionId: firstInstance?.region_id || 'unknown',
-          zoneId: firstInstance?.zone_id || 'unknown',
+          serviceId: service.serviceId,
+          regionId: firstInstance?.regionId || 'unknown',
+          zoneId: firstInstance?.zoneId || 'unknown',
           instanceCount: instances.length,
           healthyCount,
           unhealthyCount,
@@ -541,7 +541,7 @@ const Services: React.FC = () => {
         {selectedService && (
           <Box>
             <Typography variant="h6" gutterBottom>
-              {selectedService.service_id}
+              {selectedService.serviceId}
             </Typography>
 
             {/* Metadata */}
@@ -579,8 +579,8 @@ const Services: React.FC = () => {
                   </TableHead>
                   <TableBody>
                     {selectedService.instances.map((instance) => (
-                      <TableRow key={instance.instance_id}>
-                        <TableCell>{instance.instance_id}</TableCell>
+                      <TableRow key={instance.instanceId}>
+                        <TableCell>{instance.instanceId}</TableCell>
                         <TableCell>
                           {instance.ip}:{instance.port}
                         </TableCell>
@@ -596,7 +596,7 @@ const Services: React.FC = () => {
                           />
                         </TableCell>
                         <TableCell>
-                          {instance.region_id}/{instance.zone_id}
+                          {instance.regionId}/{instance.zoneId}
                         </TableCell>
                       </TableRow>
                     ))}

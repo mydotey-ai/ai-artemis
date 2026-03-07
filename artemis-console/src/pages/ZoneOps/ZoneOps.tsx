@@ -83,13 +83,13 @@ interface ZoneOperationRow extends ZoneOperationRecord {
 }
 
 interface CreateZoneOperationFormData {
-  zone_id: string;
-  region_id: string;
+  zoneId: string;
+  regionId: string;
   operation_type: 'UP_ZONE' | 'DOWN_ZONE';
   target_scope: 'all' | 'service' | 'instance';
   service_filter: string;
   instance_filter: string;
-  operator_id: string;
+  operatorId: string;
   reason: string;
 }
 
@@ -172,12 +172,12 @@ function exportToCSV(data: ZoneOperationRow[]): void {
   ];
 
   const rows = data.map((row) => [
-    `${row.zone_id}-${row.operation_time}`,
-    row.zone_id,
-    row.region_id,
+    `${row.zoneId}-${row.operation_time}`,
+    row.zoneId,
+    row.regionId,
     mapOperationType(row.operation as unknown as string),
     row.status,
-    row.operator_id,
+    row.operatorId,
     formatTimestamp(row.operation_time),
     row.completed_at ? formatTimestamp(row.completed_at) : 'N/A',
   ]);
@@ -217,13 +217,13 @@ const ZoneOps: React.FC = () => {
 
   // Form state
   const [formData, setFormData] = useState<CreateZoneOperationFormData>({
-    zone_id: '',
-    region_id: '',
+    zoneId: '',
+    regionId: '',
     operation_type: 'DOWN_ZONE',
     target_scope: 'all',
     service_filter: '',
     instance_filter: '',
-    operator_id: 'admin', // TODO: Get from auth context
+    operatorId: 'admin', // TODO: Get from auth context
     reason: '',
   });
 
@@ -295,19 +295,19 @@ const ZoneOps: React.FC = () => {
       // Search query
       if (
         searchQuery &&
-        !op.zone_id.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        !op.operator_id.toLowerCase().includes(searchQuery.toLowerCase())
+        !op.zoneId.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        !op.operatorId.toLowerCase().includes(searchQuery.toLowerCase())
       ) {
         return false;
       }
 
       // Zone filter
-      if (zoneFilter !== 'all' && op.zone_id !== zoneFilter) {
+      if (zoneFilter !== 'all' && op.zoneId !== zoneFilter) {
         return false;
       }
 
       // Region filter
-      if (regionFilter !== 'all' && op.region_id !== regionFilter) {
+      if (regionFilter !== 'all' && op.regionId !== regionFilter) {
         return false;
       }
 
@@ -337,12 +337,12 @@ const ZoneOps: React.FC = () => {
 
   // Get unique zones and regions
   const uniqueZones = useMemo(() => {
-    const zones = new Set(operations.map((op) => op.zone_id));
+    const zones = new Set(operations.map((op) => op.zoneId));
     return Array.from(zones).sort();
   }, [operations]);
 
   const uniqueRegions = useMemo(() => {
-    const regions = new Set(operations.map((op) => op.region_id));
+    const regions = new Set(operations.map((op) => op.regionId));
     return Array.from(regions).sort();
   }, [operations]);
 
@@ -356,9 +356,9 @@ const ZoneOps: React.FC = () => {
   const handleCreateOperation = async () => {
     try {
       const request: zoneApi.OperateZoneRequest = {
-        zone_id: formData.zone_id,
-        region_id: formData.region_id,
-        operator_id: formData.operator_id,
+        zoneId: formData.zoneId,
+        regionId: formData.regionId,
+        operatorId: formData.operatorId,
       };
 
       if (formData.operation_type === 'DOWN_ZONE') {
@@ -375,13 +375,13 @@ const ZoneOps: React.FC = () => {
 
       // Reset form
       setFormData({
-        zone_id: '',
-        region_id: '',
+        zoneId: '',
+        regionId: '',
         operation_type: 'DOWN_ZONE',
         target_scope: 'all',
         service_filter: '',
         instance_filter: '',
-        operator_id: 'admin',
+        operatorId: 'admin',
         reason: '',
       });
     } catch (err) {
@@ -409,9 +409,9 @@ const ZoneOps: React.FC = () => {
     // Retry by creating a new operation with same parameters
     try {
       const request: zoneApi.OperateZoneRequest = {
-        zone_id: operation.zone_id,
-        region_id: operation.region_id,
-        operator_id: operation.operator_id,
+        zoneId: operation.zoneId,
+        regionId: operation.regionId,
+        operatorId: operation.operatorId,
       };
 
       const opType = mapOperationType(operation.operation as unknown as string);
@@ -677,7 +677,7 @@ const ZoneOps: React.FC = () => {
                 </TableRow>
               ) : (
                 paginatedOperations.map((operation) => {
-                  const opId = `${operation.zone_id}-${operation.operation_time}`;
+                  const opId = `${operation.zoneId}-${operation.operation_time}`;
                   const opType = mapOperationType(operation.operation as unknown as string);
 
                   return (
@@ -691,8 +691,8 @@ const ZoneOps: React.FC = () => {
                           {opId.substring(0, 20)}...
                         </Button>
                       </TableCell>
-                      <TableCell>{operation.zone_id}</TableCell>
-                      <TableCell>{operation.region_id}</TableCell>
+                      <TableCell>{operation.zoneId}</TableCell>
+                      <TableCell>{operation.regionId}</TableCell>
                       <TableCell>
                         <Chip
                           icon={opType === 'UP_ZONE' ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />}
@@ -708,7 +708,7 @@ const ZoneOps: React.FC = () => {
                           size="small"
                         />
                       </TableCell>
-                      <TableCell>{operation.operator_id}</TableCell>
+                      <TableCell>{operation.operatorId}</TableCell>
                       <TableCell>{formatTimestamp(operation.created_at)}</TableCell>
                       <TableCell>
                         {operation.completed_at
@@ -786,8 +786,8 @@ const ZoneOps: React.FC = () => {
               label="Zone ID"
               fullWidth
               required
-              value={formData.zone_id}
-              onChange={(e) => setFormData({ ...formData, zone_id: e.target.value })}
+              value={formData.zoneId}
+              onChange={(e) => setFormData({ ...formData, zoneId: e.target.value })}
               placeholder="e.g., zone-1"
             />
 
@@ -795,8 +795,8 @@ const ZoneOps: React.FC = () => {
               label="Region ID"
               fullWidth
               required
-              value={formData.region_id}
-              onChange={(e) => setFormData({ ...formData, region_id: e.target.value })}
+              value={formData.regionId}
+              onChange={(e) => setFormData({ ...formData, regionId: e.target.value })}
               placeholder="e.g., us-east"
             />
 
@@ -876,7 +876,7 @@ const ZoneOps: React.FC = () => {
               label="Operator"
               fullWidth
               disabled
-              value={formData.operator_id}
+              value={formData.operatorId}
               helperText="Current logged-in user"
             />
 
@@ -897,7 +897,7 @@ const ZoneOps: React.FC = () => {
           <Button
             variant="contained"
             onClick={handleCreateOperation}
-            disabled={!formData.zone_id || !formData.region_id || !formData.reason}
+            disabled={!formData.zoneId || !formData.regionId || !formData.reason}
           >
             Create Operation
           </Button>
@@ -933,13 +933,13 @@ const ZoneOps: React.FC = () => {
                     <Typography variant="body2" color="text.secondary">
                       Zone ID
                     </Typography>
-                    <Typography variant="body1">{selectedOperation.zone_id}</Typography>
+                    <Typography variant="body1">{selectedOperation.zoneId}</Typography>
                   </Grid>
                   <Grid size={6}>
                     <Typography variant="body2" color="text.secondary">
                       Region ID
                     </Typography>
-                    <Typography variant="body1">{selectedOperation.region_id}</Typography>
+                    <Typography variant="body1">{selectedOperation.regionId}</Typography>
                   </Grid>
                   <Grid size={6}>
                     <Typography variant="body2" color="text.secondary">
@@ -978,7 +978,7 @@ const ZoneOps: React.FC = () => {
                     <Typography variant="body2" color="text.secondary">
                       Operator
                     </Typography>
-                    <Typography variant="body1">{selectedOperation.operator_id}</Typography>
+                    <Typography variant="body1">{selectedOperation.operatorId}</Typography>
                   </Grid>
                   <Grid size={6}>
                     <Typography variant="body2" color="text.secondary">

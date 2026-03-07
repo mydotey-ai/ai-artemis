@@ -52,19 +52,19 @@ export const useServicesStore = create<ServicesStoreState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       // TODO: 调用实际的服务发现 API
-      // const response = await getServicesAPI({ region_id: regionId, zone_id: zoneId });
+      // const response = await getServicesAPI({ regionId: regionId, zoneId: zoneId });
       // const services = response.data.services || [];
 
       // 模拟获取服务 (用于演示)
       const mockServices: Service[] = [
         {
-          service_id: 'user-service',
+          serviceId: 'user-service',
           instances: [
             {
-              region_id: regionId,
-              zone_id: zoneId,
-              service_id: 'user-service',
-              instance_id: 'user-service-1',
+              regionId: regionId,
+              zoneId: zoneId,
+              serviceId: 'user-service',
+              instanceId: 'user-service-1',
               ip: '192.168.1.10',
               port: 8001,
               url: 'http://192.168.1.10:8001',
@@ -72,10 +72,10 @@ export const useServicesStore = create<ServicesStoreState>((set, get) => ({
               metadata: { version: '1.0.0' },
             },
             {
-              region_id: regionId,
-              zone_id: zoneId,
-              service_id: 'user-service',
-              instance_id: 'user-service-2',
+              regionId: regionId,
+              zoneId: zoneId,
+              serviceId: 'user-service',
+              instanceId: 'user-service-2',
               ip: '192.168.1.11',
               port: 8001,
               url: 'http://192.168.1.11:8001',
@@ -85,13 +85,13 @@ export const useServicesStore = create<ServicesStoreState>((set, get) => ({
           ],
         },
         {
-          service_id: 'order-service',
+          serviceId: 'order-service',
           instances: [
             {
-              region_id: regionId,
-              zone_id: zoneId,
-              service_id: 'order-service',
-              instance_id: 'order-service-1',
+              regionId: regionId,
+              zoneId: zoneId,
+              serviceId: 'order-service',
+              instanceId: 'order-service-1',
               ip: '192.168.1.20',
               port: 8002,
               url: 'http://192.168.1.20:8002',
@@ -101,13 +101,13 @@ export const useServicesStore = create<ServicesStoreState>((set, get) => ({
           ],
         },
         {
-          service_id: 'payment-service',
+          serviceId: 'payment-service',
           instances: [
             {
-              region_id: regionId,
-              zone_id: zoneId,
-              service_id: 'payment-service',
-              instance_id: 'payment-service-1',
+              regionId: regionId,
+              zoneId: zoneId,
+              serviceId: 'payment-service',
+              instanceId: 'payment-service-1',
               ip: '192.168.1.30',
               port: 8003,
               url: 'http://192.168.1.30:8003',
@@ -121,7 +121,7 @@ export const useServicesStore = create<ServicesStoreState>((set, get) => ({
       // 将服务列表转换为 Map
       const servicesMap = new Map<string, Service>();
       mockServices.forEach((service) => {
-        servicesMap.set(service.service_id, service);
+        servicesMap.set(service.serviceId, service);
       });
 
       set({
@@ -145,7 +145,7 @@ export const useServicesStore = create<ServicesStoreState>((set, get) => ({
   updateService: (service: Service) => {
     const { services } = get();
     const updatedServices = new Map(services);
-    updatedServices.set(service.service_id, service);
+    updatedServices.set(service.serviceId, service);
     set({
       services: updatedServices,
       lastUpdated: Date.now(),
@@ -155,9 +155,9 @@ export const useServicesStore = create<ServicesStoreState>((set, get) => ({
   // ===== 添加服务 =====
   addService: (service: Service) => {
     const { services } = get();
-    if (!services.has(service.service_id)) {
+    if (!services.has(service.serviceId)) {
       const updatedServices = new Map(services);
-      updatedServices.set(service.service_id, service);
+      updatedServices.set(service.serviceId, service);
       set({
         services: updatedServices,
         lastUpdated: Date.now(),
@@ -225,7 +225,7 @@ export const useServicesStore = create<ServicesStoreState>((set, get) => ({
       const updatedService = {
         ...service,
         instances: service.instances.map((instance) =>
-          instance.instance_id === instanceId
+          instance.instanceId === instanceId
             ? { ...instance, ...instanceUpdate }
             : instance
         ),
@@ -250,7 +250,7 @@ export const useServicesStore = create<ServicesStoreState>((set, get) => ({
       const updatedService = {
         ...service,
         instances: service.instances.filter(
-          (instance) => instance.instance_id !== instanceId
+          (instance) => instance.instanceId !== instanceId
         ),
       };
 

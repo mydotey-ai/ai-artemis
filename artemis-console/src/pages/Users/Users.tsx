@@ -358,7 +358,7 @@ const Users: React.FC = () => {
         const matchesSearch =
           user.username.toLowerCase().includes(query) ||
           user.email?.toLowerCase().includes(query) ||
-          user.user_id.toLowerCase().includes(query);
+          user.userId.toLowerCase().includes(query);
         if (!matchesSearch) return false;
       }
 
@@ -516,7 +516,7 @@ const Users: React.FC = () => {
 
     // Fetch login history
     try {
-      const historyResponse = await getUserLoginHistory(user.user_id, 10);
+      const historyResponse = await getUserLoginHistory(user.userId, 10);
       if (historyResponse.success && historyResponse.data) {
         setLoginHistory(historyResponse.data);
       }
@@ -527,7 +527,7 @@ const Users: React.FC = () => {
     // Fetch audit logs
     try {
       const logsResponse = await queryLogs({
-        operator_id: user.username,
+        operatorId: user.username,
         limit: 20,
       });
       if (logsResponse.success && logsResponse.data) {
@@ -544,7 +544,7 @@ const Users: React.FC = () => {
   const handleStatusToggle = async (user: UserDetails): Promise<void> => {
     try {
       const newStatus = user.status === UserStatus.ACTIVE ? UserStatus.INACTIVE : UserStatus.ACTIVE;
-      const response = await changeUserStatus(user.user_id, newStatus);
+      const response = await changeUserStatus(user.userId, newStatus);
 
       if (response.success) {
         fetchUsers();
@@ -618,7 +618,7 @@ const Users: React.FC = () => {
           description: formData.description,
         };
 
-        const response = await updateUser(selectedUser.user_id, updateRequest);
+        const response = await updateUser(selectedUser.userId, updateRequest);
         if (response.success) {
           setAddEditDialogOpen(false);
           fetchUsers();
@@ -654,7 +654,7 @@ const Users: React.FC = () => {
     if (!selectedUser) return;
 
     try {
-      const response = await deleteUser(selectedUser.user_id);
+      const response = await deleteUser(selectedUser.userId);
       if (response.success) {
         setDeleteDialogOpen(false);
         fetchUsers();
@@ -683,7 +683,7 @@ const Users: React.FC = () => {
     }
 
     try {
-      const response = await resetUserPassword(selectedUser.user_id, newPassword);
+      const response = await resetUserPassword(selectedUser.userId, newPassword);
       if (response.success) {
         setResetPasswordDialogOpen(false);
         setNewPassword('');
@@ -703,7 +703,7 @@ const Users: React.FC = () => {
     const csvHeaders = ['User ID', 'Username', 'Email', 'Role', 'Status', 'Created Time'];
 
     const csvRows = filteredUsers.map((user) => [
-      user.user_id,
+      user.userId,
       user.username,
       user.email || '',
       user.role,
@@ -960,8 +960,8 @@ const Users: React.FC = () => {
           </TableHead>
           <TableBody>
             {paginatedUsers.map((user) => (
-              <TableRow key={user.user_id} hover>
-                <TableCell>{user.user_id}</TableCell>
+              <TableRow key={user.userId} hover>
+                <TableCell>{user.userId}</TableCell>
                 <TableCell>
                   <Typography component="span" sx={clickableTextSx} onClick={() => handleViewDetails(user)}>
                     {user.username}
@@ -1248,7 +1248,7 @@ const Users: React.FC = () => {
                   <Typography variant="body2" color="text.secondary">
                     User ID
                   </Typography>
-                  <Typography variant="body1">{selectedUser.user_id}</Typography>
+                  <Typography variant="body1">{selectedUser.userId}</Typography>
                 </Grid>
                 <Grid size={{ xs: 6 }}>
                   <Typography variant="body2" color="text.secondary">
@@ -1347,7 +1347,7 @@ const Users: React.FC = () => {
                           <TableCell>{formatLastLogin(log.timestamp)}</TableCell>
                           <TableCell>{log.operation_type}</TableCell>
                           <TableCell>
-                            {log.resource_type}: {log.resource_id}
+                            {log.resource_type}: {log.resourceId}
                           </TableCell>
                           <TableCell>
                             <Chip

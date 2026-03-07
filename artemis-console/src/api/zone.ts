@@ -11,14 +11,14 @@ const API_BASE = '/api/management/zone';
 // ===== 请求/响应类型定义 =====
 
 export interface OperateZoneRequest {
-  zone_id: string;
-  region_id: string;
-  operator_id?: string;
+  zoneId: string;
+  regionId: string;
+  operatorId?: string;
 }
 
 export interface ZoneInfo {
-  zone_id: string;
-  region_id: string;
+  zoneId: string;
+  regionId: string;
   total_instances: number;
   active_instances: number;
   status: 'ACTIVE' | 'INACTIVE';
@@ -62,8 +62,8 @@ export async function queryZoneOperations(
 ): Promise<ApiResponse<any[]>> {
   const response = await apiClient.get(`${API_BASE}/operations`, {
     params: {
-      zone_id: zoneId,
-      region_id: regionId,
+      zoneId: zoneId,
+      regionId: regionId,
       limit,
     },
   });
@@ -72,11 +72,11 @@ export async function queryZoneOperations(
 
 /**
  * 获取 Zone 信息
- * GET /api/management/zone/:zone_id
+ * GET /api/management/zone/:zoneId
  */
 export async function getZoneInfo(zoneId: string, regionId: string): Promise<ApiResponse<ZoneInfo>> {
   const response = await apiClient.get(`${API_BASE}/${zoneId}`, {
-    params: { region_id: regionId },
+    params: { regionId: regionId },
   });
   return response.data;
 }
@@ -87,25 +87,25 @@ export async function getZoneInfo(zoneId: string, regionId: string): Promise<Api
  */
 export async function listZones(regionId?: string): Promise<ApiResponse<ZoneInfo[]>> {
   const response = await apiClient.get(API_BASE, {
-    params: { region_id: regionId },
+    params: { regionId: regionId },
   });
   return response.data;
 }
 
 /**
  * 检查 Zone 中的实例是否全部拉出
- * GET /api/management/zone/:zone_id/is-down
+ * GET /api/management/zone/:zoneId/is-down
  */
 export async function isZoneDown(zoneId: string, regionId: string): Promise<ApiResponse<{ is_down: boolean }>> {
   const response = await apiClient.get(`${API_BASE}/${zoneId}/is-down`, {
-    params: { region_id: regionId },
+    params: { regionId: regionId },
   });
   return response.data;
 }
 
 /**
  * 获取 Zone 中的实例列表
- * GET /api/management/zone/:zone_id/instances
+ * GET /api/management/zone/:zoneId/instances
  */
 export async function getZoneInstances(
   zoneId: string,
@@ -114,7 +114,7 @@ export async function getZoneInstances(
 ): Promise<ApiResponse<any[]>> {
   const response = await apiClient.get(`${API_BASE}/${zoneId}/instances`, {
     params: {
-      region_id: regionId,
+      regionId: regionId,
       status,
     },
   });
@@ -123,7 +123,7 @@ export async function getZoneInstances(
 
 /**
  * 更新 Zone 状态
- * PUT /api/management/zone/:zone_id/status
+ * PUT /api/management/zone/:zoneId/status
  */
 export async function updateZoneStatus(
   zoneId: string,
@@ -131,8 +131,8 @@ export async function updateZoneStatus(
   status: 'ACTIVE' | 'INACTIVE'
 ): Promise<ApiResponse<any>> {
   const response = await apiClient.put(`${API_BASE}/${zoneId}/status`, {
-    zone_id: zoneId,
-    region_id: regionId,
+    zoneId: zoneId,
+    regionId: regionId,
     status,
   });
   return response.data;

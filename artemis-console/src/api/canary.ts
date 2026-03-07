@@ -11,13 +11,13 @@ const API_BASE = '/api/management/canary';
 // ===== 请求/响应类型定义 =====
 
 export interface SetCanaryConfigRequest {
-  service_id: string;
+  serviceId: string;
   ip_whitelist: string[];
   description?: string;
 }
 
 export interface CanaryConfig {
-  service_id: string;
+  serviceId: string;
   ip_whitelist: string[];
   enabled: boolean;
   created_at?: string;
@@ -25,7 +25,7 @@ export interface CanaryConfig {
 }
 
 export interface EnableCanaryRequest {
-  service_id: string;
+  serviceId: string;
   enabled: boolean;
 }
 
@@ -50,7 +50,7 @@ export async function setCanaryConfig(
 
 /**
  * 获取金丝雀配置
- * GET /api/management/canary/config/:service_id
+ * GET /api/management/canary/config/:serviceId
  */
 export async function getCanaryConfig(serviceId: string): Promise<ApiResponse<CanaryConfig>> {
   const response = await apiClient.get(`${API_BASE}/config/${serviceId}`);
@@ -59,7 +59,7 @@ export async function getCanaryConfig(serviceId: string): Promise<ApiResponse<Ca
 
 /**
  * 删除金丝雀配置
- * DELETE /api/management/canary/config/:service_id
+ * DELETE /api/management/canary/config/:serviceId
  */
 export async function deleteCanaryConfig(serviceId: string): Promise<ApiResponse<any>> {
   const response = await apiClient.delete(`${API_BASE}/config/${serviceId}`);
@@ -93,13 +93,13 @@ export async function enableCanary(
  * POST /api/management/canary/disable
  */
 export async function disableCanary(serviceId: string): Promise<ApiResponse<CanaryConfig>> {
-  const response = await apiClient.post(`${API_BASE}/disable`, { service_id: serviceId });
+  const response = await apiClient.post(`${API_BASE}/disable`, { serviceId: serviceId });
   return response.data;
 }
 
 /**
  * 检查金丝雀是否启用
- * GET /api/management/canary/enabled/:service_id
+ * GET /api/management/canary/enabled/:serviceId
  */
 export async function isCanaryEnabled(serviceId: string): Promise<ApiResponse<{ enabled: boolean }>> {
   const response = await apiClient.get(`${API_BASE}/enabled/${serviceId}`);
@@ -110,7 +110,7 @@ export async function isCanaryEnabled(serviceId: string): Promise<ApiResponse<{ 
 
 /**
  * 添加 IP 到白名单
- * POST /api/management/canary/:service_id/whitelist/add
+ * POST /api/management/canary/:serviceId/whitelist/add
  */
 export async function addIpToWhitelist(
   serviceId: string,
@@ -122,7 +122,7 @@ export async function addIpToWhitelist(
 
 /**
  * 从白名单移除 IP
- * POST /api/management/canary/:service_id/whitelist/remove
+ * POST /api/management/canary/:serviceId/whitelist/remove
  */
 export async function removeIpFromWhitelist(
   serviceId: string,
@@ -134,7 +134,7 @@ export async function removeIpFromWhitelist(
 
 /**
  * 获取白名单中的 IP
- * GET /api/management/canary/:service_id/whitelist
+ * GET /api/management/canary/:serviceId/whitelist
  */
 export async function getWhitelistIps(serviceId: string): Promise<ApiResponse<string[]>> {
   const response = await apiClient.get(`${API_BASE}/${serviceId}/whitelist`);
@@ -143,7 +143,7 @@ export async function getWhitelistIps(serviceId: string): Promise<ApiResponse<st
 
 /**
  * 检查 IP 是否在白名单中
- * GET /api/management/canary/:service_id/whitelist/check/:ip
+ * GET /api/management/canary/:serviceId/whitelist/check/:ip
  */
 export async function checkIpInWhitelist(
   serviceId: string,
@@ -155,7 +155,7 @@ export async function checkIpInWhitelist(
 
 /**
  * 清空白名单
- * DELETE /api/management/canary/:service_id/whitelist
+ * DELETE /api/management/canary/:serviceId/whitelist
  */
 export async function clearWhitelist(serviceId: string): Promise<ApiResponse<CanaryConfig>> {
   const response = await apiClient.delete(`${API_BASE}/${serviceId}/whitelist`);
@@ -181,13 +181,13 @@ export async function getCanaryStats(): Promise<
 
 /**
  * 获取服务的金丝雀统计
- * GET /api/management/canary/:service_id/stats
+ * GET /api/management/canary/:serviceId/stats
  */
 export async function getServiceCanaryStats(
   serviceId: string
 ): Promise<
   ApiResponse<{
-    service_id: string;
+    serviceId: string;
     enabled: boolean;
     whitelist_count: number;
     last_update: string;

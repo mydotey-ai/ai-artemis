@@ -49,17 +49,17 @@ export interface NodeStatusResponse {
 
 // 兼容旧接口的类型
 export interface ClusterNodeStatus {
-  node_id: string;
+  nodeId: string;
   host: string;
   port: number;
   status: 'ACTIVE' | 'INACTIVE' | 'SUSPECTED';
   last_heartbeat: string;
-  region_id: string;
-  zone_id: string;
+  regionId: string;
+  zoneId: string;
 }
 
 export interface ClusterStatus {
-  cluster_id: string;
+  clusterId: string;
   total_nodes: number;
   active_nodes: number;
   suspected_nodes: number;

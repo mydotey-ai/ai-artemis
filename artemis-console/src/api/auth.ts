@@ -21,7 +21,7 @@ export interface LoginResponse {
 }
 
 export interface User {
-  user_id: string;
+  userId: string;
   username: string;
   email?: string;
   role: string;
@@ -113,7 +113,7 @@ export async function changePassword(
 
 /**
  * 重置密码 (管理员操作)
- * POST /api/auth/password/reset/:user_id
+ * POST /api/auth/password/reset/:userId
  */
 export async function resetUserPassword(
   userId: string,
@@ -128,8 +128,8 @@ export async function resetUserPassword(
 // ===== 会话管理 API =====
 
 export interface Session {
-  session_id: string;
-  user_id: string;
+  sessionId: string;
+  userId: string;
   ip_address?: string;
   user_agent?: string;
   created_at: number;
@@ -148,7 +148,7 @@ export async function listActiveSessions(): Promise<ApiResponse<Session[]>> {
 
 /**
  * 撤销会话
- * DELETE /api/auth/sessions/:session_id
+ * DELETE /api/auth/sessions/:sessionId
  */
 export async function revokeSession(sessionId: string): Promise<ApiResponse<string>> {
   const response = await apiClient.delete(`/api/auth/sessions/${sessionId}`);
@@ -217,7 +217,7 @@ export type UserRole = (typeof UserRole)[keyof typeof UserRole];
  * Complete User Details
  */
 export interface UserDetails {
-  user_id: string;
+  userId: string;
   username: string;
   email?: string;
   description?: string;
@@ -232,7 +232,7 @@ export interface UserDetails {
  */
 export interface LoginHistory {
   id: number;
-  user_id: string;
+  userId: string;
   login_time: number;
   ip_address: string;
   user_agent: string;
@@ -277,7 +277,7 @@ export async function getAllUsers(): Promise<ApiResponse<UserDetails[]>> {
 
 /**
  * 获取用户详情
- * GET /api/auth/users/:user_id
+ * GET /api/auth/users/:userId
  */
 export async function getUser(userId: string): Promise<ApiResponse<UserDetails>> {
   const response = await apiClient.get(`/api/auth/users/${userId}`);
@@ -295,7 +295,7 @@ export async function createUser(request: CreateUserRequest): Promise<ApiRespons
 
 /**
  * 更新用户
- * PUT /api/auth/users/:user_id
+ * PUT /api/auth/users/:userId
  */
 export async function updateUser(
   userId: string,
@@ -307,7 +307,7 @@ export async function updateUser(
 
 /**
  * 删除用户
- * DELETE /api/auth/users/:user_id
+ * DELETE /api/auth/users/:userId
  */
 export async function deleteUser(userId: string): Promise<ApiResponse<string>> {
   const response = await apiClient.delete(`/api/auth/users/${userId}`);
@@ -316,7 +316,7 @@ export async function deleteUser(userId: string): Promise<ApiResponse<string>> {
 
 /**
  * 更改用户状态
- * PUT /api/auth/users/:user_id/status
+ * PUT /api/auth/users/:userId/status
  */
 export async function changeUserStatus(
   userId: string,
@@ -328,7 +328,7 @@ export async function changeUserStatus(
 
 /**
  * 获取用户登录历史
- * GET /api/auth/users/:user_id/login-history
+ * GET /api/auth/users/:userId/login-history
  */
 export async function getUserLoginHistory(userId: string): Promise<ApiResponse<LoginHistory[]>> {
   const response = await apiClient.get(`/api/auth/users/${userId}/login-history`);

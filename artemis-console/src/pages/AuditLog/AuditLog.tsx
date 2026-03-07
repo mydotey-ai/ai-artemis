@@ -247,7 +247,7 @@ const AuditLog: React.FC = () => {
       }
 
       // Add other filters
-      if (operatorFilter) params.operator_id = operatorFilter;
+      if (operatorFilter) params.operatorId = operatorFilter;
       if (resourceTypeFilter !== 'all') params.resource_type = resourceTypeFilter;
 
       const response = await queryLogs(params);
@@ -292,7 +292,7 @@ const AuditLog: React.FC = () => {
     // Top 5 operators
     const operatorCounts: Record<string, number> = {};
     logData.forEach((log) => {
-      const operator = log.operator_id;
+      const operator = log.operatorId;
       operatorCounts[operator] = (operatorCounts[operator] || 0) + 1;
     });
 
@@ -336,7 +336,7 @@ const AuditLog: React.FC = () => {
       }
 
       // Resource ID filter
-      if (resourceIdFilter && !log.resource_id.toLowerCase().includes(resourceIdFilter.toLowerCase())) {
+      if (resourceIdFilter && !log.resourceId.toLowerCase().includes(resourceIdFilter.toLowerCase())) {
         return false;
       }
 
@@ -587,8 +587,8 @@ const AuditLog: React.FC = () => {
       formatTimestamp(log.timestamp),
       log.operation_type,
       log.resource_type,
-      log.resource_id,
-      log.operator_id,
+      log.resourceId,
+      log.operatorId,
       log.action,
       log.result,
       log.error_message || '',
@@ -868,14 +868,14 @@ const AuditLog: React.FC = () => {
               Resource
             </Typography>
             <Typography variant="body2" paragraph>
-              {selectedLog.resource_type}: {selectedLog.resource_id}
+              {selectedLog.resource_type}: {selectedLog.resourceId}
             </Typography>
 
             <Typography variant="subtitle2" gutterBottom>
               Operator
             </Typography>
             <Typography variant="body2" paragraph>
-              {selectedLog.operator_id}
+              {selectedLog.operatorId}
             </Typography>
 
             <Typography variant="subtitle2" gutterBottom>
@@ -1226,10 +1226,10 @@ const AuditLog: React.FC = () => {
                               sx={clickableTextSx}
                               onClick={() => handleLogClick(log)}
                             >
-                              {log.resource_id}
+                              {log.resourceId}
                             </Typography>
                           </TableCell>
-                          <TableCell>{log.operator_id}</TableCell>
+                          <TableCell>{log.operatorId}</TableCell>
                           <TableCell>{log.action}</TableCell>
                           <TableCell>
                             <Chip

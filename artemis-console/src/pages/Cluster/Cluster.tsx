@@ -128,13 +128,13 @@ const Cluster: React.FC = () => {
     }
 
     return {
-      node_id: serviceNode.node.nodeId,
+      nodeId: serviceNode.node.nodeId,
       host,
       port,
       status,
       last_heartbeat: new Date().toISOString(),
-      region_id: serviceNode.node.regionId,
-      zone_id: serviceNode.node.zoneId,
+      regionId: serviceNode.node.regionId,
+      zoneId: serviceNode.node.zoneId,
     };
   };
 
@@ -205,10 +205,10 @@ const Cluster: React.FC = () => {
   const handleClusterNodeAdded = useCallback(
     (data: unknown) => {
       console.log('Cluster node added:', data);
-      const nodeData = data as { node_id?: string };
+      const nodeData = data as { nodeId?: string };
       showNotification({
         type: 'success',
-        message: `Cluster node added${nodeData.node_id ? `: ${nodeData.node_id}` : ''}`,
+        message: `Cluster node added${nodeData.nodeId ? `: ${nodeData.nodeId}` : ''}`,
         duration: 5000,
       });
       // Refresh cluster data
@@ -223,10 +223,10 @@ const Cluster: React.FC = () => {
   const handleClusterNodeRemoved = useCallback(
     (data: unknown) => {
       console.log('Cluster node removed:', data);
-      const nodeData = data as { node_id?: string };
+      const nodeData = data as { nodeId?: string };
       showNotification({
         type: 'warning',
-        message: `Cluster node removed${nodeData.node_id ? `: ${nodeData.node_id}` : ''}`,
+        message: `Cluster node removed${nodeData.nodeId ? `: ${nodeData.nodeId}` : ''}`,
         duration: 5000,
       });
       // Refresh cluster data
@@ -386,7 +386,7 @@ const Cluster: React.FC = () => {
                           : '#f44336';
 
                     return (
-                      <g key={node.node_id}>
+                      <g key={node.nodeId}>
                         {/* Node circle */}
                         <circle
                           cx={pos.x}
@@ -410,7 +410,7 @@ const Cluster: React.FC = () => {
                           fontWeight="bold"
                           style={{ cursor: 'pointer', pointerEvents: 'none' }}
                         >
-                          {node.node_id.substring(0, 8)}
+                          {node.nodeId.substring(0, 8)}
                         </text>
 
                         {/* Node label */}
@@ -668,10 +668,10 @@ const Cluster: React.FC = () => {
                   </TableRow>
                 ) : (
                   nodes.map((node) => (
-                    <TableRow key={node.node_id} hover>
+                    <TableRow key={node.nodeId} hover>
                       <TableCell>
                         <Typography variant="body2" fontFamily="monospace">
-                          {node.node_id}
+                          {node.nodeId}
                         </Typography>
                       </TableCell>
                       <TableCell>{node.host}</TableCell>
@@ -685,7 +685,7 @@ const Cluster: React.FC = () => {
                         />
                       </TableCell>
                       <TableCell>
-                        {node.region_id} / {node.zone_id}
+                        {node.regionId} / {node.zoneId}
                       </TableCell>
                       <TableCell>
                         <Tooltip title={new Date(node.last_heartbeat).toLocaleString()}>
@@ -721,7 +721,7 @@ const Cluster: React.FC = () => {
           Node Details
           {selectedNode && (
             <Typography variant="body2" color="text.secondary">
-              {selectedNode.node_id}
+              {selectedNode.nodeId}
             </Typography>
           )}
         </DialogTitle>
@@ -737,7 +737,7 @@ const Cluster: React.FC = () => {
                     primary="Node ID"
                     secondary={
                       <Typography variant="body2" fontFamily="monospace">
-                        {selectedNode.node_id}
+                        {selectedNode.nodeId}
                       </Typography>
                     }
                   />
@@ -762,10 +762,10 @@ const Cluster: React.FC = () => {
                   />
                 </ListItem>
                 <ListItem>
-                  <ListItemText primary="Region ID" secondary={selectedNode.region_id} />
+                  <ListItemText primary="Region ID" secondary={selectedNode.regionId} />
                 </ListItem>
                 <ListItem>
-                  <ListItemText primary="Zone ID" secondary={selectedNode.zone_id} />
+                  <ListItemText primary="Zone ID" secondary={selectedNode.zoneId} />
                 </ListItem>
                 <ListItem>
                   <ListItemText

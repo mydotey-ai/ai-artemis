@@ -368,10 +368,10 @@ const Dashboard: React.FC = () => {
   const handleInstanceStatusChanged = useCallback(
     (data: unknown) => {
       console.log('Instance status changed:', data);
-      const statusData = data as { instance_id?: string; status?: string };
+      const statusData = data as { instanceId?: string; status?: string };
       showNotification({
         type: 'warning',
-        message: `Instance status changed: ${statusData.instance_id || 'unknown'} → ${statusData.status || 'unknown'}`,
+        message: `Instance status changed: ${statusData.instanceId || 'unknown'} → ${statusData.status || 'unknown'}`,
         duration: 4000,
       });
       // Refresh dashboard data (background refresh)
@@ -639,8 +639,8 @@ const Dashboard: React.FC = () => {
                         const allUp = upCount === instanceCount && instanceCount > 0;
 
                         return (
-                          <TableRow key={service.service_id}>
-                            <TableCell>{service.service_id}</TableCell>
+                          <TableRow key={service.serviceId}>
+                            <TableCell>{service.serviceId}</TableCell>
                             <TableCell align="right">{instanceCount}</TableCell>
                             <TableCell align="center">
                               <Chip

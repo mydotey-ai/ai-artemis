@@ -85,12 +85,12 @@ import type { Service } from '@/api/types';
  * Group display data
  */
 interface GroupDisplay {
-  group_id: string;
+  groupId: string;
   name: string;
   description?: string;
-  service_id: string;
-  region_id: string;
-  zone_id: string;
+  serviceId: string;
+  regionId: string;
+  zoneId: string;
   status: 'ACTIVE' | 'INACTIVE';
   instance_count: number;
   created_at?: number;
@@ -100,10 +100,10 @@ interface GroupDisplay {
  * Route Rule display data
  */
 interface RouteRuleDisplay {
-  route_id: string;
+  routeId: string;
   name: string;
   description?: string;
-  service_id: string;
+  serviceId: string;
   strategy: 'WEIGHT_ROUND_ROBIN' | 'CONSISTENT_HASH';
   status: 'ACTIVE' | 'INACTIVE';
   groups: GroupWeightDisplay[];
@@ -114,7 +114,7 @@ interface RouteRuleDisplay {
  * Group weight display
  */
 interface GroupWeightDisplay {
-  group_id: string;
+  groupId: string;
   group_name: string;
   weight: number;
 }
@@ -132,22 +132,22 @@ interface Statistics {
  * Group form data
  */
 interface GroupFormData {
-  group_id: string;
+  groupId: string;
   name: string;
   description: string;
-  service_id: string;
-  region_id: string;
-  zone_id: string;
+  serviceId: string;
+  regionId: string;
+  zoneId: string;
 }
 
 /**
  * Route Rule form data
  */
 interface RouteRuleFormData {
-  route_id: string;
+  routeId: string;
   name: string;
   description: string;
-  service_id: string;
+  serviceId: string;
   strategy: 'WEIGHT_ROUND_ROBIN' | 'CONSISTENT_HASH';
   selectedGroups: string[];
   weights: Record<string, number>;
@@ -201,19 +201,19 @@ const Routing: React.FC = () => {
 
   // Form state
   const [groupFormData, setGroupFormData] = useState<GroupFormData>({
-    group_id: '',
+    groupId: '',
     name: '',
     description: '',
-    service_id: '',
-    region_id: 'default-region',
-    zone_id: 'default-zone',
+    serviceId: '',
+    regionId: 'default-region',
+    zoneId: 'default-zone',
   });
 
   const [ruleFormData, setRuleFormData] = useState<RouteRuleFormData>({
-    route_id: '',
+    routeId: '',
     name: '',
     description: '',
-    service_id: '',
+    serviceId: '',
     strategy: 'WEIGHT_ROUND_ROBIN',
     selectedGroups: [],
     weights: {},
@@ -245,12 +245,12 @@ const Routing: React.FC = () => {
 
       // Process groups
       const groupsData: GroupDisplay[] = groupsResponse.data?.map((g: any) => ({
-        group_id: g.group_id || g.id,
+        groupId: g.groupId || g.id,
         name: g.name,
         description: g.description,
-        service_id: g.service_id,
-        region_id: g.region_id,
-        zone_id: g.zone_id,
+        serviceId: g.serviceId,
+        regionId: g.regionId,
+        zoneId: g.zoneId,
         status: g.status?.status || 'ACTIVE',
         instance_count: g.instance_count || 0,
         created_at: g.created_at,
@@ -260,18 +260,18 @@ const Routing: React.FC = () => {
       const rulesData: RouteRuleDisplay[] = [];
       if (rulesResponse.data) {
         for (const r of rulesResponse.data) {
-          const ruleGroupsResponse = await listRuleGroups(r.route_id);
+          const ruleGroupsResponse = await listRuleGroups(r.routeId);
           const ruleGroups: GroupWeightDisplay[] = ruleGroupsResponse.data?.map((rg: any) => ({
-            group_id: rg.group_id,
-            group_name: groupsData.find(g => g.group_id === rg.group_id)?.name || rg.group_id,
+            groupId: rg.groupId,
+            group_name: groupsData.find(g => g.groupId === rg.groupId)?.name || rg.groupId,
             weight: rg.weight,
           })) || [];
 
           rulesData.push({
-            route_id: r.route_id,
+            routeId: r.routeId,
             name: r.name,
             description: r.description,
-            service_id: r.service_id,
+            serviceId: r.serviceId,
             strategy: r.strategy?.strategy || 'WEIGHT_ROUND_ROBIN',
             status: r.status?.status || 'ACTIVE',
             groups: ruleGroups,
@@ -318,22 +318,22 @@ const Routing: React.FC = () => {
     if (group) {
       setEditMode(true);
       setGroupFormData({
-        group_id: group.group_id,
+        groupId: group.groupId,
         name: group.name,
         description: group.description || '',
-        service_id: group.service_id,
-        region_id: group.region_id,
-        zone_id: group.zone_id,
+        serviceId: group.serviceId,
+        regionId: group.regionId,
+        zoneId: group.zoneId,
       });
     } else {
       setEditMode(false);
       setGroupFormData({
-        group_id: '',
+        groupId: '',
         name: '',
         description: '',
-        service_id: '',
-        region_id: 'default-region',
-        zone_id: 'default-zone',
+        serviceId: '',
+        regionId: 'default-region',
+        zoneId: 'default-zone',
       });
     }
     setGroupDialogOpen(true);
@@ -347,25 +347,25 @@ const Routing: React.FC = () => {
       setEditMode(true);
       const weights: Record<string, number> = {};
       rule.groups.forEach(g => {
-        weights[g.group_id] = g.weight;
+        weights[g.groupId] = g.weight;
       });
       setRuleFormData({
-        route_id: rule.route_id,
+        routeId: rule.routeId,
         name: rule.name,
         description: rule.description || '',
-        service_id: rule.service_id,
+        serviceId: rule.serviceId,
         strategy: rule.strategy,
-        selectedGroups: rule.groups.map(g => g.group_id),
+        selectedGroups: rule.groups.map(g => g.groupId),
         weights,
         zonePreference: '',
       });
     } else {
       setEditMode(false);
       setRuleFormData({
-        route_id: '',
+        routeId: '',
         name: '',
         description: '',
-        service_id: '',
+        serviceId: '',
         strategy: 'WEIGHT_ROUND_ROBIN',
         selectedGroups: [],
         weights: {},
@@ -384,14 +384,14 @@ const Routing: React.FC = () => {
       setError(null);
 
       if (editMode) {
-        await updateGroup(groupFormData.group_id, {
+        await updateGroup(groupFormData.groupId, {
           description: groupFormData.description,
         });
       } else {
         await createGroup({
-          service_id: groupFormData.service_id,
-          region_id: groupFormData.region_id,
-          zone_id: groupFormData.zone_id,
+          serviceId: groupFormData.serviceId,
+          regionId: groupFormData.regionId,
+          zoneId: groupFormData.zoneId,
           name: groupFormData.name,
           group_type: { type: 'WEIGHT' },
           description: groupFormData.description,
@@ -426,31 +426,31 @@ const Routing: React.FC = () => {
 
       if (editMode) {
         // Update rule metadata
-        await updateRule(ruleFormData.route_id, {
+        await updateRule(ruleFormData.routeId, {
           name: ruleFormData.name,
           description: ruleFormData.description,
           strategy: { strategy: ruleFormData.strategy },
         });
 
         // Update rule groups and weights
-        const existingRule = rules.find(r => r.route_id === ruleFormData.route_id);
+        const existingRule = rules.find(r => r.routeId === ruleFormData.routeId);
         if (existingRule) {
           // Remove old groups not in new selection
           for (const g of existingRule.groups) {
-            if (!ruleFormData.selectedGroups.includes(g.group_id)) {
-              await removeRuleGroup(ruleFormData.route_id, g.group_id);
+            if (!ruleFormData.selectedGroups.includes(g.groupId)) {
+              await removeRuleGroup(ruleFormData.routeId, g.groupId);
             }
           }
 
           // Add or update groups
           for (const groupId of ruleFormData.selectedGroups) {
             const weight = ruleFormData.weights[groupId] || 0;
-            const existingGroup = existingRule.groups.find(g => g.group_id === groupId);
+            const existingGroup = existingRule.groups.find(g => g.groupId === groupId);
             if (existingGroup) {
-              await updateRuleGroup(ruleFormData.route_id, groupId, { weight });
+              await updateRuleGroup(ruleFormData.routeId, groupId, { weight });
             } else {
-              await addRuleGroup(ruleFormData.route_id, {
-                group_id: groupId,
+              await addRuleGroup(ruleFormData.routeId, {
+                groupId: groupId,
                 weight,
               });
             }
@@ -459,8 +459,8 @@ const Routing: React.FC = () => {
       } else {
         // Create new rule
         await createRule({
-          route_id: ruleFormData.route_id,
-          service_id: ruleFormData.service_id,
+          routeId: ruleFormData.routeId,
+          serviceId: ruleFormData.serviceId,
           name: ruleFormData.name,
           description: ruleFormData.description,
           strategy: { strategy: ruleFormData.strategy },
@@ -468,8 +468,8 @@ const Routing: React.FC = () => {
 
         // Add groups to rule
         for (const groupId of ruleFormData.selectedGroups) {
-          await addRuleGroup(ruleFormData.route_id, {
-            group_id: groupId,
+          await addRuleGroup(ruleFormData.routeId, {
+            groupId: groupId,
             weight: ruleFormData.weights[groupId] || 0,
           });
         }
@@ -564,14 +564,14 @@ const Routing: React.FC = () => {
     if (type === 'groups') {
       csvContent = 'Group ID,Name,Service ID,Status,Instance Count,Description\n';
       filteredGroups.forEach(g => {
-        csvContent += `"${g.group_id}","${g.name}","${g.service_id}","${g.status}",${g.instance_count},"${g.description || ''}"\n`;
+        csvContent += `"${g.groupId}","${g.name}","${g.serviceId}","${g.status}",${g.instance_count},"${g.description || ''}"\n`;
       });
       filename = 'groups.csv';
     } else {
       csvContent = 'Rule ID,Name,Service ID,Strategy,Status,Groups,Description\n';
       filteredRules.forEach(r => {
         const groupsStr = r.groups.map(g => `${g.group_name}:${g.weight}%`).join('; ');
-        csvContent += `"${r.route_id}","${r.name}","${r.service_id}","${r.strategy}","${r.status}","${groupsStr}","${r.description || ''}"\n`;
+        csvContent += `"${r.routeId}","${r.name}","${r.serviceId}","${r.strategy}","${r.status}","${groupsStr}","${r.description || ''}"\n`;
       });
       filename = 'route-rules.csv';
     }
@@ -590,7 +590,7 @@ const Routing: React.FC = () => {
    */
   const filteredGroups = useMemo(() => {
     return groups.filter(g => {
-      const matchesSearch = g.group_id.toLowerCase().includes(groupSearchQuery.toLowerCase()) ||
+      const matchesSearch = g.groupId.toLowerCase().includes(groupSearchQuery.toLowerCase()) ||
         g.name.toLowerCase().includes(groupSearchQuery.toLowerCase());
       return matchesSearch;
     });
@@ -601,7 +601,7 @@ const Routing: React.FC = () => {
    */
   const filteredRules = useMemo(() => {
     return rules.filter(r => {
-      const matchesSearch = r.route_id.toLowerCase().includes(ruleSearchQuery.toLowerCase()) ||
+      const matchesSearch = r.routeId.toLowerCase().includes(ruleSearchQuery.toLowerCase()) ||
         r.name.toLowerCase().includes(ruleSearchQuery.toLowerCase());
       const matchesStatus = ruleStatusFilter === 'all' || r.status === ruleStatusFilter.toUpperCase();
       return matchesSearch && matchesStatus;
@@ -628,9 +628,9 @@ const Routing: React.FC = () => {
    * Available groups for rule form (filtered by service)
    */
   const availableGroups = useMemo(() => {
-    if (!ruleFormData.service_id) return [];
-    return groups.filter(g => g.service_id === ruleFormData.service_id);
-  }, [groups, ruleFormData.service_id]);
+    if (!ruleFormData.serviceId) return [];
+    return groups.filter(g => g.serviceId === ruleFormData.serviceId);
+  }, [groups, ruleFormData.serviceId]);
 
   /**
    * Calculate total weight
@@ -820,11 +820,11 @@ const Routing: React.FC = () => {
                     </TableRow>
                   ) : (
                     paginatedGroups.map((group) => (
-                      <TableRow key={group.group_id}>
-                        <TableCell>{group.group_id}</TableCell>
+                      <TableRow key={group.groupId}>
+                        <TableCell>{group.groupId}</TableCell>
                         <TableCell>{group.name}</TableCell>
                         <TableCell>{group.description || '-'}</TableCell>
-                        <TableCell>{group.service_id}</TableCell>
+                        <TableCell>{group.serviceId}</TableCell>
                         <TableCell align="center">{group.instance_count}</TableCell>
                         <TableCell>
                           {group.created_at ? new Date(group.created_at * 1000).toLocaleString() : '-'}
@@ -839,7 +839,7 @@ const Routing: React.FC = () => {
                             <IconButton
                               size="small"
                               color="error"
-                              onClick={() => confirmDelete('group', group.group_id, group.name)}
+                              onClick={() => confirmDelete('group', group.groupId, group.name)}
                             >
                               <DeleteIcon fontSize="small" />
                             </IconButton>
@@ -944,8 +944,8 @@ const Routing: React.FC = () => {
                     </TableRow>
                   ) : (
                     paginatedRules.map((rule) => (
-                      <TableRow key={rule.route_id}>
-                        <TableCell>{rule.route_id}</TableCell>
+                      <TableRow key={rule.routeId}>
+                        <TableCell>{rule.routeId}</TableCell>
                         <TableCell>{rule.name}</TableCell>
                         <TableCell>
                           {rule.strategy === 'WEIGHT_ROUND_ROBIN' ? 'Weighted Round Robin' : 'Consistent Hash'}
@@ -959,7 +959,7 @@ const Routing: React.FC = () => {
                         <TableCell align="center">
                           <Switch
                             checked={rule.status === 'ACTIVE'}
-                            onChange={() => toggleRuleStatus(rule.route_id, rule.status)}
+                            onChange={() => toggleRuleStatus(rule.routeId, rule.status)}
                             size="small"
                             disabled={actionLoading}
                           />
@@ -980,7 +980,7 @@ const Routing: React.FC = () => {
                             <IconButton
                               size="small"
                               color="error"
-                              onClick={() => confirmDelete('rule', rule.route_id, rule.name)}
+                              onClick={() => confirmDelete('rule', rule.routeId, rule.name)}
                             >
                               <DeleteIcon fontSize="small" />
                             </IconButton>
@@ -1031,8 +1031,8 @@ const Routing: React.FC = () => {
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, paddingTop: 1 }}>
             <TextField
               label="Group ID"
-              value={groupFormData.group_id}
-              onChange={(e) => setGroupFormData(prev => ({ ...prev, group_id: e.target.value }))}
+              value={groupFormData.groupId}
+              onChange={(e) => setGroupFormData(prev => ({ ...prev, groupId: e.target.value }))}
               disabled={editMode}
               required
               fullWidth
@@ -1054,12 +1054,12 @@ const Routing: React.FC = () => {
             />
             <Autocomplete
               options={services}
-              getOptionLabel={(option) => option.service_id}
-              value={services.find(s => s.service_id === groupFormData.service_id) || null}
+              getOptionLabel={(option) => option.serviceId}
+              value={services.find(s => s.serviceId === groupFormData.serviceId) || null}
               onChange={(_, newValue) => {
                 setGroupFormData(prev => ({
                   ...prev,
-                  service_id: newValue?.service_id || '',
+                  serviceId: newValue?.serviceId || '',
                 }));
               }}
               disabled={editMode}
@@ -1070,16 +1070,16 @@ const Routing: React.FC = () => {
             />
             <TextField
               label="Region ID"
-              value={groupFormData.region_id}
-              onChange={(e) => setGroupFormData(prev => ({ ...prev, region_id: e.target.value }))}
+              value={groupFormData.regionId}
+              onChange={(e) => setGroupFormData(prev => ({ ...prev, regionId: e.target.value }))}
               disabled={editMode}
               required
               fullWidth
             />
             <TextField
               label="Zone ID"
-              value={groupFormData.zone_id}
-              onChange={(e) => setGroupFormData(prev => ({ ...prev, zone_id: e.target.value }))}
+              value={groupFormData.zoneId}
+              onChange={(e) => setGroupFormData(prev => ({ ...prev, zoneId: e.target.value }))}
               disabled={editMode}
               required
               fullWidth
@@ -1091,7 +1091,7 @@ const Routing: React.FC = () => {
           <Button
             onClick={handleGroupSubmit}
             variant="contained"
-            disabled={actionLoading || !groupFormData.group_id || !groupFormData.name || !groupFormData.service_id}
+            disabled={actionLoading || !groupFormData.groupId || !groupFormData.name || !groupFormData.serviceId}
           >
             {actionLoading ? 'Saving...' : editMode ? 'Update' : 'Create'}
           </Button>
@@ -1118,8 +1118,8 @@ const Routing: React.FC = () => {
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, paddingTop: 1 }}>
             <TextField
               label="Rule ID"
-              value={ruleFormData.route_id}
-              onChange={(e) => setRuleFormData(prev => ({ ...prev, route_id: e.target.value }))}
+              value={ruleFormData.routeId}
+              onChange={(e) => setRuleFormData(prev => ({ ...prev, routeId: e.target.value }))}
               disabled={editMode}
               required
               fullWidth
@@ -1141,12 +1141,12 @@ const Routing: React.FC = () => {
             />
             <Autocomplete
               options={services}
-              getOptionLabel={(option) => option.service_id}
-              value={services.find(s => s.service_id === ruleFormData.service_id) || null}
+              getOptionLabel={(option) => option.serviceId}
+              value={services.find(s => s.serviceId === ruleFormData.serviceId) || null}
               onChange={(_, newValue) => {
                 setRuleFormData(prev => ({
                   ...prev,
-                  service_id: newValue?.service_id || '',
+                  serviceId: newValue?.serviceId || '',
                   selectedGroups: [],
                   weights: {},
                 }));
@@ -1177,10 +1177,10 @@ const Routing: React.FC = () => {
             <Autocomplete
               multiple
               options={availableGroups}
-              getOptionLabel={(option) => `${option.name} (${option.group_id})`}
-              value={availableGroups.filter(g => ruleFormData.selectedGroups.includes(g.group_id))}
+              getOptionLabel={(option) => `${option.name} (${option.groupId})`}
+              value={availableGroups.filter(g => ruleFormData.selectedGroups.includes(g.groupId))}
               onChange={(_, newValue) => {
-                const selectedIds = newValue.map(g => g.group_id);
+                const selectedIds = newValue.map(g => g.groupId);
                 const newWeights = { ...ruleFormData.weights };
                 // Remove weights for unselected groups
                 Object.keys(newWeights).forEach(id => {
@@ -1217,7 +1217,7 @@ const Routing: React.FC = () => {
                 </Box>
                 <Divider sx={{ marginBottom: 2 }} />
                 {ruleFormData.selectedGroups.map(groupId => {
-                  const group = availableGroups.find(g => g.group_id === groupId);
+                  const group = availableGroups.find(g => g.groupId === groupId);
                   return (
                     <TextField
                       key={groupId}
@@ -1267,9 +1267,9 @@ const Routing: React.FC = () => {
             variant="contained"
             disabled={
               actionLoading ||
-              !ruleFormData.route_id ||
+              !ruleFormData.routeId ||
               !ruleFormData.name ||
-              !ruleFormData.service_id ||
+              !ruleFormData.serviceId ||
               ruleFormData.selectedGroups.length === 0 ||
               (ruleFormData.strategy === 'WEIGHT_ROUND_ROBIN' && !weightValid)
             }

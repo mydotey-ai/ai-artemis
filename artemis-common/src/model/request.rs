@@ -6,11 +6,13 @@ use std::collections::HashMap;
 // ===== 注册 =====
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct RegisterRequest {
     pub instances: Vec<Instance>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct RegisterResponse {
     pub response_status: ResponseStatus,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -20,11 +22,13 @@ pub struct RegisterResponse {
 // ===== 心跳 =====
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct HeartbeatRequest {
     pub instance_keys: Vec<InstanceKey>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct HeartbeatResponse {
     pub response_status: ResponseStatus,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -34,11 +38,13 @@ pub struct HeartbeatResponse {
 // ===== 注销 =====
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UnregisterRequest {
     pub instance_keys: Vec<InstanceKey>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UnregisterResponse {
     pub response_status: ResponseStatus,
 }
@@ -62,6 +68,7 @@ pub struct DiscoveryConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetServiceResponse {
     pub response_status: ResponseStatus,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -69,18 +76,21 @@ pub struct GetServiceResponse {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetServicesRequest {
     pub region_id: String,
     pub zone_id: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetServicesResponse {
     pub response_status: ResponseStatus,
     pub services: Vec<Service>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetServicesDeltaRequest {
     pub region_id: String,
     pub zone_id: String,
@@ -88,6 +98,7 @@ pub struct GetServicesDeltaRequest {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetServicesDeltaResponse {
     pub response_status: ResponseStatus,
     pub services: Vec<Service>,
@@ -98,12 +109,14 @@ pub struct GetServicesDeltaResponse {
 
 /// Batch service lookup request (query multiple services at once)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct LookupServicesRequest {
     pub discovery_configs: Vec<DiscoveryConfig>,
 }
 
 /// Batch service lookup response
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct LookupServicesResponse {
     pub response_status: ResponseStatus,
     pub services: Vec<Service>,
@@ -112,6 +125,7 @@ pub struct LookupServicesResponse {
 // ===== 通用响应状态 =====
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct ResponseStatus {
     pub error_code: ErrorCode,
     #[serde(skip_serializing_if = "Option::is_none")]
