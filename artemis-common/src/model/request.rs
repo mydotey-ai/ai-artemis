@@ -46,11 +46,13 @@ pub struct UnregisterResponse {
 // ===== 发现 =====
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetServiceRequest {
     pub discovery_config: DiscoveryConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DiscoveryConfig {
     pub service_id: String,
     pub region_id: String,

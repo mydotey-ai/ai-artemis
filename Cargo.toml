@@ -8,6 +8,9 @@ members = [
     "artemis",
     "tools/stress-test",
 ]
+exclude = [
+    "artemis-test",
+]
 resolver = "2"
 
 [workspace.package]
