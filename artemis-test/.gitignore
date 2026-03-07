@@ -1,0 +1,41 @@
+# Artemis Test - Git Ignore
+
+# Data files
+data/*.db
+data/*.db-*
+data/*.db-journal
+
+# Log files
+logs/*.log
+logs/*.log.*
+logs/*.pid
+logs/*.toml
+logs/*.gz
+
+# Test reports
+reports/*.txt
+reports/*.csv
+reports/*.json
+
+# Build artifacts
+apps/java-provider/target/
+apps/java-consumer/target/
+apps/rust-provider/target/
+apps/rust-consumer/target/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp

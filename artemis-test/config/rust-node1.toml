@@ -1,0 +1,16 @@
+[server]
+node_id = "node-r1"
+listen_addr = "0.0.0.0:8084"
+peer_port = 9094
+
+[database]
+db_type = "sqlite"
+url = "sqlite:///home/koqizhao/Projects/mydotey-ai/ai-artemis/artemis-test/data/artemis.db"
+
+[cluster]
+enabled = true
+peers = [
+    "127.0.0.1:8081", "127.0.0.1:8082", "127.0.0.1:8083",
+    "127.0.0.1:8084", "127.0.0.1:8085", "127.0.0.1:8086"
+]
+peers = ["127.0.0.1:8081","127.0.0.1:8082","127.0.0.1:8083","127.0.0.1:8085","127.0.0.1:8086"]
