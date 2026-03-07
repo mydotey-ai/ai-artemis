@@ -12,13 +12,13 @@ const API_BASE = '/api/management/canary';
 
 export interface SetCanaryConfigRequest {
   serviceId: string;
-  ip_whitelist: string[];
+  ipWhitelist: string[];
   description?: string;
 }
 
 export interface CanaryConfig {
   serviceId: string;
-  ip_whitelist: string[];
+  ipWhitelist: string[];
   enabled: boolean;
   created_at?: string;
   updated_at?: string;
@@ -190,7 +190,7 @@ export async function getServiceCanaryStats(
     serviceId: string;
     enabled: boolean;
     whitelist_count: number;
-    last_update: string;
+    lastUpdate: string;
   }>
 > {
   const response = await apiClient.get(`${API_BASE}/${serviceId}/stats`);

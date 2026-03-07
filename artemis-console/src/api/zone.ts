@@ -22,7 +22,7 @@ export interface ZoneInfo {
   total_instances: number;
   active_instances: number;
   status: 'ACTIVE' | 'INACTIVE';
-  last_update: string;
+  lastUpdate: string;
 }
 
 export interface ApiResponse<T> {

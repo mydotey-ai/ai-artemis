@@ -101,7 +101,7 @@ interface Statistics {
  */
 interface CanaryFormData {
   serviceId: string;
-  ip_whitelist: string;
+  ipWhitelist: string;
   description: string;
 }
 
@@ -170,7 +170,7 @@ const Canary: React.FC = () => {
   // Form state
   const [formData, setFormData] = useState<CanaryFormData>({
     serviceId: '',
-    ip_whitelist: '',
+    ipWhitelist: '',
     description: '',
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -197,7 +197,7 @@ const Canary: React.FC = () => {
 
       // Fetch services
       const servicesResponse = await getAllServices('default-region', 'default-zone');
-      if (servicesResponse.response_status.error_code !== 'success') {
+      if (servicesResponse.response_status.errorCode !== 'success') {
         throw new Error(
           servicesResponse.response_status.error_message || 'Failed to fetch services'
         );
@@ -318,7 +318,7 @@ const Canary: React.FC = () => {
     setEditMode(false);
     setFormData({
       serviceId: '',
-      ip_whitelist: '',
+      ipWhitelist: '',
       description: '',
     });
     setFormErrors({});
@@ -332,7 +332,7 @@ const Canary: React.FC = () => {
     setEditMode(true);
     setFormData({
       serviceId: config.serviceId,
-      ip_whitelist: config.ip_whitelist.join('\n'),
+      ipWhitelist: config.ipWhitelist.join('\n'),
       description: '',
     });
     setFormErrors({});
@@ -400,7 +400,7 @@ const Canary: React.FC = () => {
     setIpDialog({
       open: true,
       serviceId: config.serviceId,
-      currentIps: [...config.ip_whitelist],
+      currentIps: [...config.ipWhitelist],
     });
     setNewIp('');
     setIpError('');
@@ -463,7 +463,7 @@ const Canary: React.FC = () => {
 
       setIpDialog({
         ...ipDialog,
-        currentIps: response.data.ip_whitelist,
+        currentIps: response.data.ipWhitelist,
       });
       setNewIp('');
       setIpError('');
@@ -490,7 +490,7 @@ const Canary: React.FC = () => {
 
       setIpDialog({
         ...ipDialog,
-        currentIps: response.data.ip_whitelist,
+        currentIps: response.data.ipWhitelist,
       });
       await fetchAllData();
     } catch (err) {
@@ -511,17 +511,17 @@ const Canary: React.FC = () => {
     }
 
     // Validate IPs
-    const ips = formData.ip_whitelist
+    const ips = formData.ipWhitelist
       .split('\n')
       .map((ip) => ip.trim())
       .filter((ip) => ip.length > 0);
 
     if (ips.length === 0) {
-      errors.ip_whitelist = 'At least one IP address is required';
+      errors.ipWhitelist = 'At least one IP address is required';
     } else {
       const invalidIps = ips.filter((ip) => !validateIp(ip));
       if (invalidIps.length > 0) {
-        errors.ip_whitelist = `Invalid IP addresses: ${invalidIps.join(', ')}`;
+        errors.ipWhitelist = `Invalid IP addresses: ${invalidIps.join(', ')}`;
       }
     }
 
@@ -540,14 +540,14 @@ const Canary: React.FC = () => {
     try {
       setActionLoading(true);
 
-      const ips = formData.ip_whitelist
+      const ips = formData.ipWhitelist
         .split('\n')
         .map((ip) => ip.trim())
         .filter((ip) => ip.length > 0);
 
       const request: SetCanaryConfigRequest = {
         serviceId: formData.serviceId,
-        ip_whitelist: ips,
+        ipWhitelist: ips,
         description: formData.description || undefined,
       };
 
@@ -584,7 +584,7 @@ const Canary: React.FC = () => {
     const csvRows = filteredConfigs.map((config) => [
       config.serviceId,
       config.enabled ? 'ACTIVE' : 'INACTIVE',
-      config.ip_whitelist.join('; '),
+      config.ipWhitelist.join('; '),
       config.created_at || 'N/A',
       config.updated_at || 'N/A',
     ]);
@@ -783,11 +783,11 @@ const Canary: React.FC = () => {
             rows={6}
             label="Whitelist IPs *"
             placeholder="Enter one IP per line (e.g., 192.168.1.1 or 192.168.1.0/24)"
-            value={formData.ip_whitelist}
-            onChange={(e) => handleFormChange('ip_whitelist', e.target.value)}
-            error={Boolean(formErrors.ip_whitelist)}
+            value={formData.ipWhitelist}
+            onChange={(e) => handleFormChange('ipWhitelist', e.target.value)}
+            error={Boolean(formErrors.ipWhitelist)}
             helperText={
-              formErrors.ip_whitelist ||
+              formErrors.ipWhitelist ||
               'Enter IP addresses (one per line). Supports CIDR notation (e.g., 192.168.1.0/24)'
             }
           />
@@ -1070,7 +1070,7 @@ const Canary: React.FC = () => {
                         <TableCell>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <Chip
-                              label={`${config.ip_whitelist.length} IP(s)`}
+                              label={`${config.ipWhitelist.length} IP(s)`}
                               size="small"
                               color="primary"
                               variant="outlined"

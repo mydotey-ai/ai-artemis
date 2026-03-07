@@ -85,10 +85,10 @@ interface ZoneOperationRow extends ZoneOperationRecord {
 interface CreateZoneOperationFormData {
   zoneId: string;
   regionId: string;
-  operation_type: 'UP_ZONE' | 'DOWN_ZONE';
+  operationType: 'UP_ZONE' | 'DOWN_ZONE';
   target_scope: 'all' | 'service' | 'instance';
-  service_filter: string;
-  instance_filter: string;
+  serviceFilter: string;
+  instanceFilter: string;
   operatorId: string;
   reason: string;
 }
@@ -219,10 +219,10 @@ const ZoneOps: React.FC = () => {
   const [formData, setFormData] = useState<CreateZoneOperationFormData>({
     zoneId: '',
     regionId: '',
-    operation_type: 'DOWN_ZONE',
+    operationType: 'DOWN_ZONE',
     target_scope: 'all',
-    service_filter: '',
-    instance_filter: '',
+    serviceFilter: '',
+    instanceFilter: '',
     operatorId: 'admin', // TODO: Get from auth context
     reason: '',
   });
@@ -361,7 +361,7 @@ const ZoneOps: React.FC = () => {
         operatorId: formData.operatorId,
       };
 
-      if (formData.operation_type === 'DOWN_ZONE') {
+      if (formData.operationType === 'DOWN_ZONE') {
         await zoneApi.pullOutZone(request);
       } else {
         await zoneApi.pullInZone(request);
@@ -377,10 +377,10 @@ const ZoneOps: React.FC = () => {
       setFormData({
         zoneId: '',
         regionId: '',
-        operation_type: 'DOWN_ZONE',
+        operationType: 'DOWN_ZONE',
         target_scope: 'all',
-        service_filter: '',
-        instance_filter: '',
+        serviceFilter: '',
+        instanceFilter: '',
         operatorId: 'admin',
         reason: '',
       });
@@ -804,11 +804,11 @@ const ZoneOps: React.FC = () => {
               <FormLabel component="legend">Operation Type</FormLabel>
               <RadioGroup
                 row
-                value={formData.operation_type}
+                value={formData.operationType}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    operation_type: e.target.value as 'UP_ZONE' | 'DOWN_ZONE',
+                    operationType: e.target.value as 'UP_ZONE' | 'DOWN_ZONE',
                   })
                 }
               >
@@ -850,8 +850,8 @@ const ZoneOps: React.FC = () => {
                 fullWidth
                 multiline
                 rows={2}
-                value={formData.service_filter}
-                onChange={(e) => setFormData({ ...formData, service_filter: e.target.value })}
+                value={formData.serviceFilter}
+                onChange={(e) => setFormData({ ...formData, serviceFilter: e.target.value })}
                 placeholder="Enter service IDs, one per line"
                 helperText="List of service IDs to target (currently not supported by backend)"
               />
@@ -863,8 +863,8 @@ const ZoneOps: React.FC = () => {
                 fullWidth
                 multiline
                 rows={2}
-                value={formData.instance_filter}
-                onChange={(e) => setFormData({ ...formData, instance_filter: e.target.value })}
+                value={formData.instanceFilter}
+                onChange={(e) => setFormData({ ...formData, instanceFilter: e.target.value })}
                 placeholder="Enter instance IDs, one per line"
                 helperText="List of instance IDs to target (currently not supported by backend)"
               />

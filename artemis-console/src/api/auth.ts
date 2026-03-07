@@ -15,8 +15,8 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  access_token: string;
-  token_type: string;
+  accessToken: string;
+  tokenType: string;
   expires_in: number;
 }
 
@@ -92,8 +92,8 @@ export async function getUserPermissions(): Promise<ApiResponse<string[]>> {
 // ===== 密码管理 API =====
 
 export interface ChangePasswordRequest {
-  old_password: string;
-  new_password: string;
+  oldPassword: string;
+  newPassword: string;
 }
 
 /**
@@ -105,8 +105,8 @@ export async function changePassword(
   newPassword: string
 ): Promise<ApiResponse<string>> {
   const response = await apiClient.post('/api/auth/password/change', {
-    old_password: oldPassword,
-    new_password: newPassword,
+    oldPassword: oldPassword,
+    newPassword: newPassword,
   });
   return response.data;
 }
@@ -120,7 +120,7 @@ export async function resetUserPassword(
   newPassword: string
 ): Promise<ApiResponse<string>> {
   const response = await apiClient.post(`/api/auth/password/reset/${userId}`, {
-    new_password: newPassword,
+    newPassword: newPassword,
   });
   return response.data;
 }
@@ -130,8 +130,8 @@ export async function resetUserPassword(
 export interface Session {
   sessionId: string;
   userId: string;
-  ip_address?: string;
-  user_agent?: string;
+  ipAddress?: string;
+  userAgent?: string;
   created_at: number;
   expires_at: number;
   last_activity: number;
@@ -234,8 +234,8 @@ export interface LoginHistory {
   id: number;
   userId: string;
   login_time: number;
-  ip_address: string;
-  user_agent: string;
+  ipAddress: string;
+  userAgent: string;
   status: 'success' | 'failed';
 }
 

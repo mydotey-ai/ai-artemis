@@ -139,7 +139,7 @@ export const useAuthStore = create<AuthStoreState>((set, get) => {
           throw new Error(response.message || 'Login failed');
         }
 
-        const { access_token } = response.data;
+        const { accessToken } = response.data;
 
         // For now, create mock user until backend is implemented
         // TODO: Replace with actual user data from API response
@@ -178,7 +178,7 @@ export const useAuthStore = create<AuthStoreState>((set, get) => {
         // Token is already saved there, but we ensure it's set
         const currentToken = getToken();
         if (!currentToken) {
-          saveToken(access_token, false);
+          saveToken(accessToken, false);
         }
 
         // Save user to localStorage
@@ -187,7 +187,7 @@ export const useAuthStore = create<AuthStoreState>((set, get) => {
         // Update state
         set({
           user: mockUser,
-          token: access_token,
+          token: accessToken,
           permissions,
           roles: mockUser.roles,
           isAuthenticated: true,
@@ -322,7 +322,7 @@ export const useAuthStore = create<AuthStoreState>((set, get) => {
       // try {
       //   const response = await authApi.refreshToken({ refresh_token: token });
       //   if (response.success && response.data) {
-      //     get().setToken(response.data.access_token);
+      //     get().setToken(response.data.accessToken);
       //   }
       // } catch (error) {
       //   console.error('Token refresh failed:', error);

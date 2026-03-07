@@ -132,7 +132,7 @@ const Cluster: React.FC = () => {
       host,
       port,
       status,
-      last_heartbeat: new Date().toISOString(),
+      lastHeartbeat: new Date().toISOString(),
       regionId: serviceNode.node.regionId,
       zoneId: serviceNode.node.zoneId,
     };
@@ -688,9 +688,9 @@ const Cluster: React.FC = () => {
                         {node.regionId} / {node.zoneId}
                       </TableCell>
                       <TableCell>
-                        <Tooltip title={new Date(node.last_heartbeat).toLocaleString()}>
+                        <Tooltip title={new Date(node.lastHeartbeat).toLocaleString()}>
                           <Typography variant="body2">
-                            {formatRelativeTime(node.last_heartbeat)}
+                            {formatRelativeTime(node.lastHeartbeat)}
                           </Typography>
                         </Tooltip>
                       </TableCell>
@@ -772,10 +772,10 @@ const Cluster: React.FC = () => {
                     primary="Last Heartbeat"
                     secondary={
                       <>
-                        {new Date(selectedNode.last_heartbeat).toLocaleString()}
+                        {new Date(selectedNode.lastHeartbeat).toLocaleString()}
                         <br />
                         <Typography variant="caption" color="text.secondary">
-                          ({formatRelativeTime(selectedNode.last_heartbeat)})
+                          ({formatRelativeTime(selectedNode.lastHeartbeat)})
                         </Typography>
                       </>
                     }

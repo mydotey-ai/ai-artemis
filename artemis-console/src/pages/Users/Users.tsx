@@ -1305,7 +1305,7 @@ const Users: React.FC = () => {
                       {loginHistory.map((history) => (
                         <TableRow key={history.id}>
                           <TableCell>{formatLastLogin(history.login_time)}</TableCell>
-                          <TableCell>{history.ip_address}</TableCell>
+                          <TableCell>{history.ipAddress}</TableCell>
                           <TableCell>
                             <Chip
                               label={history.status.toUpperCase()}
@@ -1345,9 +1345,9 @@ const Users: React.FC = () => {
                       {auditLogs.slice(0, 10).map((log) => (
                         <TableRow key={log.id}>
                           <TableCell>{formatLastLogin(log.timestamp)}</TableCell>
-                          <TableCell>{log.operation_type}</TableCell>
+                          <TableCell>{log.operationType}</TableCell>
                           <TableCell>
-                            {log.resource_type}: {log.resourceId}
+                            {log.resourceType}: {log.resourceId}
                           </TableCell>
                           <TableCell>
                             <Chip

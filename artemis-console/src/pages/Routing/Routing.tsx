@@ -115,7 +115,7 @@ interface RouteRuleDisplay {
  */
 interface GroupWeightDisplay {
   groupId: string;
-  group_name: string;
+  groupName: string;
   weight: number;
 }
 
@@ -263,7 +263,7 @@ const Routing: React.FC = () => {
           const ruleGroupsResponse = await listRuleGroups(r.routeId);
           const ruleGroups: GroupWeightDisplay[] = ruleGroupsResponse.data?.map((rg: any) => ({
             groupId: rg.groupId,
-            group_name: groupsData.find(g => g.groupId === rg.groupId)?.name || rg.groupId,
+            groupName: groupsData.find(g => g.groupId === rg.groupId)?.name || rg.groupId,
             weight: rg.weight,
           })) || [];
 
@@ -570,7 +570,7 @@ const Routing: React.FC = () => {
     } else {
       csvContent = 'Rule ID,Name,Service ID,Strategy,Status,Groups,Description\n';
       filteredRules.forEach(r => {
-        const groupsStr = r.groups.map(g => `${g.group_name}:${g.weight}%`).join('; ');
+        const groupsStr = r.groups.map(g => `${g.groupName}:${g.weight}%`).join('; ');
         csvContent += `"${r.routeId}","${r.name}","${r.serviceId}","${r.strategy}","${r.status}","${groupsStr}","${r.description || ''}"\n`;
       });
       filename = 'route-rules.csv';
@@ -954,7 +954,7 @@ const Routing: React.FC = () => {
                           {rule.groups.map(g => `${g.weight}%`).join(', ')}
                         </TableCell>
                         <TableCell>
-                          {rule.groups.map(g => g.group_name).join(', ')}
+                          {rule.groups.map(g => g.groupName).join(', ')}
                         </TableCell>
                         <TableCell align="center">
                           <Switch

@@ -248,7 +248,7 @@ const AuditLog: React.FC = () => {
 
       // Add other filters
       if (operatorFilter) params.operatorId = operatorFilter;
-      if (resourceTypeFilter !== 'all') params.resource_type = resourceTypeFilter;
+      if (resourceTypeFilter !== 'all') params.resourceType = resourceTypeFilter;
 
       const response = await queryLogs(params);
 
@@ -280,7 +280,7 @@ const AuditLog: React.FC = () => {
     // Event type distribution
     const eventTypeCounts: Record<string, number> = {};
     logData.forEach((log) => {
-      const eventType = log.operation_type;
+      const eventType = log.operationType;
       eventTypeCounts[eventType] = (eventTypeCounts[eventType] || 0) + 1;
     });
 
@@ -331,7 +331,7 @@ const AuditLog: React.FC = () => {
   const filteredLogs = useMemo(() => {
     return logs.filter((log) => {
       // Event type filter
-      if (eventTypeFilter.length > 0 && !eventTypeFilter.includes(log.operation_type)) {
+      if (eventTypeFilter.length > 0 && !eventTypeFilter.includes(log.operationType)) {
         return false;
       }
 
@@ -585,8 +585,8 @@ const AuditLog: React.FC = () => {
 
     const csvRows = filteredLogs.map((log) => [
       formatTimestamp(log.timestamp),
-      log.operation_type,
-      log.resource_type,
+      log.operationType,
+      log.resourceType,
       log.resourceId,
       log.operatorId,
       log.action,
@@ -858,8 +858,8 @@ const AuditLog: React.FC = () => {
             </Typography>
             <Box sx={{ marginBottom: 2 }}>
               <Chip
-                label={selectedLog.operation_type}
-                color={EVENT_TYPE_COLORS[selectedLog.operation_type] || 'default'}
+                label={selectedLog.operationType}
+                color={EVENT_TYPE_COLORS[selectedLog.operationType] || 'default'}
                 size="small"
               />
             </Box>
@@ -868,7 +868,7 @@ const AuditLog: React.FC = () => {
               Resource
             </Typography>
             <Typography variant="body2" paragraph>
-              {selectedLog.resource_type}: {selectedLog.resourceId}
+              {selectedLog.resourceType}: {selectedLog.resourceId}
             </Typography>
 
             <Typography variant="subtitle2" gutterBottom>
@@ -1214,12 +1214,12 @@ const AuditLog: React.FC = () => {
                           <TableCell>{formatTimestamp(log.timestamp)}</TableCell>
                           <TableCell>
                             <Chip
-                              label={log.operation_type}
-                              color={EVENT_TYPE_COLORS[log.operation_type] || 'default'}
+                              label={log.operationType}
+                              color={EVENT_TYPE_COLORS[log.operationType] || 'default'}
                               size="small"
                             />
                           </TableCell>
-                          <TableCell>{log.resource_type}</TableCell>
+                          <TableCell>{log.resourceType}</TableCell>
                           <TableCell>
                             <Typography
                               component="span"

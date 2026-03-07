@@ -13,9 +13,9 @@ const API_BASE = '/api/management/audit';
 export interface AuditLog {
   id: string;
   timestamp: string;
-  operation_type: string;
+  operationType: string;
   operatorId: string;
-  resource_type: string;
+  resourceType: string;
   resourceId: string;
   action: string;
   details: Record<string, any>;
@@ -24,9 +24,9 @@ export interface AuditLog {
 }
 
 export interface QueryLogsParams {
-  operation_type?: string;
+  operationType?: string;
   operatorId?: string;
-  resource_type?: string;
+  resourceType?: string;
   start_time?: string;
   end_time?: string;
   limit?: number;
@@ -52,13 +52,13 @@ export async function queryLogs(params?: QueryLogsParams): Promise<ApiResponse<A
 
 /**
  * 按操作类型查询
- * GET /api/management/audit/logs?operation_type=...
+ * GET /api/management/audit/logs?operationType=...
  */
 export async function queryLogsByOperation(
   operationType: string,
   limit?: number
 ): Promise<ApiResponse<AuditLog[]>> {
-  return queryLogs({ operation_type: operationType, limit });
+  return queryLogs({ operationType: operationType, limit });
 }
 
 /**
@@ -74,13 +74,13 @@ export async function queryLogsByOperator(
 
 /**
  * 按资源类型查询
- * GET /api/management/audit/logs?resource_type=...
+ * GET /api/management/audit/logs?resourceType=...
  */
 export async function queryLogsByResourceType(
   resourceType: string,
   limit?: number
 ): Promise<ApiResponse<AuditLog[]>> {
-  return queryLogs({ resource_type: resourceType, limit });
+  return queryLogs({ resourceType: resourceType, limit });
 }
 
 /**
@@ -134,7 +134,7 @@ export async function cleanupOldLogs(daysToKeep: number): Promise<ApiResponse<{ 
 export async function getLogStats(
   startTime?: string,
   endTime?: string
-): Promise<ApiResponse<{ total: number; by_operation: Record<string, number> }>> {
+): Promise<ApiResponse<{ total: number; byOperation: Record<string, number> }>> {
   const response = await apiClient.get(`${API_BASE}/logs/stats`, {
     params: {
       start_time: startTime,

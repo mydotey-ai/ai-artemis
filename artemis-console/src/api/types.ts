@@ -29,7 +29,7 @@ export type ErrorCode = typeof ErrorCode[keyof typeof ErrorCode];
  * Used in most API responses to indicate success/failure
  */
 export interface ResponseStatus {
-  error_code: ErrorCode;
+  errorCode: ErrorCode;
   error_message?: string;
 }
 
@@ -79,7 +79,7 @@ export interface Instance {
   groupId?: string;
   serviceId: string;
   instanceId: string;
-  machine_name?: string;
+  machineName?: string;
   ip: string;
   port: number;
   protocol?: string;
@@ -700,9 +700,9 @@ export const NodeStatusConstants = {
  */
 export interface LeaseStatus {
   instance: string;
-  creation_time: string;
-  renewal_time: string;
-  evition_time: string;
+  creationTime: string;
+  renewalTime: string;
+  evitionTime: string;
   ttl: number;
 }
 
@@ -718,12 +718,12 @@ export interface GetLeasesStatusRequest {
  */
 export interface GetLeasesStatusResponse {
   lease_update_max_count: number;
-  lease_update_max_count_last_update_time: number;
+  lease_update_max_count_lastUpdate_time: number;
   lease_update_count_last_time_window: number;
   is_safe: boolean;
   is_safe_check_enabled: boolean;
   lease_count: number;
-  leases_status: Record<string, LeaseStatus[]>;
+  leasesStatus: Record<string, LeaseStatus[]>;
   response_status: ResponseStatus;
 }
 
@@ -755,7 +755,7 @@ export interface GetDeploymentStatusResponse {
   regionId: string;
   zoneId: string;
   appId: string;
-  machine_name: string;
+  machineName: string;
   ip: string;
   port: number;
   protocol: string;
@@ -775,8 +775,8 @@ export interface GetDeploymentStatusResponse {
  */
 export interface AuditLog {
   id?: number;
-  operation_type: string;
-  resource_type: string;
+  operationType: string;
+  resourceType: string;
   resourceId: string;
   operatorId: string;
   operation_details?: Record<string, any>;
@@ -789,7 +789,7 @@ export interface AuditLog {
  * Query Logs Parameters
  */
 export interface QueryLogsParams {
-  operation_type?: string;
+  operationType?: string;
   operatorId?: string;
   limit?: number;
 }
@@ -927,7 +927,7 @@ export interface ListZoneOperationsResponse {
  */
 export interface CanaryConfig {
   serviceId: string;
-  ip_whitelist: string[];
+  ipWhitelist: string[];
   enabled: boolean;
 }
 
@@ -936,7 +936,7 @@ export interface CanaryConfig {
  */
 export interface SetCanaryConfigRequest {
   serviceId: string;
-  ip_whitelist: string[];
+  ipWhitelist: string[];
 }
 
 /**
@@ -1246,7 +1246,7 @@ export interface GetGroupInstancesQuery {
 export interface GroupOperation {
   operation_id?: number;
   groupId: number;
-  operation_type: string;
+  operationType: string;
   operatorId: string;
   description?: string;
   timestamp: number;

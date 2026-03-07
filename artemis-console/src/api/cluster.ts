@@ -30,7 +30,7 @@ export interface ServiceNodeStatus {
 
 // 响应状态
 export interface ResponseStatus {
-  error_code: string;
+  errorCode: string;
   message?: string;
 }
 
@@ -53,7 +53,7 @@ export interface ClusterNodeStatus {
   host: string;
   port: number;
   status: 'ACTIVE' | 'INACTIVE' | 'SUSPECTED';
-  last_heartbeat: string;
+  lastHeartbeat: string;
   regionId: string;
   zoneId: string;
 }
@@ -73,13 +73,13 @@ export interface ConfigStatus {
   total_groups: number;
   total_rules: number;
   total_zones: number;
-  last_update: string;
+  lastUpdate: string;
 }
 
 export interface DeploymentStatus {
   version: string;
-  build_time: string;
-  deployment_date: string;
+  buildTime: string;
+  deploymentDate: string;
 }
 
 export interface LeasesStatus {
