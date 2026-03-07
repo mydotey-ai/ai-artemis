@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 /// 金丝雀配置
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CanaryConfig {
     pub service_id: String,
     pub ip_whitelist: Vec<String>,
@@ -12,6 +13,7 @@ pub struct CanaryConfig {
 
 /// 设置金丝雀配置请求
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SetCanaryConfigRequest {
     pub service_id: String,
     pub ip_whitelist: Vec<String>,
@@ -26,12 +28,14 @@ pub struct SetCanaryConfigResponse {
 
 /// 获取金丝雀配置请求
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetCanaryConfigRequest {
     pub service_id: String,
 }
 
 /// 获取金丝雀配置响应
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetCanaryConfigResponse {
     pub success: bool,
     pub config: Option<CanaryConfig>,
@@ -39,6 +43,7 @@ pub struct GetCanaryConfigResponse {
 
 /// 启用/禁用金丝雀配置请求
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct EnableCanaryRequest {
     pub service_id: String,
     pub enabled: bool,
@@ -46,6 +51,7 @@ pub struct EnableCanaryRequest {
 
 /// 启用/禁用金丝雀配置响应
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct EnableCanaryResponse {
     pub success: bool,
     pub message: Option<String>,

@@ -24,6 +24,7 @@ impl fmt::Display for ZoneOperation {
 
 /// Zone 操作记录
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ZoneOperationRecord {
     pub zone_id: String,
     pub region_id: String,
@@ -34,6 +35,7 @@ pub struct ZoneOperationRecord {
 
 /// 操作 Zone 请求
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct OperateZoneRequest {
     pub zone_id: String,
     pub region_id: String,
@@ -50,6 +52,7 @@ pub struct OperateZoneResponse {
 
 /// 查询 Zone 状态请求
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetZoneStatusRequest {
     pub zone_id: String,
     pub region_id: String,
@@ -57,6 +60,7 @@ pub struct GetZoneStatusRequest {
 
 /// 查询 Zone 状态响应
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetZoneStatusResponse {
     pub success: bool,
     pub zone_id: String,
@@ -68,12 +72,14 @@ pub struct GetZoneStatusResponse {
 
 /// 查询所有 Zone 操作请求
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ListZoneOperationsRequest {
     pub region_id: Option<String>,
 }
 
 /// 查询所有 Zone 操作响应
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ListZoneOperationsResponse {
     pub success: bool,
     pub operations: Vec<ZoneOperationRecord>,

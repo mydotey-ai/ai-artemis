@@ -5,6 +5,7 @@ use std::collections::HashMap;
 
 /// 服务路由规则 (Service Route Rule)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct RouteRule {
     /// 路由规则 ID (自动生成或手动指定)
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -36,6 +37,7 @@ pub enum RouteRuleStatus {
 
 /// 路由规则分组关联 (带权重)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct RouteRuleGroup {
     /// 路由规则 ID
     pub route_rule_id: String,
@@ -96,6 +98,7 @@ pub enum RouteStrategy {
 
 /// 服务分组 (完整定义)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Group {
     /// 分组 ID (自动生成)
     #[serde(skip_serializing_if = "Option::is_none")]

@@ -5,6 +5,7 @@ use std::str::FromStr;
 
 /// 服务分组核心结构
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct ServiceGroup {
     /// 分组 ID (自动生成)
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -60,6 +61,7 @@ pub enum GroupType {
 
 /// 分组标签
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
 pub struct GroupTag {
     /// 标签键
     pub key: String,
@@ -69,6 +71,7 @@ pub struct GroupTag {
 
 /// 分组实例关联
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct GroupInstance {
     /// 关联 ID (自动生成)
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -106,6 +109,7 @@ pub enum BindingType {
 
 /// 分组操作记录
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct GroupOperation {
     /// 操作 ID (自动生成)
     #[serde(skip_serializing_if = "Option::is_none")]

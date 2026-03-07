@@ -23,6 +23,7 @@ impl fmt::Display for InstanceOperation {
 
 /// 实例操作记录
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct InstanceOperationRecord {
     /// 实例键
     pub instance_key: InstanceKey,
@@ -39,6 +40,7 @@ pub struct InstanceOperationRecord {
 
 /// 操作实例请求
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct OperateInstanceRequest {
     /// 实例键
     pub instance_key: InstanceKey,
@@ -56,6 +58,7 @@ pub struct OperateInstanceRequest {
 
 /// 操作实例响应
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct OperateInstanceResponse {
     /// 响应状态
     pub status: ResponseStatus,
@@ -63,6 +66,7 @@ pub struct OperateInstanceResponse {
 
 /// 查询实例操作请求
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetInstanceOperationsRequest {
     /// 实例键
     pub instance_key: InstanceKey,
@@ -70,6 +74,7 @@ pub struct GetInstanceOperationsRequest {
 
 /// 查询实例操作响应
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetInstanceOperationsResponse {
     /// 响应状态
     pub status: ResponseStatus,
@@ -79,6 +84,7 @@ pub struct GetInstanceOperationsResponse {
 
 /// 查询实例是否被拉出请求
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct IsInstanceDownRequest {
     /// 实例键
     pub instance_key: InstanceKey,
@@ -86,6 +92,7 @@ pub struct IsInstanceDownRequest {
 
 /// 查询实例是否被拉出响应
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct IsInstanceDownResponse {
     /// 响应状态
     pub status: ResponseStatus,
@@ -114,6 +121,7 @@ impl fmt::Display for ServerOperation {
 
 /// 服务器操作记录
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ServerOperationRecord {
     pub server_id: String,
     pub region_id: String,
@@ -124,6 +132,7 @@ pub struct ServerOperationRecord {
 
 /// 操作服务器请求
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct OperateServerRequest {
     /// 服务器 ID (IP 地址)
     pub server_id: String,
@@ -143,6 +152,7 @@ pub struct OperateServerRequest {
 
 /// 操作服务器响应
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct OperateServerResponse {
     /// 响应状态
     pub status: ResponseStatus,
@@ -150,6 +160,7 @@ pub struct OperateServerResponse {
 
 /// 查询服务器是否被拉出请求
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct IsServerDownRequest {
     /// 服务器 ID
     pub server_id: String,
@@ -159,6 +170,7 @@ pub struct IsServerDownRequest {
 
 /// 查询服务器是否被拉出响应
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct IsServerDownResponse {
     /// 响应状态
     pub status: ResponseStatus,
@@ -170,6 +182,7 @@ pub struct IsServerDownResponse {
 
 /// 查询所有实例操作请求
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetAllInstanceOperationsRequest {
     /// 可选的 Region ID 过滤
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -178,6 +191,7 @@ pub struct GetAllInstanceOperationsRequest {
 
 /// 查询所有实例操作响应
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetAllInstanceOperationsResponse {
     /// 响应状态
     pub status: ResponseStatus,
@@ -187,6 +201,7 @@ pub struct GetAllInstanceOperationsResponse {
 
 /// 服务器操作记录 (用于批量查询返回)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ServerOperationInfo {
     pub server_id: String,
     pub region_id: String,
@@ -195,6 +210,7 @@ pub struct ServerOperationInfo {
 
 /// 查询所有服务器操作请求
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetAllServerOperationsRequest {
     /// 可选的 Region ID 过滤
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -203,6 +219,7 @@ pub struct GetAllServerOperationsRequest {
 
 /// 查询所有服务器操作响应
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetAllServerOperationsResponse {
     /// 响应状态
     pub status: ResponseStatus,
