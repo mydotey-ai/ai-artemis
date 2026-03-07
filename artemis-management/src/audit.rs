@@ -9,6 +9,7 @@ use std::sync::atomic::{AtomicI64, Ordering};
 
 /// 审计日志记录
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AuditLog {
     pub log_id: i64,
     pub operation_type: String, // "instance" | "server" | "zone" | "group" | "route"

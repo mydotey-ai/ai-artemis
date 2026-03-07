@@ -64,6 +64,7 @@ impl FromStr for UserStatus {
 
 /// 用户模型
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct User {
     pub user_id: String,
     pub username: String,
@@ -116,6 +117,7 @@ impl User {
 
 /// 用户响应(不包含密码)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UserResponse {
     pub user_id: String,
     pub username: String,
@@ -129,6 +131,7 @@ pub struct UserResponse {
 
 /// 会话模型
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Session {
     pub session_id: String,
     pub user_id: String,
@@ -198,6 +201,7 @@ impl FromStr for LoginStatus {
 
 /// 登录历史
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct LoginHistory {
     pub id: i64,
     pub user_id: String,
