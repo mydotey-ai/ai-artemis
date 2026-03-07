@@ -1,127 +1,374 @@
 -- Artemis 数据持久化 Schema
--- 15张表用于管理配置持久化存储和用户认证
+-- 与 Java 版本完全兼容 (除 console 认证相关表外)
 
--- 1. 实例操作表
-CREATE TABLE IF NOT EXISTS instance_operation (
+-- 1. 实例操作表 (instance)
+CREATE TABLE IF NOT EXISTS instance (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    region_id TEXT NOT NULL,
-    service_id TEXT NOT NULL,
-    instance_id TEXT NOT NULL,
-    ip TEXT NOT NULL,
-    port INTEGER NOT NULL,
-    zone_id TEXT,
-    operation TEXT NOT NULL CHECK(operation IN ('pullin', 'pullout')),
-    operator_id TEXT NOT NULL,
-    operation_time BIGINT NOT NULL,
-    operation_complete BOOLEAN NOT NULL DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(region_id, service_id, instance_id)
+    INSTANCE_ID TEXT NOT NULL DEFAULT '',
+    SERVICE_ID TEXT NOT NULL DEFAULT '',
+    REGION_ID TEXT NOT NULL DEFAULT '',
+    OPERATION TEXT NOT NULL DEFAULT '',
+    OPERATOR_ID TEXT NOT NULL DEFAULT '',
+    TOKEN TEXT NOT NULL DEFAULT '',
+    CREATE_TIME DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    DataChange_LastTime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(INSTANCE_ID, SERVICE_ID, REGION_ID, OPERATION)
 );
 
-CREATE INDEX IF NOT EXISTS idx_instance_op_service ON instance_operation(service_id);
-CREATE INDEX IF NOT EXISTS idx_instance_op_server ON instance_operation(ip, region_id);
+CREATE INDEX IF NOT EXISTS idx_instance_service ON instance(SERVICE_ID);
+CREATE INDEX IF NOT EXISTS idx_instance_time ON instance(DataChange_LastTime);
 
--- 2. 服务器操作表
-CREATE TABLE IF NOT EXISTS server_operation (
+-- 2. 实例日志表 (instance_log)
+CREATE TABLE IF NOT EXISTS instance_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    server_id TEXT NOT NULL,
-    region_id TEXT NOT NULL,
-    operation TEXT NOT NULL CHECK(operation IN ('pullin', 'pullout')),
-    operator_id TEXT NOT NULL,
-    operation_time BIGINT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(server_id, region_id)
+    INSTANCE_ID TEXT NOT NULL DEFAULT '',
+    SERVICE_ID TEXT NOT NULL DEFAULT '',
+    REGION_ID TEXT NOT NULL DEFAULT '',
+    OPERATION TEXT NOT NULL DEFAULT '',
+    OPERATOR_ID TEXT NOT NULL DEFAULT '',
+    TOKEN TEXT NOT NULL DEFAULT '',
+    COMPLETE INTEGER NOT NULL DEFAULT 0,
+    EXTENSIONS TEXT NOT NULL DEFAULT '{}',
+    CREATE_TIME DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    DataChange_LastTime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_server_op_region ON server_operation(region_id);
+CREATE INDEX IF NOT EXISTS idx_instance_log_instance ON instance_log(INSTANCE_ID, SERVICE_ID, REGION_ID, OPERATION);
+CREATE INDEX IF NOT EXISTS idx_instance_log_time ON instance_log(DataChange_LastTime);
 
--- 3. 服务分组表
+-- 3. 服务器表 (server)
+CREATE TABLE IF NOT EXISTS server (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    SERVER_ID TEXT NOT NULL DEFAULT '',
+    REGION_ID TEXT NOT NULL DEFAULT '',
+    OPERATION TEXT NOT NULL DEFAULT '',
+    OPERATOR_ID TEXT NOT NULL DEFAULT '',
+    TOKEN TEXT NOT NULL DEFAULT '',
+    CREATE_TIME DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    DataChange_LastTime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(SERVER_ID, REGION_ID, OPERATION)
+);
+
+CREATE INDEX IF NOT EXISTS idx_server_region ON server(REGION_ID);
+CREATE INDEX IF NOT EXISTS idx_server_time ON server(DataChange_LastTime);
+
+-- 4. 服务器日志表 (server_log)
+CREATE TABLE IF NOT EXISTS server_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    SERVER_ID TEXT NOT NULL DEFAULT '',
+    REGION_ID TEXT NOT NULL DEFAULT '',
+    OPERATION TEXT NOT NULL DEFAULT '',
+    OPERATOR_ID TEXT NOT NULL DEFAULT '',
+    TOKEN TEXT NOT NULL DEFAULT '',
+    COMPLETE INTEGER NOT NULL DEFAULT 0,
+    EXTENSIONS TEXT NOT NULL DEFAULT '{}',
+    CREATE_TIME DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    DataChange_LastTime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_server_log_server ON server_log(SERVER_ID, REGION_ID, OPERATION);
+CREATE INDEX IF NOT EXISTS idx_server_log_time ON server_log(DataChange_LastTime);
+
+-- 5. 服务分组表 (service_group)
 CREATE TABLE IF NOT EXISTS service_group (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    group_id TEXT NOT NULL UNIQUE,
-    group_name TEXT NOT NULL,
-    group_type TEXT NOT NULL CHECK(group_type IN ('physical', 'logical')),
-    service_id TEXT,
-    region_id TEXT,
-    zone_id TEXT,
-    description TEXT,
-    metadata TEXT, -- JSON
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    SERVICE_ID TEXT NOT NULL DEFAULT '',
+    REGION_ID TEXT NOT NULL DEFAULT '',
+    ZONE_ID TEXT NOT NULL DEFAULT '',
+    NAME TEXT NOT NULL DEFAULT '',
+    APP_ID TEXT NOT NULL DEFAULT '',
+    DESCRIPTION TEXT,
+    STATUS TEXT NOT NULL DEFAULT '',
+    CREATE_TIME DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    DataChange_LastTime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    DELETED INTEGER DEFAULT 0,
+    type TEXT NOT NULL DEFAULT 'physical'
 );
 
-CREATE INDEX IF NOT EXISTS idx_group_service ON service_group(service_id);
-CREATE INDEX IF NOT EXISTS idx_group_type ON service_group(group_type);
+CREATE INDEX IF NOT EXISTS idx_group_service ON service_group(SERVICE_ID);
+CREATE INDEX IF NOT EXISTS idx_group_status ON service_group(STATUS);
+CREATE INDEX IF NOT EXISTS idx_group_deleted ON service_group(DELETED);
+CREATE INDEX IF NOT EXISTS idx_group_time ON service_group(DataChange_LastTime);
 
--- 4. 分组标签表
+-- 6. 分组标签表 (service_group_tag)
 CREATE TABLE IF NOT EXISTS service_group_tag (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    group_id TEXT NOT NULL,
-    tag_key TEXT NOT NULL,
-    tag_value TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(group_id, tag_key),
-    FOREIGN KEY(group_id) REFERENCES service_group(group_id) ON DELETE CASCADE
+    GROUP_ID INTEGER NOT NULL DEFAULT 0,
+    TAG TEXT NOT NULL DEFAULT '',
+    VALUE TEXT NOT NULL DEFAULT '',
+    CREATE_TIME DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    DataChange_LastTime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(GROUP_ID, TAG)
 );
 
-CREATE INDEX IF NOT EXISTS idx_group_tag_group ON service_group_tag(group_id);
-CREATE INDEX IF NOT EXISTS idx_group_tag_key ON service_group_tag(tag_key);
+CREATE INDEX IF NOT EXISTS idx_group_tag_group ON service_group_tag(GROUP_ID);
+CREATE INDEX IF NOT EXISTS idx_group_tag_time ON service_group_tag(DataChange_LastTime);
 
--- 5. 路由规则表
+-- 7. 分组标签日志表 (service_group_tag_log)
+CREATE TABLE IF NOT EXISTS service_group_tag_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    GROUP_ID INTEGER NOT NULL DEFAULT 0,
+    TAG TEXT NOT NULL DEFAULT '',
+    VALUE TEXT NOT NULL DEFAULT '',
+    OPERATION TEXT NOT NULL DEFAULT '',
+    OPERATOR_ID TEXT NOT NULL DEFAULT '',
+    TOKEN TEXT NOT NULL DEFAULT '',
+    EXTENSIONS TEXT NOT NULL DEFAULT '{}',
+    CREATE_TIME DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    DataChange_LastTime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_group_tag_log_group ON service_group_tag_log(GROUP_ID, TAG);
+CREATE INDEX IF NOT EXISTS idx_group_tag_log_operator ON service_group_tag_log(OPERATOR_ID);
+CREATE INDEX IF NOT EXISTS idx_group_tag_log_time ON service_group_tag_log(DataChange_LastTime);
+
+-- 8. 服务实例表 (service_instance)
+CREATE TABLE IF NOT EXISTS service_instance (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    SERVICE_ID TEXT NOT NULL DEFAULT '',
+    INSTANCE_ID TEXT NOT NULL DEFAULT '',
+    IP TEXT NOT NULL DEFAULT '',
+    MACHINE_NAME TEXT NOT NULL DEFAULT '',
+    METADATA TEXT NOT NULL DEFAULT '',
+    PORT INTEGER NOT NULL DEFAULT 80,
+    PROTOCOL TEXT NOT NULL DEFAULT 'http',
+    REGION_ID TEXT NOT NULL DEFAULT '',
+    ZONE_ID TEXT NOT NULL DEFAULT '',
+    GROUP_ID TEXT NOT NULL DEFAULT '',
+    HEALTHY_CHECK_URL TEXT NOT NULL DEFAULT '',
+    URL TEXT NOT NULL DEFAULT '',
+    DESCRIPTION TEXT,
+    CREATE_TIME DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    DataChange_LastTime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(SERVICE_ID, INSTANCE_ID)
+);
+
+CREATE INDEX IF NOT EXISTS idx_service_inst_service ON service_instance(SERVICE_ID);
+CREATE INDEX IF NOT EXISTS idx_service_inst_time ON service_instance(DataChange_LastTime);
+
+-- 9. 服务实例日志表 (service_instance_log)
+CREATE TABLE IF NOT EXISTS service_instance_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    SERVICE_ID TEXT NOT NULL DEFAULT '',
+    INSTANCE_ID TEXT NOT NULL DEFAULT '',
+    IP TEXT NOT NULL DEFAULT '',
+    MACHINE_NAME TEXT NOT NULL DEFAULT '',
+    METADATA TEXT NOT NULL DEFAULT '',
+    PORT INTEGER NOT NULL DEFAULT 80,
+    PROTOCOL TEXT NOT NULL DEFAULT 'http',
+    REGION_ID TEXT NOT NULL DEFAULT '',
+    ZONE_ID TEXT NOT NULL DEFAULT '',
+    GROUP_ID TEXT NOT NULL DEFAULT '',
+    HEALTHY_CHECK_URL TEXT NOT NULL DEFAULT '',
+    URL TEXT NOT NULL DEFAULT '',
+    OPERATION TEXT NOT NULL DEFAULT '',
+    OPERATOR_ID TEXT NOT NULL DEFAULT '',
+    TOKEN TEXT NOT NULL DEFAULT '',
+    CREATE_TIME DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    DataChange_LastTime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_service_inst_log_instance ON service_instance_log(SERVICE_ID, INSTANCE_ID);
+CREATE INDEX IF NOT EXISTS idx_service_inst_log_service ON service_instance_log(SERVICE_ID);
+CREATE INDEX IF NOT EXISTS idx_service_inst_log_time ON service_instance_log(DataChange_LastTime);
+
+-- 10. 路由规则表 (service_route_rule)
 CREATE TABLE IF NOT EXISTS service_route_rule (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    route_rule_id INTEGER,
-    route_id TEXT NOT NULL UNIQUE,
-    service_id TEXT NOT NULL,
-    name TEXT NOT NULL,
-    description TEXT,
-    status TEXT NOT NULL DEFAULT 'inactive' CHECK(status IN ('active', 'inactive')),
-    strategy TEXT NOT NULL CHECK(strategy IN ('weighted-round-robin', 'close-by-visit')),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    SERVICE_ID TEXT NOT NULL DEFAULT '',
+    NAME TEXT NOT NULL DEFAULT '',
+    DESCRIPTION TEXT,
+    STATUS TEXT NOT NULL DEFAULT '',
+    CREATE_TIME DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    DataChange_LastTime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    DELETED INTEGER DEFAULT 0,
+    strategy TEXT NOT NULL DEFAULT 'weighted-round-robin'
 );
 
-CREATE INDEX IF NOT EXISTS idx_route_rule_service ON service_route_rule(service_id);
-CREATE INDEX IF NOT EXISTS idx_route_rule_status ON service_route_rule(status);
+CREATE INDEX IF NOT EXISTS idx_route_rule_service ON service_route_rule(SERVICE_ID);
+CREATE INDEX IF NOT EXISTS idx_route_rule_status ON service_route_rule(STATUS);
+CREATE INDEX IF NOT EXISTS idx_route_rule_deleted ON service_route_rule(DELETED);
+CREATE INDEX IF NOT EXISTS idx_route_rule_time ON service_route_rule(DataChange_LastTime);
 
--- 6. 路由规则分组关联表
+-- 11. 路由规则分组关联表 (service_route_rule_group)
 CREATE TABLE IF NOT EXISTS service_route_rule_group (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    rule_id TEXT NOT NULL,
-    group_id TEXT NOT NULL,
-    weight INTEGER NOT NULL DEFAULT 100 CHECK(weight >= 0 AND weight <= 100),
-    priority INTEGER NOT NULL DEFAULT 0,
-    region_id TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(rule_id, group_id),
-    FOREIGN KEY(rule_id) REFERENCES service_route_rule(route_id) ON DELETE CASCADE,
-    FOREIGN KEY(group_id) REFERENCES service_group(group_id) ON DELETE CASCADE
+    ROUTE_RULE_ID INTEGER NOT NULL DEFAULT 0,
+    GROUP_ID INTEGER NOT NULL DEFAULT 0,
+    WEIGHT INTEGER,
+    UNRELEASED_WEIGHT INTEGER,
+    CREATE_TIME DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    DataChange_LastTime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(ROUTE_RULE_ID, GROUP_ID)
 );
 
-CREATE INDEX IF NOT EXISTS idx_rule_group_rule ON service_route_rule_group(rule_id);
-CREATE INDEX IF NOT EXISTS idx_rule_group_group ON service_route_rule_group(group_id);
+CREATE INDEX IF NOT EXISTS idx_rule_group_rule ON service_route_rule_group(ROUTE_RULE_ID);
+CREATE INDEX IF NOT EXISTS idx_rule_group_time ON service_route_rule_group(DataChange_LastTime);
 
--- 7. Zone 操作表
-CREATE TABLE IF NOT EXISTS zone_operation (
+-- 12. 路由规则日志表 (service_route_rule_log)
+CREATE TABLE IF NOT EXISTS service_route_rule_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    zone_id TEXT NOT NULL,
-    region_id TEXT NOT NULL,
-    operation TEXT NOT NULL CHECK(operation IN ('pullin', 'pullout')),
-    operator_id TEXT NOT NULL,
-    operation_time BIGINT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(zone_id, region_id)
+    SERVICE_ID TEXT NOT NULL DEFAULT '',
+    NAME TEXT NOT NULL DEFAULT '',
+    STATUS TEXT NOT NULL DEFAULT '',
+    OPERATION TEXT NOT NULL DEFAULT '',
+    OPERATOR_ID TEXT NOT NULL DEFAULT '',
+    TOKEN TEXT NOT NULL DEFAULT '',
+    EXTENSIONS TEXT NOT NULL DEFAULT '{}',
+    REASON TEXT DEFAULT '',
+    CREATE_TIME DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    DataChange_LastTime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_zone_op_zone ON zone_operation(zone_id);
-CREATE INDEX IF NOT EXISTS idx_zone_op_region ON zone_operation(region_id);
+CREATE INDEX IF NOT EXISTS idx_route_rule_log_name ON service_route_rule_log(NAME, SERVICE_ID);
+CREATE INDEX IF NOT EXISTS idx_route_rule_log_time ON service_route_rule_log(DataChange_LastTime);
 
--- 8. 金丝雀配置表
+-- 13. 路由规则分组日志表 (service_route_rule_group_log)
+CREATE TABLE IF NOT EXISTS service_route_rule_group_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ROUTE_RULE_ID INTEGER NOT NULL DEFAULT 0,
+    GROUP_ID INTEGER NOT NULL DEFAULT 0,
+    WEIGHT INTEGER,
+    OPERATION TEXT NOT NULL DEFAULT '',
+    OPERATOR_ID TEXT NOT NULL DEFAULT '',
+    TOKEN TEXT NOT NULL DEFAULT '',
+    EXTENSIONS TEXT NOT NULL DEFAULT '{}',
+    REASON TEXT DEFAULT '',
+    CREATE_TIME DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    DataChange_LastTime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_route_rule_group_log_rule ON service_route_rule_group_log(ROUTE_RULE_ID, GROUP_ID);
+CREATE INDEX IF NOT EXISTS idx_route_rule_group_log_time ON service_route_rule_group_log(DataChange_LastTime);
+
+-- 14. 分组实例关联表 (service_group_instance)
+CREATE TABLE IF NOT EXISTS service_group_instance (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    GROUP_ID INTEGER NOT NULL DEFAULT 0,
+    INSTANCE_ID TEXT NOT NULL DEFAULT '',
+    CREATE_TIME DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    DataChange_LastTime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(GROUP_ID, INSTANCE_ID)
+);
+
+CREATE INDEX IF NOT EXISTS idx_group_inst_group ON service_group_instance(GROUP_ID);
+CREATE INDEX IF NOT EXISTS idx_group_inst_time ON service_group_instance(DataChange_LastTime);
+
+-- 15. 分组实例日志表 (service_group_instance_log)
+CREATE TABLE IF NOT EXISTS service_group_instance_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    GROUP_ID INTEGER NOT NULL DEFAULT 0,
+    INSTANCE_ID TEXT NOT NULL DEFAULT '',
+    OPERATION TEXT NOT NULL DEFAULT '',
+    OPERATOR_ID TEXT NOT NULL DEFAULT '',
+    TOKEN TEXT NOT NULL DEFAULT '',
+    REASON TEXT DEFAULT '',
+    CREATE_TIME DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    DataChange_LastTime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_group_inst_log_group ON service_group_instance_log(GROUP_ID, INSTANCE_ID);
+CREATE INDEX IF NOT EXISTS idx_group_inst_log_time ON service_group_instance_log(DataChange_LastTime);
+
+-- 16. 分组操作表 (service_group_operation)
+CREATE TABLE IF NOT EXISTS service_group_operation (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    GROUP_ID INTEGER NOT NULL DEFAULT 0,
+    OPERATION TEXT NOT NULL DEFAULT '',
+    CREATE_TIME DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    DataChange_LastTime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(GROUP_ID, OPERATION)
+);
+
+CREATE INDEX IF NOT EXISTS idx_group_op_group ON service_group_operation(GROUP_ID);
+CREATE INDEX IF NOT EXISTS idx_group_op_time ON service_group_operation(DataChange_LastTime);
+
+-- 17. 分组操作日志表 (service_group_operation_log)
+CREATE TABLE IF NOT EXISTS service_group_operation_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    GROUP_ID INTEGER NOT NULL DEFAULT 0,
+    OPERATION TEXT NOT NULL DEFAULT '',
+    OPERATOR_ID TEXT NOT NULL DEFAULT '',
+    TOKEN TEXT NOT NULL DEFAULT '',
+    COMPLETE INTEGER NOT NULL DEFAULT 0,
+    EXTENSIONS TEXT NOT NULL DEFAULT '{}',
+    reason TEXT DEFAULT '',
+    CREATE_TIME DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    DataChange_LastTime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_group_op_log_group ON service_group_operation_log(GROUP_ID, OPERATION);
+CREATE INDEX IF NOT EXISTS idx_group_op_log_operator ON service_group_operation_log(OPERATOR_ID);
+CREATE INDEX IF NOT EXISTS idx_group_op_log_time ON service_group_operation_log(DataChange_LastTime);
+
+-- 18. 分组日志表 (service_group_log)
+CREATE TABLE IF NOT EXISTS service_group_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    GROUP_ID INTEGER NOT NULL DEFAULT 0,
+    PARENT_ID INTEGER NOT NULL DEFAULT 0,
+    NAME TEXT NOT NULL DEFAULT '',
+    STATUS TEXT NOT NULL DEFAULT '',
+    WEIGHT INTEGER,
+    TYPE TEXT NOT NULL DEFAULT '',
+    OPERATION TEXT NOT NULL DEFAULT '',
+    OPERATOR_ID TEXT NOT NULL DEFAULT '',
+    DESCRIPTION TEXT,
+    TOKEN TEXT NOT NULL DEFAULT '',
+    EXTENSIONS TEXT NOT NULL DEFAULT '{}',
+    CREATE_TIME DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    DataChange_LastTime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    SERVICE_ID TEXT NOT NULL DEFAULT '',
+    REGION_ID TEXT NOT NULL DEFAULT '',
+    ZONE_ID TEXT NOT NULL DEFAULT '',
+    APP_ID TEXT NOT NULL DEFAULT '',
+    REASON TEXT DEFAULT ''
+);
+
+CREATE INDEX IF NOT EXISTS idx_group_log_name_parent ON service_group_log(NAME, PARENT_ID);
+CREATE INDEX IF NOT EXISTS idx_group_log_status ON service_group_log(STATUS);
+CREATE INDEX IF NOT EXISTS idx_group_log_type ON service_group_log(TYPE);
+CREATE INDEX IF NOT EXISTS idx_group_log_operator ON service_group_log(OPERATOR_ID);
+CREATE INDEX IF NOT EXISTS idx_group_log_time ON service_group_log(DataChange_LastTime);
+
+-- 19. Zone 表 (service_zone)
+CREATE TABLE IF NOT EXISTS service_zone (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    SERVICE_ID TEXT NOT NULL DEFAULT '',
+    ZONE_ID TEXT NOT NULL DEFAULT '',
+    REGION_ID TEXT NOT NULL DEFAULT '',
+    OPERATION TEXT NOT NULL DEFAULT '',
+    CREATE_TIME DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    DataChange_LastTime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(SERVICE_ID, REGION_ID, ZONE_ID, OPERATION)
+);
+
+CREATE INDEX IF NOT EXISTS idx_zone_service ON service_zone(SERVICE_ID);
+CREATE INDEX IF NOT EXISTS idx_zone_time ON service_zone(DataChange_LastTime);
+
+-- 20. Zone 日志表 (service_zone_log)
+CREATE TABLE IF NOT EXISTS service_zone_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    SERVICE_ID TEXT NOT NULL DEFAULT '',
+    ZONE_ID TEXT NOT NULL DEFAULT '',
+    REGION_ID TEXT NOT NULL DEFAULT '',
+    OPERATION TEXT NOT NULL DEFAULT '',
+    OPERATOR_ID TEXT NOT NULL DEFAULT '',
+    TOKEN TEXT NOT NULL DEFAULT '',
+    REASON TEXT DEFAULT '',
+    COMPLETE INTEGER NOT NULL DEFAULT 0,
+    CREATE_TIME DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    DataChange_LastTime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_zone_log_service ON service_zone_log(SERVICE_ID, REGION_ID, ZONE_ID, OPERATION);
+CREATE INDEX IF NOT EXISTS idx_zone_log_time ON service_zone_log(DataChange_LastTime);
+
+-- 21. 金丝雀配置表 (canary_config) - Rust 特有
 CREATE TABLE IF NOT EXISTS canary_config (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     service_id TEXT NOT NULL UNIQUE,
-    ip_whitelist TEXT NOT NULL, -- JSON array
-    enabled BOOLEAN NOT NULL DEFAULT 1,
+    ip_whitelist TEXT NOT NULL,
+    enabled INTEGER NOT NULL DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -129,16 +376,16 @@ CREATE TABLE IF NOT EXISTS canary_config (
 CREATE INDEX IF NOT EXISTS idx_canary_service ON canary_config(service_id);
 CREATE INDEX IF NOT EXISTS idx_canary_enabled ON canary_config(enabled);
 
--- 9. 操作审计日志表
+-- 22. 操作审计日志表 (audit_log) - Rust 特有
 CREATE TABLE IF NOT EXISTS audit_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     log_id BIGINT NOT NULL UNIQUE,
-    operation_type TEXT NOT NULL, -- instance_operation, server_operation, zone_operation, etc.
+    operation_type TEXT NOT NULL,
     target_id TEXT NOT NULL,
     operation TEXT NOT NULL,
     operator_id TEXT NOT NULL,
     operation_time BIGINT NOT NULL,
-    details TEXT, -- JSON
+    details TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -147,62 +394,7 @@ CREATE INDEX IF NOT EXISTS idx_audit_target ON audit_log(target_id);
 CREATE INDEX IF NOT EXISTS idx_audit_operator ON audit_log(operator_id);
 CREATE INDEX IF NOT EXISTS idx_audit_time ON audit_log(operation_time);
 
--- 10. 分组实例关联表 (用于逻辑分组)
-CREATE TABLE IF NOT EXISTS service_group_instance (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    group_id TEXT NOT NULL,
-    region_id TEXT NOT NULL,
-    zone_id TEXT NOT NULL,
-    service_id TEXT NOT NULL,
-    instance_id TEXT NOT NULL,
-    ip TEXT,
-    port INTEGER,
-    binding_type TEXT NOT NULL DEFAULT 'auto' CHECK(binding_type IN ('manual', 'auto')),
-    operator_id TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(group_id, instance_id, region_id, zone_id),
-    FOREIGN KEY(group_id) REFERENCES service_group(group_id) ON DELETE CASCADE
-);
-
-CREATE INDEX IF NOT EXISTS idx_group_inst_group ON service_group_instance(group_id);
-CREATE INDEX IF NOT EXISTS idx_group_inst_service ON service_group_instance(service_id);
-CREATE INDEX IF NOT EXISTS idx_group_inst_binding ON service_group_instance(binding_type);
-
--- 11. 配置版本表 (用于配置变更追踪)
-CREATE TABLE IF NOT EXISTS config_version (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    config_type TEXT NOT NULL, -- route_rule, service_group, zone_operation, etc.
-    config_id TEXT NOT NULL,
-    version INTEGER NOT NULL,
-    content TEXT NOT NULL, -- JSON
-    operator_id TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(config_type, config_id, version)
-);
-
-CREATE INDEX IF NOT EXISTS idx_config_version_type ON config_version(config_type, config_id);
-
--- 12. 实例操作日志表 (历史记录)
-CREATE TABLE IF NOT EXISTS instance_operation_log (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    region_id TEXT NOT NULL,
-    service_id TEXT NOT NULL,
-    instance_id TEXT NOT NULL,
-    ip TEXT NOT NULL,
-    port INTEGER NOT NULL,
-    zone_id TEXT,
-    operation TEXT NOT NULL,
-    operator_id TEXT NOT NULL,
-    operation_time BIGINT NOT NULL,
-    operation_complete BOOLEAN NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE INDEX IF NOT EXISTS idx_instance_log_time ON instance_operation_log(created_at);
-CREATE INDEX IF NOT EXISTS idx_instance_log_operator ON instance_operation_log(operator_id);
-CREATE INDEX IF NOT EXISTS idx_instance_log_service ON instance_operation_log(service_id);
-
--- 13. 用户表 (认证系统)
+-- 23. 用户表 (auth_users) - Console 认证系统
 CREATE TABLE IF NOT EXISTS auth_users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id TEXT NOT NULL UNIQUE,
@@ -220,7 +412,7 @@ CREATE INDEX IF NOT EXISTS idx_users_username ON auth_users(username);
 CREATE INDEX IF NOT EXISTS idx_users_role ON auth_users(role);
 CREATE INDEX IF NOT EXISTS idx_users_status ON auth_users(status);
 
--- 14. 会话表 (认证系统)
+-- 24. 会话表 (auth_sessions) - Console 认证系统
 CREATE TABLE IF NOT EXISTS auth_sessions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     session_id TEXT NOT NULL UNIQUE,
@@ -230,23 +422,21 @@ CREATE TABLE IF NOT EXISTS auth_sessions (
     user_agent TEXT,
     created_at BIGINT NOT NULL,
     expires_at BIGINT NOT NULL,
-    last_activity BIGINT NOT NULL,
-    FOREIGN KEY(user_id) REFERENCES auth_users(user_id) ON DELETE CASCADE
+    last_activity BIGINT NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_sessions_user ON auth_sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_token ON auth_sessions(token);
 CREATE INDEX IF NOT EXISTS idx_sessions_expires ON auth_sessions(expires_at);
 
--- 15. 登录历史表 (认证系统)
+-- 25. 登录历史表 (auth_login_history) - Console 认证系统
 CREATE TABLE IF NOT EXISTS auth_login_history (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id TEXT NOT NULL,
     login_time BIGINT NOT NULL,
     ip_address TEXT NOT NULL,
     user_agent TEXT NOT NULL,
-    status TEXT NOT NULL CHECK(status IN ('success', 'failed')),
-    FOREIGN KEY(user_id) REFERENCES auth_users(user_id) ON DELETE CASCADE
+    status TEXT NOT NULL CHECK(status IN ('success', 'failed'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_login_history_user ON auth_login_history(user_id);

@@ -12,7 +12,7 @@ impl RouteRuleDao {
         Self { conn }
     }
 
-    /// 插入路由规则
+    /// 插入路由规则 (兼容 Java 列名)
     pub async fn insert_rule(&self, rule: &RouteRule) -> anyhow::Result<()> {
         let status_str = match rule.status {
             RouteRuleStatus::Active => "active",
@@ -24,17 +24,16 @@ impl RouteRuleDao {
             RouteStrategy::CloseByVisit => "close-by-visit",
         };
 
+        // 使用 Java 列名: SERVICE_ID, NAME, DESCRIPTION, STATUS, strategy
         let stmt = Statement::from_sql_and_values(
             self.conn.get_database_backend(),
             r#"
-            INSERT INTO service_route_rule (route_rule_id, route_id, service_id, name, description, status, strategy)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO service_route_rule (SERVICE_ID, NAME, DESCRIPTION, STATUS, strategy)
+            VALUES (?, ?, ?, ?, ?)
             "#,
             vec![
-                Value::from(rule.route_rule_id.unwrap_or(0)),
-                Value::from(&rule.route_id),
                 Value::from(&rule.service_id),
-                Value::from(&rule.name),
+                Value::from(&rule.route_id), // NAME 使用 route_id 作为标识符
                 Value::from(rule.description.as_deref().unwrap_or("")),
                 Value::from(status_str),
                 Value::from(strategy_str),
@@ -51,7 +50,7 @@ impl RouteRuleDao {
         Ok(())
     }
 
-    /// 更新路由规则
+    /// 更新路由规则 (兼容 Java 列名)
     pub async fn update_rule(&self, rule: &RouteRule) -> anyhow::Result<()> {
         let status_str = match rule.status {
             RouteRuleStatus::Active => "active",
@@ -67,11 +66,11 @@ impl RouteRuleDao {
             self.conn.get_database_backend(),
             r#"
             UPDATE service_route_rule
-            SET name = ?, description = ?, status = ?, strategy = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE route_id = ?
+            SET NAME = ?, DESCRIPTION = ?, STATUS = ?, strategy = ?, DataChange_LastTime = CURRENT_TIMESTAMP
+            WHERE NAME = ?
             "#,
             vec![
-                Value::from(&rule.name),
+                Value::from(&rule.route_id),
                 Value::from(rule.description.as_deref().unwrap_or("")),
                 Value::from(status_str),
                 Value::from(strategy_str),
@@ -82,12 +81,16 @@ impl RouteRuleDao {
         self.conn.execute(stmt).await?;
 
         // 删除旧的规则分组关联并插入新的
-        let delete_stmt = Statement::from_sql_and_values(
-            self.conn.get_database_backend(),
-            "DELETE FROM service_route_rule_group WHERE rule_id = ?",
-            vec![Value::from(&rule.route_id)],
-        );
-        self.conn.execute(delete_stmt).await?;
+        // 先获取 route_rule_id
+        let route_rule_id = self.get_route_rule_id(&rule.route_id).await?;
+        if let Some(id) = route_rule_id {
+            let delete_stmt = Statement::from_sql_and_values(
+                self.conn.get_database_backend(),
+                "DELETE FROM service_route_rule_group WHERE ROUTE_RULE_ID = ?",
+                vec![Value::from(id)],
+            );
+            self.conn.execute(delete_stmt).await?;
+        }
 
         for group in &rule.groups {
             self.insert_rule_group(&rule.route_id, group).await?;
@@ -96,11 +99,37 @@ impl RouteRuleDao {
         Ok(())
     }
 
-    /// 删除路由规则
-    pub async fn delete_rule(&self, rule_id: &str) -> anyhow::Result<()> {
+    /// 获取路由规则 ID
+    async fn get_route_rule_id(&self, rule_name: &str) -> anyhow::Result<Option<i64>> {
         let stmt = Statement::from_sql_and_values(
             self.conn.get_database_backend(),
-            "DELETE FROM service_route_rule WHERE route_id = ?",
+            "SELECT id FROM service_route_rule WHERE NAME = ?",
+            vec![Value::from(rule_name)],
+        );
+
+        let result = self.conn.query_one(stmt).await?;
+        match result {
+            Some(row) => Ok(Some(row.try_get("", "id")?)),
+            None => Ok(None),
+        }
+    }
+
+    /// 删除路由规则 (兼容 Java 列名)
+    pub async fn delete_rule(&self, rule_id: &str) -> anyhow::Result<()> {
+        // 先删除关联的分组
+        let route_rule_id = self.get_route_rule_id(rule_id).await?;
+        if let Some(id) = route_rule_id {
+            let delete_assoc_stmt = Statement::from_sql_and_values(
+                self.conn.get_database_backend(),
+                "DELETE FROM service_route_rule_group WHERE ROUTE_RULE_ID = ?",
+                vec![Value::from(id)],
+            );
+            self.conn.execute(delete_assoc_stmt).await?;
+        }
+
+        let stmt = Statement::from_sql_and_values(
+            self.conn.get_database_backend(),
+            "DELETE FROM service_route_rule WHERE NAME = ?",
             vec![Value::from(rule_id)],
         );
         self.conn.execute(stmt).await?;
@@ -112,9 +141,9 @@ impl RouteRuleDao {
         let stmt = Statement::from_sql_and_values(
             self.conn.get_database_backend(),
             r#"
-            SELECT route_rule_id, route_id, service_id, name, description, status, strategy
+            SELECT id, SERVICE_ID, NAME, DESCRIPTION, STATUS, strategy
             FROM service_route_rule
-            WHERE route_id = ?
+            WHERE NAME = ?
             "#,
             vec![Value::from(rule_id)],
         );
@@ -123,7 +152,7 @@ impl RouteRuleDao {
 
         match result {
             Some(row) => {
-                let status_str: String = row.try_get("", "status")?;
+                let status_str: String = row.try_get("", "STATUS")?;
                 let status = match status_str.as_str() {
                     "active" => RouteRuleStatus::Active,
                     _ => RouteRuleStatus::Inactive,
@@ -135,12 +164,14 @@ impl RouteRuleDao {
                     _ => RouteStrategy::WeightedRoundRobin,
                 };
 
+                let route_rule_id: i64 = row.try_get("", "id")?;
+
                 Ok(Some(RouteRule {
-                    route_rule_id: row.try_get("", "route_rule_id").ok(),
-                    route_id: row.try_get("", "route_id")?,
-                    service_id: row.try_get("", "service_id")?,
-                    name: row.try_get("", "name")?,
-                    description: row.try_get("", "description")?,
+                    route_rule_id: Some(route_rule_id),
+                    route_id: row.try_get("", "NAME")?,
+                    service_id: row.try_get("", "SERVICE_ID")?,
+                    name: row.try_get("", "NAME")?,
+                    description: row.try_get("", "DESCRIPTION")?,
                     status,
                     strategy,
                     groups: vec![], // Manager通过get_rule_group_ids加载
@@ -155,7 +186,7 @@ impl RouteRuleDao {
         let stmt = Statement::from_sql_and_values(
             self.conn.get_database_backend(),
             r#"
-            SELECT route_rule_id, route_id, service_id, name, description, status, strategy
+            SELECT id, SERVICE_ID, NAME, DESCRIPTION, STATUS, strategy
             FROM service_route_rule
             "#,
             vec![],
@@ -165,7 +196,7 @@ impl RouteRuleDao {
 
         let mut rules = Vec::new();
         for row in rows {
-            let status_str: String = row.try_get("", "status")?;
+            let status_str: String = row.try_get("", "STATUS")?;
             let status = match status_str.as_str() {
                 "active" => RouteRuleStatus::Active,
                 _ => RouteRuleStatus::Inactive,
@@ -177,12 +208,14 @@ impl RouteRuleDao {
                 _ => RouteStrategy::WeightedRoundRobin,
             };
 
+            let route_rule_id: i64 = row.try_get("", "id")?;
+
             rules.push(RouteRule {
-                route_rule_id: row.try_get("", "route_rule_id").ok(),
-                route_id: row.try_get("", "route_id")?,
-                service_id: row.try_get("", "service_id")?,
-                name: row.try_get("", "name")?,
-                description: row.try_get("", "description")?,
+                route_rule_id: Some(route_rule_id),
+                route_id: row.try_get("", "NAME")?,
+                service_id: row.try_get("", "SERVICE_ID")?,
+                name: row.try_get("", "NAME")?,
+                description: row.try_get("", "DESCRIPTION")?,
                 status,
                 strategy,
                 groups: vec![], // Manager负责加载
@@ -192,22 +225,26 @@ impl RouteRuleDao {
         Ok(rules)
     }
 
-    /// 插入规则分组关联 (存储group_key和weight)
+    /// 插入规则分组关联 (兼容 Java 列名)
     async fn insert_rule_group(&self, rule_id: &str, group: &ServiceGroup) -> anyhow::Result<()> {
         let weight = group.weight.unwrap_or(100);
+
+        // 获取 route_rule_id
+        let route_rule_id = self.get_route_rule_id(rule_id).await?.unwrap_or(0);
+
+        // 获取 group_id (需要通过 group_name 查询)
+        let group_id = self.get_group_id_by_name(&group.group_key).await?;
 
         let stmt = Statement::from_sql_and_values(
             self.conn.get_database_backend(),
             r#"
-            INSERT INTO service_route_rule_group (rule_id, group_id, weight, region_id)
-            VALUES (?, ?, ?, ?)
-            ON CONFLICT(rule_id, group_id) DO UPDATE SET weight = excluded.weight
+            INSERT INTO service_route_rule_group (ROUTE_RULE_ID, GROUP_ID, WEIGHT)
+            VALUES (?, ?, ?)
             "#,
             vec![
-                Value::from(rule_id),
-                Value::from(&group.group_key),
+                Value::from(route_rule_id),
+                Value::from(group_id),
                 Value::from(weight as i32),
-                Value::from(""), // region_id 暂时为空
             ],
         );
 
@@ -215,16 +252,38 @@ impl RouteRuleDao {
         Ok(())
     }
 
+    /// 根据 group_name 获取 group_id
+    async fn get_group_id_by_name(&self, group_name: &str) -> anyhow::Result<i64> {
+        let stmt = Statement::from_sql_and_values(
+            self.conn.get_database_backend(),
+            "SELECT id FROM service_group WHERE NAME = ?",
+            vec![Value::from(group_name)],
+        );
+
+        let result = self.conn.query_one(stmt).await?;
+        match result {
+            Some(row) => Ok(row.try_get("", "id")?),
+            None => Ok(0), // 如果找不到返回 0
+        }
+    }
+
     /// 获取规则关联的所有group_id列表
     pub async fn get_rule_group_ids(&self, rule_id: &str) -> anyhow::Result<Vec<(String, u32)>> {
+        // 先获取 route_rule_id
+        let route_rule_id = match self.get_route_rule_id(rule_id).await? {
+            Some(id) => id,
+            None => return Ok(vec![]),
+        };
+
         let stmt = Statement::from_sql_and_values(
             self.conn.get_database_backend(),
             r#"
-            SELECT group_id, weight
-            FROM service_route_rule_group
-            WHERE rule_id = ?
+            SELECT rg.GROUP_ID, rg.WEIGHT, g.NAME
+            FROM service_route_rule_group rg
+            LEFT JOIN service_group g ON rg.GROUP_ID = g.id
+            WHERE rg.ROUTE_RULE_ID = ?
             "#,
-            vec![Value::from(rule_id)],
+            vec![Value::from(route_rule_id)],
         );
 
         let rows = self.conn.query_all(stmt).await?;
@@ -232,9 +291,9 @@ impl RouteRuleDao {
         Ok(rows
             .into_iter()
             .map(|row| {
-                let weight: i32 = row.try_get("", "weight").unwrap_or(100);
-                let group_id: String = row.try_get("", "group_id").unwrap_or_default();
-                (group_id, weight as u32)
+                let weight: i32 = row.try_get("", "WEIGHT").unwrap_or(100);
+                let group_name: String = row.try_get("", "NAME").unwrap_or_default();
+                (group_name, weight as u32)
             })
             .collect())
     }
