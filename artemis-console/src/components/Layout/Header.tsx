@@ -51,7 +51,6 @@ import {
 import { useUIStore } from '@/store/uiStore';
 import { useAuthStore } from '@/store/authStore';
 import { useWebSocketState } from '@/hooks/useWebSocket';
-import { ConnectionState } from '@/utils/websocket';
 import { ChangePasswordDialog } from '@/components/ChangePasswordDialog';
 
 // ===== Type Definitions =====
@@ -241,7 +240,7 @@ export const Header: React.FC<HeaderProps> = ({
     handleUserMenuClose();
     // Navigate to users page with current user's ID
     if (user) {
-      navigate(`/users?id=${user.user_id}`);
+      navigate(`/users?id=${user.userId}`);
     }
   };
 

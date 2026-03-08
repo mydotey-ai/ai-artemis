@@ -124,9 +124,9 @@ const Services: React.FC = () => {
 
       const response = await getAllServices(regionId, zoneId);
 
-      if (response.response_status.errorCode !== ('success' as ErrorCode)) {
+      if (response.responseStatus.errorCode !== ('success' as ErrorCode)) {
         throw new Error(
-          response.response_status.error_message || 'Failed to fetch services'
+          response.responseStatus.errorMessage || 'Failed to fetch services'
         );
       }
 

@@ -591,7 +591,7 @@ const AuditLog: React.FC = () => {
       log.operatorId,
       log.action,
       log.result,
-      log.error_message || '',
+      log.errorMessage || '',
     ]);
 
     const csvContent = [
@@ -896,13 +896,13 @@ const AuditLog: React.FC = () => {
               />
             </Box>
 
-            {selectedLog.error_message && (
+            {selectedLog.errorMessage && (
               <>
                 <Typography variant="subtitle2" gutterBottom color="error">
                   Error Message
                 </Typography>
                 <Typography variant="body2" color="error" paragraph>
-                  {selectedLog.error_message}
+                  {selectedLog.errorMessage}
                 </Typography>
               </>
             )}
@@ -1255,13 +1255,13 @@ const AuditLog: React.FC = () => {
                           <TableRow>
                             <TableCell colSpan={8}>
                               <Box sx={{ padding: 2, backgroundColor: 'grey.50' }}>
-                                {log.error_message && (
+                                {log.errorMessage && (
                                   <>
                                     <Typography variant="subtitle2" color="error" gutterBottom>
                                       Error Message:
                                     </Typography>
                                     <Typography variant="body2" color="error" paragraph>
-                                      {log.error_message}
+                                      {log.errorMessage}
                                     </Typography>
                                   </>
                                 )}

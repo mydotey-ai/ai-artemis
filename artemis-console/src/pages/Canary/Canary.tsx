@@ -197,9 +197,9 @@ const Canary: React.FC = () => {
 
       // Fetch services
       const servicesResponse = await getAllServices('default-region', 'default-zone');
-      if (servicesResponse.response_status.errorCode !== 'success') {
+      if (servicesResponse.responseStatus.errorCode !== 'success') {
         throw new Error(
-          servicesResponse.response_status.error_message || 'Failed to fetch services'
+          servicesResponse.responseStatus.errorMessage || 'Failed to fetch services'
         );
       }
 

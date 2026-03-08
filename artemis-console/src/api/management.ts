@@ -8,14 +8,7 @@
  */
 
 import apiClient from '@/api/client';
-
-/**
- * 响应状态
- */
-export interface ResponseStatus {
-  code: string;
-  message: string;
-}
+import type { ResponseStatus } from '@/api/types';
 
 /**
  * 实例键 (唯一标识一个实例)
@@ -384,8 +377,8 @@ export interface GetAllInstanceOperationsResponse {
  *
  * @example
  * const result = await getAllInstanceOperationsPost('us-east');
- * result.instance_operation_records.forEach(record => {
- *   console.log(`${record.instance_key.instanceId}: ${record.operation}`);
+ * result.instanceOperationRecords.forEach(record => {
+ *   console.log(`${record.instanceKey.instanceId}: ${record.operation}`);
  * });
  */
 export async function getAllInstanceOperationsPost(

@@ -6,12 +6,12 @@
  */
 
 import { useMemo, useRef, useEffect } from 'react';
-import { FixedSizeList as List, ListChildComponentProps } from 'react-window';
+import { FixedSizeList as List } from 'react-window';
+import type { ListChildComponentProps } from 'react-window';
 import {
   Box,
   Paper,
   Table,
-  TableBody,
   TableCell,
   TableContainer,
   TableHead,

@@ -9,7 +9,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { cacheApi, CacheKeys, CacheInvalidators } from '@/utils/cache';
 import { measureAsync, MetricType } from '@/utils/performance';
 import * as discoveryApi from '@/api/discovery';
-import { Service, ServiceInstance } from '@/api/types';
+import type { Service, ServiceInstance } from '@/api/types';
+
+// Default region and zone for service discovery
+const DEFAULT_REGION = 'default';
+const DEFAULT_ZONE = 'default';
 
 /**
  * Hook for fetching all services with caching
@@ -38,11 +42,15 @@ export function useServices(options?: {
         'get_all_services',
         MetricType.API_CALL,
         () =>
-          cacheApi(CacheKeys.services.all(), () => discoveryApi.getAllServices(), ttl),
+          cacheApi(
+            CacheKeys.services.all(),
+            () => discoveryApi.getAllServices(DEFAULT_REGION, DEFAULT_ZONE),
+            ttl
+          ),
         { cached: true }
       );
 
-      setServices(data);
+      setServices(data.services);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch services'));
     } finally {
@@ -103,7 +111,12 @@ export function useServiceInstances(
         () =>
           cacheApi(
             CacheKeys.services.instances(serviceId),
-            () => discoveryApi.getServiceInstances(serviceId),
+            () =>
+              discoveryApi.getServiceInstances(serviceId, {
+                serviceId,
+                regionId: DEFAULT_REGION,
+                zoneId: DEFAULT_ZONE,
+              }),
             ttl
           ),
         { serviceId, cached: true }
@@ -168,7 +181,7 @@ export function useServiceMutations() {
     }
   }, []);
 
-  const deregisterInstance = useCallback(async (serviceId: string, instanceId: string) => {
+  const deregisterInstance = useCallback(async (instanceKey: { serviceId: string; instanceId?: string; regionId?: string; zoneId?: string; groupId?: string }) => {
     try {
       setLoading(true);
       setError(null);
@@ -176,11 +189,18 @@ export function useServiceMutations() {
       await measureAsync(
         'deregister_instance',
         MetricType.API_CALL,
-        () => discoveryApi.deregisterInstance(serviceId, instanceId)
+        () =>
+          discoveryApi.deregisterInstance({
+            regionId: instanceKey.regionId ?? DEFAULT_REGION,
+            zoneId: instanceKey.zoneId ?? DEFAULT_ZONE,
+            serviceId: instanceKey.serviceId,
+            groupId: instanceKey.groupId ?? '',
+            instanceId: instanceKey.instanceId ?? '',
+          })
       );
 
       // Invalidate caches
-      CacheInvalidators.service(serviceId);
+      CacheInvalidators.service(instanceKey.serviceId);
 
       return true;
     } catch (err) {

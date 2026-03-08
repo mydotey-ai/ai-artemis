@@ -66,6 +66,16 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error: AxiosError) => {
+    // Log detailed error information
+    console.error('API Error:', {
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      message: error.message,
+    });
+
     // Handle HTTP errors
     if (error.response) {
       const status = error.response.status;
@@ -77,12 +87,17 @@ apiClient.interceptors.response.use(
         // Clear token from storage
         removeToken();
 
+        // Save error info to sessionStorage for display after redirect
+        sessionStorage.setItem('auth_error', 'Session expired. Please login again.');
+
         // Save current path for redirect after login
         const currentPath = window.location.pathname;
         const loginPath = `/login${currentPath !== '/login' ? `?redirect=${encodeURIComponent(currentPath)}` : ''}`;
 
-        // Redirect to login page
-        window.location.href = loginPath;
+        // Delay redirect to show error message
+        setTimeout(() => {
+          window.location.href = loginPath;
+        }, 100);
       } else if (status === 403) {
         // 403 Forbidden - Permission denied
         console.error('Permission denied - insufficient privileges');
@@ -91,6 +106,9 @@ apiClient.interceptors.response.use(
         // For now, just log the error
         // TODO: Integrate with notification/toast system
       }
+    } else if (error.request) {
+      // Network error (no response received)
+      console.error('Network error - no response received:', error.message);
     }
 
     // Reject with error for caller to handle

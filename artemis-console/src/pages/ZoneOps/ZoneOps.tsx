@@ -75,9 +75,9 @@ type OperationStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED';
 
 interface ZoneOperationRow extends ZoneOperationRecord {
   status: OperationStatus;
-  created_at: number;
-  completed_at?: number;
-  total_instances?: number;
+  createdAt: number;
+  completedAt?: number;
+  totalInstances?: number;
   completed_instances?: number;
   failed_instances?: number;
 }
@@ -119,7 +119,7 @@ function mapOperationType(operation: string): 'UP_ZONE' | 'DOWN_ZONE' {
  */
 function deriveOperationStatus(operation: ZoneOperationRecord): OperationStatus {
   const now = Date.now();
-  const operationTime = operation.operation_time * 1000; // Convert to ms
+  const operationTime = operation.operationTime * 1000; // Convert to ms
   const elapsed = now - operationTime;
 
   // Simple heuristic: operations complete within 5 minutes
@@ -172,14 +172,14 @@ function exportToCSV(data: ZoneOperationRow[]): void {
   ];
 
   const rows = data.map((row) => [
-    `${row.zoneId}-${row.operation_time}`,
+    `${row.zoneId}-${row.operationTime}`,
     row.zoneId,
     row.regionId,
     mapOperationType(row.operation as unknown as string),
     row.status,
     row.operatorId,
-    formatTimestamp(row.operation_time),
-    row.completed_at ? formatTimestamp(row.completed_at) : 'N/A',
+    formatTimestamp(row.operationTime),
+    row.completedAt ? formatTimestamp(row.completedAt) : 'N/A',
   ]);
 
   const csvContent = [headers, ...rows].map((row) => row.join(',')).join('\n');
@@ -284,7 +284,7 @@ const ZoneOps: React.FC = () => {
       pending: operations.filter((op) => op.status === 'PENDING').length,
       in_progress: operations.filter((op) => op.status === 'IN_PROGRESS').length,
       failed_last_24h: operations.filter(
-        (op) => op.status === 'FAILED' && op.created_at * 1000 > last24h
+        (op) => op.status === 'FAILED' && op.createdAt * 1000 > last24h
       ).length,
     };
   }, [operations]);

@@ -152,6 +152,12 @@ const Login: React.FC = () => {
     if (authError) {
       setDisplayError(authError);
     }
+    // Check for session error from redirect
+    const sessionError = sessionStorage.getItem('auth_error');
+    if (sessionError) {
+      setDisplayError(sessionError);
+      sessionStorage.removeItem('auth_error');
+    }
   }, [authError]);
 
   /**

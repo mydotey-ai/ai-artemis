@@ -17,9 +17,7 @@ export {
   operateServer,
   isServerDown,
   getAllInstanceOperations,
-  getAllInstanceOperationsGet,
   getAllServerOperations,
-  getAllServerOperationsGet,
 } from './management';
 
 // ===== 新增 API 模块 =====
@@ -100,7 +98,7 @@ export {
   getCurrentUser,
   getUserPermissions,
   changePassword,
-  resetPassword,
+  resetUserPassword,
   listActiveSessions,
   revokeSession,
   listRoles,
@@ -110,7 +108,6 @@ export {
   createUser,
   updateUser,
   deleteUser,
-  resetUserPassword,
   changeUserStatus,
   getUserLoginHistory,
   UserStatus,

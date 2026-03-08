@@ -20,7 +20,7 @@ export interface AuditLog {
   action: string;
   details: Record<string, any>;
   result: 'SUCCESS' | 'FAILURE';
-  error_message?: string;
+  errorMessage?: string;
 }
 
 export interface QueryLogsParams {

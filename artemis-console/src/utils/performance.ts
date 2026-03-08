@@ -11,12 +11,14 @@
 /**
  * Performance metric types
  */
-export enum MetricType {
-  PAGE_LOAD = 'page_load',
-  API_CALL = 'api_call',
-  COMPONENT_RENDER = 'component_render',
-  USER_INTERACTION = 'user_interaction',
-}
+export const MetricType = {
+  PAGE_LOAD: 'page_load',
+  API_CALL: 'api_call',
+  COMPONENT_RENDER: 'component_render',
+  USER_INTERACTION: 'user_interaction',
+} as const;
+
+export type MetricType = (typeof MetricType)[keyof typeof MetricType];
 
 /**
  * Performance metric data
@@ -226,7 +228,7 @@ export function measureSync<T>(
 /**
  * Start a performance timer
  */
-export function startTimer(name: string): () => void {
+export function startTimer(_name: string): () => number {
   const startTime = performance.now();
 
   return () => {
@@ -284,7 +286,7 @@ export function monitorPageLoad(): void {
       recordMetric({
         type: MetricType.PAGE_LOAD,
         name: 'dom_processing',
-        duration: perfData.domComplete - perfData.domLoading,
+        duration: perfData.domComplete - (perfData as any).domLoading,
         timestamp: Date.now(),
       });
 

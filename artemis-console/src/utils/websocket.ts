@@ -247,7 +247,7 @@ export class WebSocketManager {
       this.startHeartbeat();
     };
 
-    this.ws.onclose = (event) => {
+    this.ws.onclose = (_event) => {
       // Debug log (state change notification already shown via handlers)
       // console.debug('[WebSocket] Disconnected:', event.code, event.reason);
       this.clearTimers();

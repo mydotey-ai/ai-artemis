@@ -30,7 +30,7 @@ export type ErrorCode = typeof ErrorCode[keyof typeof ErrorCode];
  */
 export interface ResponseStatus {
   errorCode: ErrorCode;
-  error_message?: string;
+  errorMessage?: string;
 }
 
 /**
@@ -88,6 +88,12 @@ export interface Instance {
   status: InstanceStatus;
   metadata?: Record<string, string>;
 }
+
+/**
+ * Service Instance (alias for Instance)
+ * Core entity representing a registered service instance
+ */
+export type ServiceInstance = Instance;
 
 /**
  * Instance Key
@@ -233,7 +239,7 @@ export interface GetServiceRequest {
  * Get Service Response
  */
 export interface GetServiceResponse {
-  response_status: ResponseStatus;
+  responseStatus: ResponseStatus;
   service?: Service;
 }
 
@@ -249,7 +255,7 @@ export interface GetServicesRequest {
  * Get Services Response
  */
 export interface GetServicesResponse {
-  response_status: ResponseStatus;
+  responseStatus: ResponseStatus;
   services: Service[];
 }
 
@@ -267,7 +273,7 @@ export interface GetServicesDeltaRequest {
  * Get Services Delta Response
  */
 export interface GetServicesDeltaResponse {
-  response_status: ResponseStatus;
+  responseStatus: ResponseStatus;
   services: Service[];
   current_timestamp: number;
 }
@@ -284,7 +290,7 @@ export interface LookupServicesRequest {
  * Lookup Services Response
  */
 export interface LookupServicesResponse {
-  response_status: ResponseStatus;
+  responseStatus: ResponseStatus;
   services: Service[];
 }
 
@@ -303,7 +309,7 @@ export interface RegisterRequest {
  * Register Response
  */
 export interface RegisterResponse {
-  response_status: ResponseStatus;
+  responseStatus: ResponseStatus;
   failed_instances?: Instance[];
 }
 
@@ -318,7 +324,7 @@ export interface HeartbeatRequest {
  * Heartbeat Response
  */
 export interface HeartbeatResponse {
-  response_status: ResponseStatus;
+  responseStatus: ResponseStatus;
   failed_instance_keys?: InstanceKey[];
 }
 
@@ -333,7 +339,7 @@ export interface UnregisterRequest {
  * Unregister Response
  */
 export interface UnregisterResponse {
-  response_status: ResponseStatus;
+  responseStatus: ResponseStatus;
 }
 
 // =====================================================
@@ -355,9 +361,9 @@ export type InstanceOperationType = typeof InstanceOperationType[keyof typeof In
  * Instance Operation Record
  */
 export interface InstanceOperationRecord {
-  instance_key: InstanceKey;
+  instanceKey: InstanceKey;
   operation: InstanceOperationType;
-  operation_complete: boolean;
+  operationComplete: boolean;
   operatorId: string;
   token?: string;
 }
@@ -366,9 +372,9 @@ export interface InstanceOperationRecord {
  * Operate Instance Request
  */
 export interface OperateInstanceRequest {
-  instance_key: InstanceKey;
+  instanceKey: InstanceKey;
   operation: InstanceOperationType;
-  operation_complete?: boolean;
+  operationComplete?: boolean;
   operatorId: string;
   token?: string;
 }
@@ -392,7 +398,7 @@ export interface GetInstanceOperationsRequest {
  */
 export interface GetInstanceOperationsResponse {
   status: ResponseStatus;
-  operations: InstanceOperationType[];
+  instanceOperationRecords: InstanceOperationRecord[];
 }
 
 /**
@@ -432,7 +438,7 @@ export interface ServerOperationRecord {
   regionId: string;
   operation: ServerOperationType;
   operatorId: string;
-  operation_time: number;
+  operationTime: number;
 }
 
 /**
@@ -452,7 +458,7 @@ export interface OperateServerRequest {
   serverId: string;
   regionId: string;
   operation: ServerOperationType;
-  operation_complete?: boolean;
+  operationComplete?: boolean;
   operatorId: string;
   token?: string;
 }
@@ -507,7 +513,7 @@ export interface GetAllServerOperationsRequest {
  */
 export interface GetAllServerOperationsResponse {
   status: ResponseStatus;
-  server_operation_records: ServerOperationInfo[];
+  serverOperationRecords: ServerOperationInfo[];
 }
 
 // =====================================================
@@ -570,7 +576,7 @@ export interface CreateGroupRequest {
   regionId: string;
   zoneId: string;
   name: string;
-  group_type: GroupType;
+  groupType: GroupType;
   description?: string;
 }
 
@@ -663,7 +669,7 @@ export interface GetClusterNodeStatusRequest {
  */
 export interface GetClusterNodeStatusResponse {
   node_status?: ServiceNodeStatus;
-  response_status: ResponseStatus;
+  responseStatus: ResponseStatus;
 }
 
 /**
@@ -678,7 +684,7 @@ export interface GetClusterStatusRequest {
 export interface GetClusterStatusResponse {
   nodes_status: ServiceNodeStatus[];
   node_count: number;
-  response_status: ResponseStatus;
+  responseStatus: ResponseStatus;
 }
 
 /**
@@ -717,14 +723,14 @@ export interface GetLeasesStatusRequest {
  * Get Leases Status Response
  */
 export interface GetLeasesStatusResponse {
-  lease_update_max_count: number;
-  lease_update_max_count_lastUpdate_time: number;
-  lease_update_count_last_time_window: number;
-  is_safe: boolean;
-  is_safe_check_enabled: boolean;
-  lease_count: number;
+  leaseUpdateMaxCount: number;
+  leaseUpdateMaxCountLastUpdateTime: number;
+  leaseUpdateCountLastTimeWindow: number;
+  isSafe: boolean;
+  isSafeCheckEnabled: boolean;
+  leaseCount: number;
   leasesStatus: Record<string, LeaseStatus[]>;
-  response_status: ResponseStatus;
+  responseStatus: ResponseStatus;
 }
 
 /**
@@ -739,7 +745,7 @@ export interface GetConfigStatusRequest {
 export interface GetConfigStatusResponse {
   sources: Record<string, number>;
   properties: Record<string, string>;
-  response_status: ResponseStatus;
+  responseStatus: ResponseStatus;
 }
 
 /**
@@ -762,7 +768,7 @@ export interface GetDeploymentStatusResponse {
   path: string;
   sources: Record<string, number>;
   properties: Record<string, string>;
-  response_status: ResponseStatus;
+  responseStatus: ResponseStatus;
 }
 
 // =====================================================
@@ -779,10 +785,10 @@ export interface AuditLog {
   resourceType: string;
   resourceId: string;
   operatorId: string;
-  operation_details?: Record<string, any>;
+  operationDetails?: Record<string, any>;
   timestamp: number;
   status: 'success' | 'failure';
-  error_message?: string;
+  errorMessage?: string;
 }
 
 /**
@@ -862,7 +868,7 @@ export interface ZoneOperationRecord {
   regionId: string;
   operation: ZoneOperationType;
   operatorId: string;
-  operation_time: number;
+  operationTime: number;
 }
 
 /**
@@ -993,7 +999,7 @@ export interface ReplicateRegisterRequest {
  * Replicate Register Response
  */
 export interface ReplicateRegisterResponse {
-  response_status: ResponseStatus;
+  responseStatus: ResponseStatus;
   failed_instances?: Instance[];
 }
 
@@ -1008,7 +1014,7 @@ export interface ReplicateHeartbeatRequest {
  * Replicate Heartbeat Response
  */
 export interface ReplicateHeartbeatResponse {
-  response_status: ResponseStatus;
+  responseStatus: ResponseStatus;
   failed_instance_keys?: InstanceKey[];
 }
 
@@ -1023,14 +1029,14 @@ export interface ReplicateUnregisterRequest {
  * Replicate Unregister Response
  */
 export interface ReplicateUnregisterResponse {
-  response_status: ResponseStatus;
+  responseStatus: ResponseStatus;
 }
 
 /**
  * Get All Services Response
  */
 export interface GetAllServicesResponse {
-  response_status: ResponseStatus;
+  responseStatus: ResponseStatus;
   services: Service[];
 }
 
@@ -1045,7 +1051,7 @@ export interface BatchRegisterRequest {
  * Batch Register Response
  */
 export interface BatchRegisterResponse {
-  response_status: ResponseStatus;
+  responseStatus: ResponseStatus;
   failed_instances?: Instance[];
 }
 
@@ -1060,7 +1066,7 @@ export interface BatchHeartbeatRequest {
  * Batch Heartbeat Response
  */
 export interface BatchHeartbeatResponse {
-  response_status: ResponseStatus;
+  responseStatus: ResponseStatus;
   failed_instance_keys?: InstanceKey[];
 }
 
@@ -1075,7 +1081,7 @@ export interface BatchUnregisterRequest {
  * Batch Unregister Response
  */
 export interface BatchUnregisterResponse {
-  response_status: ResponseStatus;
+  responseStatus: ResponseStatus;
   failed_instance_keys?: InstanceKey[];
 }
 
@@ -1092,7 +1098,7 @@ export interface ServicesDeltaRequest {
  * Services Delta Response
  */
 export interface ServicesDeltaResponse {
-  response_status: ResponseStatus;
+  responseStatus: ResponseStatus;
   services: Service[];
   current_timestamp: number;
 }
@@ -1109,7 +1115,7 @@ export interface SyncFullDataRequest {
  * Sync Full Data Response
  */
 export interface SyncFullDataResponse {
-  response_status: ResponseStatus;
+  responseStatus: ResponseStatus;
   services: Service[];
   sync_timestamp: number;
 }

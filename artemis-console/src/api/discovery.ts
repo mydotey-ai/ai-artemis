@@ -11,6 +11,12 @@ import type {
   GetServicesRequest,
   GetServicesResponse,
   DiscoveryConfig,
+  Instance,
+  InstanceKey,
+  RegisterRequest,
+  RegisterResponse,
+  UnregisterRequest,
+  UnregisterResponse,
 } from '@/api/types';
 
 const API_BASE = '/api/discovery';
@@ -44,6 +50,22 @@ export async function getService(
 }
 
 /**
+ * 获取服务实例列表
+ * POST /api/discovery/service.json
+ *
+ * @param serviceId - 服务 ID
+ * @param config - 发现配置（包含 regionId, zoneId 等）
+ * @returns 服务实例列表
+ */
+export async function getServiceInstances(
+  serviceId: string,
+  config: DiscoveryConfig
+): Promise<Instance[]> {
+  const response = await getService(serviceId, config);
+  return response.service?.instances ?? [];
+}
+
+/**
  * 获取所有服务
  * POST /api/discovery/services.json
  *
@@ -62,6 +84,48 @@ export async function getAllServices(
 
   const response = await apiClient.post<GetServicesResponse>(
     `${API_BASE}/services.json`,
+    request
+  );
+  return response.data;
+}
+
+/**
+ * 注册服务实例
+ * POST /api/registry/register
+ *
+ * @param instance - 服务实例
+ * @returns 注册响应
+ */
+export async function registerInstance(
+  instance: Instance
+): Promise<RegisterResponse> {
+  const request: RegisterRequest = {
+    instances: [instance],
+  };
+
+  const response = await apiClient.post<RegisterResponse>(
+    '/api/registry/register.json',
+    request
+  );
+  return response.data;
+}
+
+/**
+ * 注销服务实例
+ * POST /api/registry/unregister
+ *
+ * @param instanceKey - 实例键
+ * @returns 注销响应
+ */
+export async function deregisterInstance(
+  instanceKey: InstanceKey
+): Promise<UnregisterResponse> {
+  const request: UnregisterRequest = {
+    instance_keys: [instanceKey],
+  };
+
+  const response = await apiClient.post<UnregisterResponse>(
+    '/api/registry/unregister.json',
     request
   );
   return response.data;

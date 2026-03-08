@@ -57,18 +57,6 @@ function base64UrlDecode(str: string): string {
   }
 }
 
-/**
- * Get storage implementation based on remember me setting
- */
-function getStorage(): Storage {
-  try {
-    const remember = localStorage.getItem(TOKEN_REMEMBER_KEY);
-    return remember === 'true' ? localStorage : sessionStorage;
-  } catch {
-    return sessionStorage;
-  }
-}
-
 // ===== Public API =====
 
 /**

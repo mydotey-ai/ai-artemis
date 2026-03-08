@@ -52,7 +52,7 @@ import {
   Cloud as CloudIcon,
   Storage as StorageIcon,
 } from '@mui/icons-material';
-import { getClusterStatus, getClusterNodeStatus } from '@/api/cluster';
+import { getClusterStatus } from '@/api/cluster';
 import type { ClusterNodeStatus, ServiceNodeStatus } from '@/api/cluster';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { useUIStore } from '@/store/uiStore';

@@ -192,16 +192,16 @@ const Instances: React.FC = () => {
         getAllInstanceOperations(), // No region filter - get all
       ]);
 
-      if (servicesResponse.response_status.errorCode !== 'success') {
-        throw new Error(servicesResponse.response_status.error_message || 'Failed to fetch services');
+      if (servicesResponse.responseStatus.errorCode !== 'success') {
+        throw new Error(servicesResponse.responseStatus.errorMessage || 'Failed to fetch services');
       }
 
       // Build a map of pulled out instances
       const pulledOutInstances = new Set<string>();
       if (operationsResponse.status.errorCode === 'success') {
-        operationsResponse.instance_operation_records.forEach((record: InstanceOperationRecord) => {
-          if (record.operation === 'pullout' && record.operation_complete) {
-            const key = `${record.instance_key.serviceId}:${record.instance_key.instanceId}:${record.instance_key.regionId}`;
+        operationsResponse.instanceOperationRecords.forEach((record: InstanceOperationRecord) => {
+          if (record.operation === 'pullout' && record.operationComplete) {
+            const key = `${record.instanceKey.serviceId}:${record.instanceKey.instanceId}:${record.instanceKey.regionId}`;
             pulledOutInstances.add(key);
           }
         });

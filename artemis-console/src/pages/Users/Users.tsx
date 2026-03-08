@@ -516,7 +516,7 @@ const Users: React.FC = () => {
 
     // Fetch login history
     try {
-      const historyResponse = await getUserLoginHistory(user.userId, 10);
+      const historyResponse = await getUserLoginHistory(user.userId);
       if (historyResponse.success && historyResponse.data) {
         setLoginHistory(historyResponse.data);
       }
@@ -731,10 +731,11 @@ const Users: React.FC = () => {
   /**
    * Format last login time
    */
-  const formatLastLogin = (lastLogin?: string): string => {
+  const formatLastLogin = (lastLogin?: string | number): string => {
     if (!lastLogin) return 'Never';
     try {
-      return formatDistanceToNow(new Date(lastLogin), { addSuffix: true });
+      const date = typeof lastLogin === 'number' ? new Date(lastLogin * 1000) : new Date(lastLogin);
+      return formatDistanceToNow(date, { addSuffix: true });
     } catch {
       return 'Unknown';
     }

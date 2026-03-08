@@ -221,8 +221,8 @@ export interface UserDetails {
   username: string;
   email?: string;
   description?: string;
-  role: string;
-  status: string;
+  role: UserRole;
+  status: UserStatus;
   created_at: number;
   updated_at: number;
 }
