@@ -31,7 +31,7 @@ export interface CreateGroupRequest {
   regionId: string;
   zoneId: string;
   name: string;
-  group_type: GroupType;
+  groupType: GroupType;
   description?: string;
 }
 

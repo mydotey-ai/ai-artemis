@@ -78,8 +78,8 @@ interface ZoneOperationRow extends ZoneOperationRecord {
   createdAt: number;
   completedAt?: number;
   totalInstances?: number;
-  completed_instances?: number;
-  failed_instances?: number;
+  completedInstances?: number;
+  failedInstances?: number;
 }
 
 interface CreateZoneOperationFormData {
@@ -677,7 +677,7 @@ const ZoneOps: React.FC = () => {
                 </TableRow>
               ) : (
                 paginatedOperations.map((operation) => {
-                  const opId = `${operation.zoneId}-${operation.operation_time}`;
+                  const opId = `${operation.zoneId}-${operation.operationTime}`;
                   const opType = mapOperationType(operation.operation as unknown as string);
 
                   return (
@@ -709,10 +709,10 @@ const ZoneOps: React.FC = () => {
                         />
                       </TableCell>
                       <TableCell>{operation.operatorId}</TableCell>
-                      <TableCell>{formatTimestamp(operation.created_at)}</TableCell>
+                      <TableCell>{formatTimestamp(operation.createdAt)}</TableCell>
                       <TableCell>
-                        {operation.completed_at
-                          ? formatTimestamp(operation.completed_at)
+                        {operation.completedAt
+                          ? formatTimestamp(operation.completedAt)
                           : 'N/A'}
                       </TableCell>
                       <TableCell>
@@ -985,7 +985,7 @@ const ZoneOps: React.FC = () => {
                       Created Time
                     </Typography>
                     <Typography variant="body1">
-                      {formatTimestamp(selectedOperation.created_at)}
+                      {formatTimestamp(selectedOperation.createdAt)}
                     </Typography>
                   </Grid>
                 </Grid>
@@ -1004,16 +1004,16 @@ const ZoneOps: React.FC = () => {
                       Progress
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      {selectedOperation.completed_instances || 0} /{' '}
-                      {selectedOperation.total_instances || 0} instances
+                      {selectedOperation.completedInstances || 0} /{' '}
+                      {selectedOperation.totalInstances || 0} instances
                     </Typography>
                   </Box>
                   <LinearProgress
                     variant="determinate"
                     value={
-                      selectedOperation.total_instances
-                        ? ((selectedOperation.completed_instances || 0) /
-                            selectedOperation.total_instances) *
+                      selectedOperation.totalInstances
+                        ? ((selectedOperation.completedInstances || 0) /
+                            selectedOperation.totalInstances) *
                           100
                         : 0
                     }
@@ -1024,14 +1024,14 @@ const ZoneOps: React.FC = () => {
                     <Typography variant="body2" color="text.secondary">
                       Total
                     </Typography>
-                    <Typography variant="h6">{selectedOperation.total_instances || 0}</Typography>
+                    <Typography variant="h6">{selectedOperation.totalInstances || 0}</Typography>
                   </Grid>
                   <Grid size={4}>
                     <Typography variant="body2" color="text.secondary">
                       Completed
                     </Typography>
                     <Typography variant="h6" color="success.main">
-                      {selectedOperation.completed_instances || 0}
+                      {selectedOperation.completedInstances || 0}
                     </Typography>
                   </Grid>
                   <Grid size={4}>
@@ -1039,7 +1039,7 @@ const ZoneOps: React.FC = () => {
                       Failed
                     </Typography>
                     <Typography variant="h6" color="error.main">
-                      {selectedOperation.failed_instances || 0}
+                      {selectedOperation.failedInstances || 0}
                     </Typography>
                   </Grid>
                 </Grid>

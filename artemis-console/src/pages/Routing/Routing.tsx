@@ -393,7 +393,7 @@ const Routing: React.FC = () => {
           regionId: groupFormData.regionId,
           zoneId: groupFormData.zoneId,
           name: groupFormData.name,
-          group_type: { type: 'WEIGHT' },
+          groupType: { type: 'WEIGHT' },
           description: groupFormData.description,
         });
       }

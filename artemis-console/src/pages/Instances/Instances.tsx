@@ -225,7 +225,7 @@ const Instances: React.FC = () => {
             zoneId: instance.zoneId,
             metadata: instance.metadata || {},
             url: instance.url,
-            healthCheckUrl: instance.health_check_url,
+            healthCheckUrl: instance.healthCheckUrl,
             instance,
             isPulledOut,
           });

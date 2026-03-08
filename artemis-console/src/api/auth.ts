@@ -17,7 +17,7 @@ export interface LoginRequest {
 export interface LoginResponse {
   accessToken: string;
   tokenType: string;
-  expires_in: number;
+  expiresIn: number;
 }
 
 export interface User {
@@ -26,8 +26,8 @@ export interface User {
   email?: string;
   role: string;
   status: string;
-  created_at: number;
-  updated_at: number;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export interface RefreshTokenRequest {
@@ -132,9 +132,9 @@ export interface Session {
   userId: string;
   ipAddress?: string;
   userAgent?: string;
-  created_at: number;
-  expires_at: number;
-  last_activity: number;
+  createdAt: number;
+  expiresAt: number;
+  lastActivity: number;
 }
 
 /**
@@ -223,8 +223,8 @@ export interface UserDetails {
   description?: string;
   role: UserRole;
   status: UserStatus;
-  created_at: number;
-  updated_at: number;
+  createdAt: number;
+  updatedAt: number;
 }
 
 /**
@@ -233,7 +233,7 @@ export interface UserDetails {
 export interface LoginHistory {
   id: number;
   userId: string;
-  login_time: number;
+  loginTime: number;
   ipAddress: string;
   userAgent: string;
   status: 'success' | 'failed';

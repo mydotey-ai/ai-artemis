@@ -60,19 +60,19 @@ export interface ClusterNodeStatus {
 
 export interface ClusterStatus {
   clusterId: string;
-  total_nodes: number;
-  active_nodes: number;
-  suspected_nodes: number;
-  inactive_nodes: number;
-  total_instances: number;
-  total_services: number;
+  totalNodes: number;
+  activeNodes: number;
+  suspectedNodes: number;
+  inactiveNodes: number;
+  totalInstances: number;
+  totalServices: number;
   timestamp: string;
 }
 
 export interface ConfigStatus {
-  total_groups: number;
-  total_rules: number;
-  total_zones: number;
+  totalGroups: number;
+  totalRules: number;
+  totalZones: number;
   lastUpdate: string;
 }
 
@@ -83,10 +83,10 @@ export interface DeploymentStatus {
 }
 
 export interface LeasesStatus {
-  total_leases: number;
-  active_leases: number;
-  expired_leases: number;
-  expiring_soon: number;
+  totalLeases: number;
+  activeLeases: number;
+  expiredLeases: number;
+  expiringSoon: number;
 }
 
 export interface ApiResponse<T> {

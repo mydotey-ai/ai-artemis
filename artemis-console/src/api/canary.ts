@@ -20,8 +20,8 @@ export interface CanaryConfig {
   serviceId: string;
   ipWhitelist: string[];
   enabled: boolean;
-  created_at?: string;
-  updated_at?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface EnableCanaryRequest {
@@ -148,7 +148,7 @@ export async function getWhitelistIps(serviceId: string): Promise<ApiResponse<st
 export async function checkIpInWhitelist(
   serviceId: string,
   ip: string
-): Promise<ApiResponse<{ in_whitelist: boolean }>> {
+): Promise<ApiResponse<{ inWhitelist: boolean }>> {
   const response = await apiClient.get(`${API_BASE}/${serviceId}/whitelist/check/${ip}`);
   return response.data;
 }
@@ -170,9 +170,9 @@ export async function clearWhitelist(serviceId: string): Promise<ApiResponse<Can
  */
 export async function getCanaryStats(): Promise<
   ApiResponse<{
-    total_services: number;
-    enabled_count: number;
-    total_whitelisted_ips: number;
+    totalServices: number;
+    enabledCount: number;
+    totalWhitelistedIps: number;
   }>
 > {
   const response = await apiClient.get(`${API_BASE}/stats`);

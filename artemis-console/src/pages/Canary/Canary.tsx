@@ -83,7 +83,7 @@ import type { Service } from '@/api/types';
  */
 interface CanaryConfigDisplay extends CanaryConfig {
   stats?: {
-    whitelist_count: number;
+    whitelistCount: number;
   };
 }
 
@@ -585,8 +585,8 @@ const Canary: React.FC = () => {
       config.serviceId,
       config.enabled ? 'ACTIVE' : 'INACTIVE',
       config.ipWhitelist.join('; '),
-      config.created_at || 'N/A',
-      config.updated_at || 'N/A',
+      config.createdAt || 'N/A',
+      config.updatedAt || 'N/A',
     ]);
 
     const csvContent = [csvHeaders.join(','), ...csvRows.map((row) => row.join(','))].join(
@@ -1086,8 +1086,8 @@ const Canary: React.FC = () => {
                         </TableCell>
                         <TableCell>
                           <Typography variant="body2">
-                            {config.created_at
-                              ? new Date(config.created_at).toLocaleString()
+                            {config.createdAt
+                              ? new Date(config.createdAt).toLocaleString()
                               : 'N/A'}
                           </Typography>
                         </TableCell>

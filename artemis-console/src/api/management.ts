@@ -48,9 +48,9 @@ export type ServerOperationType = typeof ServerOperationType[keyof typeof Server
  * 实例操作记录
  */
 export interface InstanceOperationRecord {
-  instance_key: InstanceKey;
+  instanceKey: InstanceKey;
   operation: InstanceOperationType;
-  operation_complete: boolean;
+  operationComplete: boolean;
   operatorId: string;
   token?: string;
 }
@@ -70,9 +70,9 @@ export interface ServerOperationInfo {
  * 操作实例请求
  */
 export interface OperateInstanceRequest {
-  instance_key: InstanceKey;
+  instanceKey: InstanceKey;
   operation: InstanceOperationType;
-  operation_complete?: boolean;
+  operationComplete?: boolean;
   operatorId: string;
   token?: string;
 }
@@ -103,16 +103,16 @@ export interface OperateInstanceResponse {
  * await operateInstance(instanceKey, InstanceOperationType.PullIn, 'admin');
  */
 export async function operateInstance(
-  instance_key: InstanceKey,
+  instanceKey: InstanceKey,
   operation: InstanceOperationType,
   operatorId: string,
-  operation_complete: boolean = false
+  operationComplete: boolean = false
 ): Promise<OperateInstanceResponse> {
   const request: OperateInstanceRequest = {
-    instance_key,
+    instanceKey,
     operation,
     operatorId,
-    operation_complete,
+    operationComplete,
   };
 
   try {
@@ -131,7 +131,7 @@ export async function operateInstance(
  * 查询实例操作历史请求
  */
 export interface GetInstanceOperationsRequest {
-  instance_key: InstanceKey;
+  instanceKey: InstanceKey;
 }
 
 /**
@@ -157,10 +157,10 @@ export interface GetInstanceOperationsResponse {
  * console.log(history.operations); // ['pullout', 'pullin', ...]
  */
 export async function getInstanceOperations(
-  instance_key: InstanceKey
+  instanceKey: InstanceKey
 ): Promise<GetInstanceOperationsResponse> {
   const request: GetInstanceOperationsRequest = {
-    instance_key,
+    instanceKey,
   };
 
   try {
@@ -179,7 +179,7 @@ export async function getInstanceOperations(
  * 查询实例是否被拉出请求
  */
 export interface IsInstanceDownRequest {
-  instance_key: InstanceKey;
+  instanceKey: InstanceKey;
 }
 
 /**
@@ -187,7 +187,7 @@ export interface IsInstanceDownRequest {
  */
 export interface IsInstanceDownResponse {
   status: ResponseStatus;
-  is_down: boolean;
+  isDown: boolean;
 }
 
 /**
@@ -207,10 +207,10 @@ export interface IsInstanceDownResponse {
  * }
  */
 export async function isInstanceDown(
-  instance_key: InstanceKey
+  instanceKey: InstanceKey
 ): Promise<IsInstanceDownResponse> {
   const request: IsInstanceDownRequest = {
-    instance_key,
+    instanceKey,
   };
 
   try {
@@ -234,7 +234,7 @@ export interface OperateServerRequest {
   serverId: string;
   regionId: string;
   operation: ServerOperationType;
-  operation_complete?: boolean;
+  operationComplete?: boolean;
   operatorId: string;
   token?: string;
 }
@@ -272,14 +272,14 @@ export async function operateServer(
   regionId: string,
   operation: ServerOperationType,
   operatorId: string,
-  operation_complete: boolean = false
+  operationComplete: boolean = false
 ): Promise<OperateServerResponse> {
   const request: OperateServerRequest = {
     serverId,
     regionId,
     operation,
     operatorId,
-    operation_complete,
+    operationComplete,
   };
 
   try {
@@ -307,7 +307,7 @@ export interface IsServerDownRequest {
  */
 export interface IsServerDownResponse {
   status: ResponseStatus;
-  is_down: boolean;
+  isDown: boolean;
 }
 
 /**
@@ -362,7 +362,7 @@ export interface GetAllInstanceOperationsRequest {
  */
 export interface GetAllInstanceOperationsResponse {
   status: ResponseStatus;
-  instance_operation_records: InstanceOperationRecord[];
+  instanceOperationRecords: InstanceOperationRecord[];
 }
 
 /**
@@ -445,7 +445,7 @@ export interface GetAllServerOperationsRequest {
  */
 export interface GetAllServerOperationsResponse {
   status: ResponseStatus;
-  server_operation_records: ServerOperationInfo[];
+  serverOperationRecords: ServerOperationInfo[];
 }
 
 /**

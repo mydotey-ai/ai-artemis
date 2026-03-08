@@ -373,8 +373,8 @@ const Users: React.FC = () => {
       }
 
       // Days filter (created in last X days)
-      if (daysFilter > 0 && user.created_at) {
-        const createdDate = new Date(user.created_at);
+      if (daysFilter > 0 && user.createdAt) {
+        const createdDate = new Date(user.createdAt);
         const daysAgo = (Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24);
         if (daysAgo > daysFilter) return false;
       }
@@ -708,7 +708,7 @@ const Users: React.FC = () => {
       user.email || '',
       user.role,
       user.status,
-      user.created_at || '',
+      user.createdAt || '',
     ]);
 
     const csvContent = [
@@ -987,7 +987,7 @@ const Users: React.FC = () => {
                 </TableCell>
                 <TableCell>-</TableCell>
                 <TableCell>
-                  {user.created_at ? new Date(user.created_at).toLocaleDateString() : '-'}
+                  {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-'}
                 </TableCell>
                 <TableCell>
                   <Tooltip title="Edit">
@@ -1305,7 +1305,7 @@ const Users: React.FC = () => {
                     <TableBody>
                       {loginHistory.map((history) => (
                         <TableRow key={history.id}>
-                          <TableCell>{formatLastLogin(history.login_time)}</TableCell>
+                          <TableCell>{formatLastLogin(history.loginTime)}</TableCell>
                           <TableCell>{history.ipAddress}</TableCell>
                           <TableCell>
                             <Chip

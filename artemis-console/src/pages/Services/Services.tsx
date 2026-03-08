@@ -606,14 +606,14 @@ const Services: React.FC = () => {
             </Box>
 
             {/* Route Rules */}
-            {selectedService.route_rules &&
-              selectedService.route_rules.length > 0 && (
+            {selectedService.routeRules &&
+              selectedService.routeRules.length > 0 && (
                 <Box>
                   <Typography variant="subtitle2" gutterBottom>
-                    Route Rules ({selectedService.route_rules.length}):
+                    Route Rules ({selectedService.routeRules.length}):
                   </Typography>
                   <Paper sx={{ padding: 2, backgroundColor: 'grey.50' }}>
-                    {selectedService.route_rules.map((rule, index) => (
+                    {selectedService.routeRules.map((rule: any, index: number) => (
                       <Typography key={index} variant="body2">
                         <strong>{rule.name}</strong> - {rule.strategy} (
                         {rule.status})

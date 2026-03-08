@@ -19,8 +19,8 @@ export interface OperateZoneRequest {
 export interface ZoneInfo {
   zoneId: string;
   regionId: string;
-  total_instances: number;
-  active_instances: number;
+  totalInstances: number;
+  activeInstances: number;
   status: 'ACTIVE' | 'INACTIVE';
   lastUpdate: string;
 }
@@ -96,7 +96,7 @@ export async function listZones(regionId?: string): Promise<ApiResponse<ZoneInfo
  * 检查 Zone 中的实例是否全部拉出
  * GET /api/management/zone/:zoneId/is-down
  */
-export async function isZoneDown(zoneId: string, regionId: string): Promise<ApiResponse<{ is_down: boolean }>> {
+export async function isZoneDown(zoneId: string, regionId: string): Promise<ApiResponse<{ isDown: boolean }>> {
   const response = await apiClient.get(`${API_BASE}/${zoneId}/is-down`, {
     params: { regionId: regionId },
   });

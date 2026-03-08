@@ -34,11 +34,11 @@ export async function getService(
   config: DiscoveryConfig
 ): Promise<GetServiceResponse> {
   const request: GetServiceRequest = {
-    discovery_config: {
+    discoveryConfig: {
       serviceId: serviceId,
       regionId: config.regionId,
       zoneId: config.zoneId,
-      discovery_data: config.discovery_data,
+      discoveryData: config.discoveryData,
     },
   };
 
@@ -121,7 +121,7 @@ export async function deregisterInstance(
   instanceKey: InstanceKey
 ): Promise<UnregisterResponse> {
   const request: UnregisterRequest = {
-    instance_keys: [instanceKey],
+    instanceKeys: [instanceKey],
   };
 
   const response = await apiClient.post<UnregisterResponse>(

@@ -239,11 +239,11 @@ const AuditLog: React.FC = () => {
       // Add time range filter
       const timeRange = getTimeRange(timeRangePreset);
       if (timeRange) {
-        params.start_time = timeRange.startTime;
-        params.end_time = timeRange.endTime;
+        params.startTime = timeRange.startTime;
+        params.endTime = timeRange.endTime;
       } else if (timeRangePreset === 'Custom') {
-        if (customStartTime) params.start_time = new Date(customStartTime).toISOString();
-        if (customEndTime) params.end_time = new Date(customEndTime).toISOString();
+        if (customStartTime) params.startTime = new Date(customStartTime).toISOString();
+        if (customEndTime) params.endTime = new Date(customEndTime).toISOString();
       }
 
       // Add other filters

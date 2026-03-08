@@ -27,8 +27,8 @@ export interface QueryLogsParams {
   operationType?: string;
   operatorId?: string;
   resourceType?: string;
-  start_time?: string;
-  end_time?: string;
+  startTime?: string;
+  endTime?: string;
   limit?: number;
   offset?: number;
 }
@@ -92,7 +92,7 @@ export async function queryLogsByTimeRange(
   endTime: string,
   limit?: number
 ): Promise<ApiResponse<AuditLog[]>> {
-  return queryLogs({ start_time: startTime, end_time: endTime, limit });
+  return queryLogs({ startTime, endTime, limit });
 }
 
 /**
@@ -120,9 +120,9 @@ export async function exportLogs(params?: QueryLogsParams): Promise<Blob> {
  * 清理老日志
  * DELETE /api/management/audit/logs/cleanup
  */
-export async function cleanupOldLogs(daysToKeep: number): Promise<ApiResponse<{ deleted_count: number }>> {
+export async function cleanupOldLogs(daysToKeep: number): Promise<ApiResponse<{ deletedCount: number }>> {
   const response = await apiClient.delete(`${API_BASE}/logs/cleanup`, {
-    params: { days_to_keep: daysToKeep },
+    params: { daysToKeep: daysToKeep },
   });
   return response.data;
 }
@@ -137,8 +137,8 @@ export async function getLogStats(
 ): Promise<ApiResponse<{ total: number; byOperation: Record<string, number> }>> {
   const response = await apiClient.get(`${API_BASE}/logs/stats`, {
     params: {
-      start_time: startTime,
-      end_time: endTime,
+      startTime: startTime,
+      endTime: endTime,
     },
   });
   return response.data;

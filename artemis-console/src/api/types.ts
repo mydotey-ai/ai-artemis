@@ -84,7 +84,7 @@ export interface Instance {
   port: number;
   protocol?: string;
   url: string;
-  health_check_url?: string;
+  healthCheckUrl?: string;
   status: InstanceStatus;
   metadata?: Record<string, string>;
 }
@@ -121,13 +121,13 @@ export interface ServiceGroup {
   regionId: string;
   zoneId: string;
   name: string;
-  group_type: GroupType;
+  groupType: GroupType;
   status: GroupStatus;
   description?: string;
   tags?: GroupTag[];
   metadata?: Record<string, string>;
-  created_at?: number;
-  updated_at?: number;
+  createdAt?: number;
+  updatedAt?: number;
 }
 
 /**
@@ -170,9 +170,9 @@ export interface GroupInstance {
   regionId: string;
   zoneId: string;
   serviceId: string;
-  binding_type?: BindingType;
+  bindingType?: BindingType;
   operatorId?: string;
-  created_at?: number;
+  createdAt?: number;
 }
 
 /**
@@ -193,8 +193,8 @@ export interface Service {
   serviceId: string;
   metadata?: Record<string, string>;
   instances: Instance[];
-  logic_instances?: Instance[];
-  route_rules?: RouteRule[];
+  logicInstances?: Instance[];
+  routeRules?: RouteRule[];
 }
 
 /**
@@ -205,7 +205,7 @@ export interface DiscoveryConfig {
   serviceId: string;
   regionId: string;
   zoneId: string;
-  discovery_data?: Record<string, string>;
+  discoveryData?: Record<string, string>;
 }
 
 /**
@@ -232,7 +232,7 @@ export interface Group {
  * Get Service Request
  */
 export interface GetServiceRequest {
-  discovery_config: DiscoveryConfig;
+  discoveryConfig: DiscoveryConfig;
 }
 
 /**
@@ -266,7 +266,7 @@ export interface GetServicesResponse {
 export interface GetServicesDeltaRequest {
   regionId: string;
   zoneId: string;
-  since_timestamp: number;
+  sinceTimestamp: number;
 }
 
 /**
@@ -275,7 +275,7 @@ export interface GetServicesDeltaRequest {
 export interface GetServicesDeltaResponse {
   responseStatus: ResponseStatus;
   services: Service[];
-  current_timestamp: number;
+  currentTimestamp: number;
 }
 
 /**
@@ -283,7 +283,7 @@ export interface GetServicesDeltaResponse {
  * Batch lookup for multiple services
  */
 export interface LookupServicesRequest {
-  discovery_configs: DiscoveryConfig[];
+  discoveryConfigs: DiscoveryConfig[];
 }
 
 /**
@@ -310,14 +310,14 @@ export interface RegisterRequest {
  */
 export interface RegisterResponse {
   responseStatus: ResponseStatus;
-  failed_instances?: Instance[];
+  failedInstances?: Instance[];
 }
 
 /**
  * Heartbeat Request
  */
 export interface HeartbeatRequest {
-  instance_keys: InstanceKey[];
+  instanceKeys: InstanceKey[];
 }
 
 /**
@@ -325,14 +325,14 @@ export interface HeartbeatRequest {
  */
 export interface HeartbeatResponse {
   responseStatus: ResponseStatus;
-  failed_instance_keys?: InstanceKey[];
+  failedInstanceKeys?: InstanceKey[];
 }
 
 /**
  * Unregister Request
  */
 export interface UnregisterRequest {
-  instance_keys: InstanceKey[];
+  instanceKeys: InstanceKey[];
 }
 
 /**
@@ -390,7 +390,7 @@ export interface OperateInstanceResponse {
  * Get Instance Operations Request
  */
 export interface GetInstanceOperationsRequest {
-  instance_key: InstanceKey;
+  instanceKey: InstanceKey;
 }
 
 /**
@@ -405,7 +405,7 @@ export interface GetInstanceOperationsResponse {
  * Is Instance Down Request
  */
 export interface IsInstanceDownRequest {
-  instance_key: InstanceKey;
+  instanceKey: InstanceKey;
 }
 
 /**
@@ -413,7 +413,7 @@ export interface IsInstanceDownRequest {
  */
 export interface IsInstanceDownResponse {
   status: ResponseStatus;
-  is_down: boolean;
+  isDown: boolean;
 }
 
 // =====================================================
@@ -483,7 +483,7 @@ export interface IsServerDownRequest {
  */
 export interface IsServerDownResponse {
   status: ResponseStatus;
-  is_down: boolean;
+  isDown: boolean;
 }
 
 /**
@@ -498,7 +498,7 @@ export interface GetAllInstanceOperationsRequest {
  */
 export interface GetAllInstanceOperationsResponse {
   status: ResponseStatus;
-  instance_operation_records: InstanceOperationRecord[];
+  instanceOperationRecords: InstanceOperationRecord[];
 }
 
 /**
@@ -652,10 +652,10 @@ export interface ServiceNode {
 export interface ServiceNodeStatus {
   node: ServiceNode;
   status: string; // 'starting' | 'up' | 'down' | 'unknown'
-  can_service_discovery: boolean;
-  can_service_registry: boolean;
-  allow_registry_from_other_zone: boolean;
-  allow_discovery_from_other_zone: boolean;
+  canServiceDiscovery: boolean;
+  canServiceRegistry: boolean;
+  allowRegistryFromOtherZone: boolean;
+  allowDiscoveryFromOtherZone: boolean;
 }
 
 /**
@@ -668,7 +668,7 @@ export interface GetClusterNodeStatusRequest {
  * Get Cluster Node Status Response
  */
 export interface GetClusterNodeStatusResponse {
-  node_status?: ServiceNodeStatus;
+  nodeStatus?: ServiceNodeStatus;
   responseStatus: ResponseStatus;
 }
 
@@ -682,8 +682,8 @@ export interface GetClusterStatusRequest {
  * Get Cluster Status Response
  */
 export interface GetClusterStatusResponse {
-  nodes_status: ServiceNodeStatus[];
-  node_count: number;
+  nodesStatus: ServiceNodeStatus[];
+  nodeCount: number;
   responseStatus: ResponseStatus;
 }
 
@@ -831,7 +831,7 @@ export interface QueryGroupLogsParams {
  * Query Route Rule Logs Parameters
  */
 export interface QueryRouteRuleLogsParams {
-  rule_id?: string;
+  ruleId?: string;
   operatorId?: string;
   limit?: number;
 }
@@ -840,7 +840,7 @@ export interface QueryRouteRuleLogsParams {
  * Query Route Rule Group Logs Parameters
  */
 export interface QueryRouteRuleGroupLogsParams {
-  rule_id?: string;
+  ruleId?: string;
   groupId?: string;
   operatorId?: string;
   limit?: number;
@@ -904,7 +904,7 @@ export interface GetZoneStatusResponse {
   success: boolean;
   zoneId: string;
   regionId: string;
-  is_down: boolean;
+  isDown: boolean;
   operation?: ZoneOperationType;
   operatorId?: string;
 }
@@ -1000,14 +1000,14 @@ export interface ReplicateRegisterRequest {
  */
 export interface ReplicateRegisterResponse {
   responseStatus: ResponseStatus;
-  failed_instances?: Instance[];
+  failedInstances?: Instance[];
 }
 
 /**
  * Replicate Heartbeat Request
  */
 export interface ReplicateHeartbeatRequest {
-  instance_keys: InstanceKey[];
+  instanceKeys: InstanceKey[];
 }
 
 /**
@@ -1015,14 +1015,14 @@ export interface ReplicateHeartbeatRequest {
  */
 export interface ReplicateHeartbeatResponse {
   responseStatus: ResponseStatus;
-  failed_instance_keys?: InstanceKey[];
+  failedInstanceKeys?: InstanceKey[];
 }
 
 /**
  * Replicate Unregister Request
  */
 export interface ReplicateUnregisterRequest {
-  instance_keys: InstanceKey[];
+  instanceKeys: InstanceKey[];
 }
 
 /**
@@ -1059,7 +1059,7 @@ export interface BatchRegisterResponse {
  * Batch Heartbeat Request
  */
 export interface BatchHeartbeatRequest {
-  instance_keys: InstanceKey[];
+  instanceKeys: InstanceKey[];
 }
 
 /**
@@ -1067,14 +1067,14 @@ export interface BatchHeartbeatRequest {
  */
 export interface BatchHeartbeatResponse {
   responseStatus: ResponseStatus;
-  failed_instance_keys?: InstanceKey[];
+  failedInstanceKeys?: InstanceKey[];
 }
 
 /**
  * Batch Unregister Request
  */
 export interface BatchUnregisterRequest {
-  instance_keys: InstanceKey[];
+  instanceKeys: InstanceKey[];
 }
 
 /**
@@ -1082,7 +1082,7 @@ export interface BatchUnregisterRequest {
  */
 export interface BatchUnregisterResponse {
   responseStatus: ResponseStatus;
-  failed_instance_keys?: InstanceKey[];
+  failedInstanceKeys?: InstanceKey[];
 }
 
 /**
@@ -1091,7 +1091,7 @@ export interface BatchUnregisterResponse {
 export interface ServicesDeltaRequest {
   regionId: string;
   zoneId: string;
-  since_timestamp: number;
+  sinceTimestamp: number;
 }
 
 /**
@@ -1100,7 +1100,7 @@ export interface ServicesDeltaRequest {
 export interface ServicesDeltaResponse {
   responseStatus: ResponseStatus;
   services: Service[];
-  current_timestamp: number;
+  currentTimestamp: number;
 }
 
 /**
@@ -1117,7 +1117,7 @@ export interface SyncFullDataRequest {
 export interface SyncFullDataResponse {
   responseStatus: ResponseStatus;
   services: Service[];
-  sync_timestamp: number;
+  syncTimestamp: number;
 }
 
 // =====================================================
@@ -1133,8 +1133,8 @@ export interface User {
   email?: string;
   roles: Role[];
   permissions: Permission[];
-  created_at?: number;
-  updated_at?: number;
+  createdAt?: number;
+  updatedAt?: number;
 }
 
 /**
@@ -1250,7 +1250,7 @@ export interface GetGroupInstancesQuery {
  * Group Operation Record
  */
 export interface GroupOperation {
-  operation_id?: number;
+  operationId?: number;
   groupId: number;
   operationType: string;
   operatorId: string;
