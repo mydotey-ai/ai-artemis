@@ -255,6 +255,16 @@ DB_TYPE=mysql DB_URL="mysql://user:pass@host:3306/artemis" ./scripts/cluster.sh 
 
 ---
 
+## API 序列化规范
+
+遵循 [`.claude/rules/api-serialization.md`](api-serialization.md) 的序列化规范：
+
+- **统一格式**: 所有 API 接口、内部通信使用 camelCase 序列化
+- **后端实现**: 需要序列化的结构体添加 `#[serde(rename_all = "camelCase")]`
+- **前端实现**: TypeScript 类型定义使用 camelCase
+
+---
+
 ## 文档规范
 
 遵循 [`.claude/rules/doc.md`](doc.md) 的文档组织规范：
@@ -303,5 +313,6 @@ dashmap = "6.1"
 ## 相关文档
 
 - **项目上下文**: [.claude/rules/project.md](project.md)
+- **API 序列化**: [.claude/rules/api-serialization.md](api-serialization.md)
 - **文档组织**: [.claude/rules/doc.md](doc.md)
 - **实施路线图**: [`docs/plans/implementation-roadmap.md`](../../docs/plans/implementation-roadmap.md)
