@@ -9,7 +9,7 @@ use tracing::{debug, error, info, warn};
 
 /// Client-to-server WebSocket message types
 #[derive(Debug, Serialize, Deserialize)]
-#[serde(tag = "type")]
+#[serde(tag = "type", rename_all = "camelCase")]
 enum ClientMessage {
     #[serde(rename = "subscribe")]
     Subscribe { service_id: String },
@@ -23,7 +23,7 @@ enum ClientMessage {
 
 /// Server-to-client WebSocket message types
 #[derive(Debug, Serialize, Deserialize)]
-#[serde(tag = "type")]
+#[serde(tag = "type", rename_all = "camelCase")]
 enum ServerMessage {
     #[serde(rename = "subscribed")]
     Subscribed { service_id: String },

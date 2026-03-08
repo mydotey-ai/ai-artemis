@@ -80,6 +80,7 @@ pub async fn get_services_by_query(
 
 /// Lookup 请求 (查询单个实例)
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct LookupRequest {
     pub discovery_config: DiscoveryConfig,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -88,6 +89,7 @@ pub struct LookupRequest {
 
 /// Lookup 响应
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct LookupResponse {
     pub success: bool,
     #[serde(skip_serializing_if = "Option::is_none")]

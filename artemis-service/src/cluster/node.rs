@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 
 /// 集群节点状态
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum NodeStatus {
     /// 节点在线且健康
     Up,
@@ -14,6 +15,7 @@ pub enum NodeStatus {
 
 /// 集群节点信息
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ClusterNode {
     /// 节点ID
     pub node_id: String,

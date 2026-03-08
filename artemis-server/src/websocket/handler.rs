@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 #[derive(Debug, Serialize, Deserialize)]
-#[serde(tag = "type")]
+#[serde(tag = "type", rename_all = "camelCase")]
 enum ClientMessage {
     #[serde(rename = "subscribe")]
     Subscribe { service_id: String },
@@ -24,7 +24,7 @@ enum ClientMessage {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-#[serde(tag = "type")]
+#[serde(tag = "type", rename_all = "camelCase")]
 enum ServerMessage {
     #[serde(rename = "subscribed")]
     Subscribed { service_id: String },

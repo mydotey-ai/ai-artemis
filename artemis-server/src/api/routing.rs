@@ -18,6 +18,7 @@ use serde::{Deserialize, Serialize};
 // ===== 请求/响应模型 =====
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateGroupRequest {
     pub service_id: String,
     pub region_id: String,
@@ -28,6 +29,7 @@ pub struct CreateGroupRequest {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateRuleRequest {
     pub route_id: String,
     pub service_id: String,
@@ -37,6 +39,7 @@ pub struct CreateRuleRequest {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AddRuleGroupRequest {
     pub group_id: String,
     pub weight: u32,
@@ -45,18 +48,21 @@ pub struct AddRuleGroupRequest {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ListGroupsQuery {
     pub service_id: Option<String>,
     pub region_id: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UpdateGroupRequest {
     pub description: Option<String>,
     pub status: Option<GroupStatus>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UpdateRuleRequest {
     pub name: Option<String>,
     pub description: Option<String>,
@@ -64,22 +70,26 @@ pub struct UpdateRuleRequest {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UpdateRuleGroupRequest {
     pub weight: u32,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AddGroupTagsRequest {
     pub tags: Vec<artemis_management::model::GroupTag>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetGroupInstancesQuery {
     pub region_id: Option<String>,
     pub zone_id: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ApiResponse<T> {
     pub success: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -512,6 +522,7 @@ pub async fn update_rule_group(
 
 /// 添加实例到分组请求
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AddInstanceToGroupRequest {
     pub instance_id: String,
     pub region_id: String,
@@ -522,6 +533,7 @@ pub struct AddInstanceToGroupRequest {
 
 /// 批量添加服务实例请求
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct BatchAddServiceInstancesRequest {
     pub instances: Vec<GroupInstance>,
 }
