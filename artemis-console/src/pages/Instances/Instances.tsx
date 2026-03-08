@@ -414,13 +414,11 @@ const Instances: React.FC = () => {
 
   // ===== Instance Operations =====
   const createInstanceKey = (instance: InstanceRow): InstanceKey => ({
-    serviceId: instance.serviceId,
-    instanceId: instance.instanceId,
-    ip: instance.ip,
-    port: instance.port,
     regionId: instance.regionId,
     zoneId: instance.zoneId,
-    groupId: '', // Default group
+    serviceId: instance.serviceId,
+    groupId: '', // Default group (not tracked in InstanceRow)
+    instanceId: instance.instanceId,
   });
 
   const handlePullIn = async (instance: InstanceRow): Promise<void> => {

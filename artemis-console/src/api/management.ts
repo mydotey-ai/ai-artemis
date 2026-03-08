@@ -12,16 +12,14 @@ import type { ResponseStatus } from '@/api/types';
 
 /**
  * 实例键 (唯一标识一个实例)
+ * 与后端 artemis-common/src/model/instance.rs 中 InstanceKey 保持一致
  */
 export interface InstanceKey {
-  serviceId: string;
-  instanceId: string;
-  appId?: string;
-  groupId?: string;
-  ip: string;
-  port: number;
   regionId: string;
-  zoneId?: string;
+  zoneId: string;
+  serviceId: string;
+  groupId: string;
+  instanceId: string;
 }
 
 /**
